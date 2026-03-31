@@ -114,23 +114,22 @@ PETSc.Sys.Print(f"Source permutation size: {iss.getSize()}")
 PETSc.Sys.Print(f"Target permutation size: {ist.getSize()}")
 
 # ---------------------------------------------------------------------------
-# Verify by comparing mat-vec product with dense matrix (serial only)
+# Verify by comparing mat-vec product with dense matrix
 # ---------------------------------------------------------------------------
-if comm.size == 1:
-    x, y_htool = A.createVecs()
-    x.setRandom()
+x, y_htool = A.createVecs()
+x.setRandom()
 
-    A.mult(x, y_htool)
+A.mult(x, y_htool)
 
-    D = A.convert('dense')
-    y_dense = D.createVecLeft()
-    D.mult(x, y_dense)
+D = A.convert('dense')
+y_dense = D.createVecLeft()
+D.mult(x, y_dense)
 
-    y_htool.axpy(-1.0, y_dense)
-    rel_err = y_htool.norm() / y_dense.norm()
-    PETSc.Sys.Print(f"Relative error ||y_htool - y_dense|| / ||y_dense|| = {rel_err:.2e}")
-    assert rel_err < 1.0e-4, f"Relative error too large: {rel_err}"
-    PETSc.Sys.Print("Verification passed.")
-    D.destroy()
+y_htool.axpy(-1.0, y_dense)
+rel_err = y_htool.norm() / y_dense.norm()
+PETSc.Sys.Print(f"Relative error ||y_htool - y_dense|| / ||y_dense|| = {rel_err:.2e}")
+assert rel_err < 1.0e-4, f"Relative error too large: {rel_err}"
+PETSc.Sys.Print("Verification passed.")
+D.destroy()
 
 A.destroy()
