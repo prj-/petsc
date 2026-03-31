@@ -231,6 +231,35 @@ int main(int argc, char **argv)
     }
   }
   PetscCall(PetscRandomDestroy(&rdm));
+  /* verify that MatGetDiagonalBlock returns a sub-MatHtool and that its MatMult is correct */
+  {
+    Mat         Dblock, Ddense;
+    Vec         xd, yd_htool, yd_dense;
+    PetscBool   is_htool;
+    PetscRandom rdm2;
+    PetscReal   dnorm, ref;
+
+    PetscCall(MatGetDiagonalBlock(A, &Dblock));
+    PetscCall(PetscObjectTypeCompare((PetscObject)Dblock, MATHTOOL, &is_htool));
+    PetscCheck(is_htool, PETSC_COMM_SELF, PETSC_ERR_PLIB, "MatGetDiagonalBlock did not return a MATHTOOL");
+    PetscCall(PetscRandomCreate(PETSC_COMM_SELF, &rdm2));
+    PetscCall(MatCreateVecs(Dblock, &xd, &yd_htool));
+    PetscCall(VecSetRandom(xd, rdm2));
+    PetscCall(MatMult(Dblock, xd, yd_htool));
+    PetscCall(MatConvert(Dblock, MATDENSE, MAT_INITIAL_MATRIX, &Ddense));
+    PetscCall(VecDuplicate(yd_htool, &yd_dense));
+    PetscCall(MatMult(Ddense, xd, yd_dense));
+    PetscCall(VecNorm(yd_htool, NORM_INFINITY, &ref));
+    PetscCall(VecAXPY(yd_dense, -1.0, yd_htool));
+    PetscCall(VecNorm(yd_dense, NORM_INFINITY, &dnorm));
+    /* tolerance accounts for H-matrix compression error (proportional to epsilon) */
+    PetscCheck(dnorm <= 1.0e2 * epsilon * ref + PETSC_MACHINE_EPSILON * 1.0e3, PETSC_COMM_SELF, PETSC_ERR_PLIB, "||D_htool*x - D_dense*x|| / ||D_htool*x|| = %g (epsilon = %g)", (double)(ref > 0 ? dnorm / ref : dnorm), (double)epsilon);
+    PetscCall(VecDestroy(&xd));
+    PetscCall(VecDestroy(&yd_htool));
+    PetscCall(VecDestroy(&yd_dense));
+    PetscCall(MatDestroy(&Ddense));
+    PetscCall(PetscRandomDestroy(&rdm2));
+  }
   PetscCall(MatDestroy(&A));
   PetscCall(PetscFree(gcoords));
   PetscCall(PetscFree(coords));

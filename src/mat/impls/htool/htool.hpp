@@ -53,6 +53,7 @@ struct Mat_Htool {
   std::unique_ptr<htool::Cluster<PetscReal>>                       target_cluster;
   std::unique_ptr<htool::Cluster<PetscReal>>                       source_cluster;
   std::unique_ptr<htool::DefaultApproximationBuilder<PetscScalar>> distributed_operator_holder;
+  const htool::HMatrix<PetscScalar>                               *block_diagonal_hmatrix{nullptr}; /* non-owning; set when this Mat is a diagonal sub-block */
 };
 
 struct MatHtoolKernelTranspose {

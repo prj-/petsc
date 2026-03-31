@@ -4,26 +4,26 @@
 const char *const MatHtoolCompressorTypes[] = {"sympartialACA", "fullACA", "SVD"};
 const char *const MatHtoolClusteringTypes[] = {"PCARegular", "PCAGeometric", "BoundingBox1Regular", "BoundingBox1Geometric"};
 const char       *HtoolCitations[2]         = {"@article{marchand2020two,\n"
-                                               "  Author = {Marchand, Pierre and Claeys, Xavier and Jolivet, Pierre and Nataf, Fr\\'ed\\'eric and Tournier, Pierre-Henri},\n"
-                                               "  Title = {Two-level preconditioning for $h$-version boundary element approximation of hypersingular operator with {GenEO}},\n"
-                                               "  Year = {2020},\n"
-                                               "  Publisher = {Elsevier},\n"
-                                               "  Journal = {Numerische Mathematik},\n"
-                                               "  Volume = {146},\n"
-                                               "  Pages = {597--628},\n"
-                                               "  Url = {https://github.com/htool-ddm/htool}\n"
-                                               "}\n",
+                                                             "  Author = {Marchand, Pierre and Claeys, Xavier and Jolivet, Pierre and Nataf, Fr\\'ed\\'eric and Tournier, Pierre-Henri},\n"
+                                                             "  Title = {Two-level preconditioning for $h$-version boundary element approximation of hypersingular operator with {GenEO}},\n"
+                                                             "  Year = {2020},\n"
+                                                             "  Publisher = {Elsevier},\n"
+                                                             "  Journal = {Numerische Mathematik},\n"
+                                                             "  Volume = {146},\n"
+                                                             "  Pages = {597--628},\n"
+                                                             "  Url = {https://github.com/htool-ddm/htool}\n"
+                                                             "}\n",
                                                "@article{Marchand2026,\n"
-                                               "  Author = {Marchand, Pierre and Tournier, Pierre-Henri and Jolivet, Pierre},\n"
-                                               "  Title = {{Htool-DDM}: A {C++} library for parallel solvers and compressed linear systems},\n"
-                                               "  Year = {2026},\n"
-                                               "  Publisher = {The Open Journal},\n"
-                                               "  Journal = {Journal of Open Source Software},\n"
-                                               "  Volume = {11},\n"
-                                               "  Number = {118},\n"
-                                               "  Pages = {9279},\n"
-                                               "  Url = {https://doi.org/10.21105/joss.09279}\n"
-                                               "}\n"};
+                                                             "  Author = {Marchand, Pierre and Tournier, Pierre-Henri and Jolivet, Pierre},\n"
+                                                             "  Title = {{Htool-DDM}: A {C++} library for parallel solvers and compressed linear systems},\n"
+                                                             "  Year = {2026},\n"
+                                                             "  Publisher = {The Open Journal},\n"
+                                                             "  Journal = {Journal of Open Source Software},\n"
+                                                             "  Volume = {11},\n"
+                                                             "  Number = {118},\n"
+                                                             "  Pages = {9279},\n"
+                                                             "  Url = {https://doi.org/10.21105/joss.09279}\n"
+                                                             "}\n"};
 static PetscBool  HtoolCite[2]              = {PETSC_FALSE, PETSC_FALSE};
 
 static PetscErrorCode MatGetDiagonal_Htool(Mat A, Vec v)
@@ -37,19 +37,21 @@ static PetscErrorCode MatGetDiagonal_Htool(Mat A, Vec v)
   PetscCheck(flg, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Only congruent layouts supported");
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(VecGetArrayWrite(v, &x));
-  PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(a->distributed_operator_holder->hmatrix, x));
+  if (a->block_diagonal_hmatrix) {
+    PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(*a->block_diagonal_hmatrix, x));
+  } else {
+    PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(a->distributed_operator_holder->hmatrix, x));
+  }
   PetscCall(VecRestoreArrayWrite(v, &x));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static PetscErrorCode MatGetDiagonalBlock_Htool(Mat A, Mat *b)
 {
-  Mat_Htool                 *a;
-  Mat                        B;
-  PetscScalar               *ptr, shift, scale;
-  PetscBool                  flg;
-  PetscMPIInt                rank;
-  htool::Cluster<PetscReal> *source_cluster = nullptr;
+  Mat_Htool  *a, *c;
+  Mat         B;
+  PetscScalar shift, scale;
+  PetscBool   flg;
 
   PetscFunctionBegin;
   PetscCall(MatHasCongruentLayouts(A, &flg));
@@ -58,12 +60,24 @@ static PetscErrorCode MatGetDiagonalBlock_Htool(Mat A, Mat *b)
   PetscCall(PetscObjectQuery((PetscObject)A, "DiagonalBlock", (PetscObject *)&B)); /* same logic as in MatGetDiagonalBlock_MPIDense() */
   if (!B) {
     PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
-    PetscCall(MatCreateDense(PETSC_COMM_SELF, A->rmap->n, A->rmap->n, A->rmap->n, A->rmap->n, nullptr, &B));
-    PetscCall(MatDenseGetArrayWrite(B, &ptr));
-    PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)A), &rank));
-    source_cluster = a->source_cluster ? a->source_cluster.get() : a->target_cluster.get();
-    PetscCallExternalVoid("copy_to_dense_in_user_numbering", htool::copy_to_dense_in_user_numbering(*a->distributed_operator_holder->hmatrix.get_sub_hmatrix(a->target_cluster->get_cluster_on_partition(rank), source_cluster->get_cluster_on_partition(rank)), ptr));
-    PetscCall(MatDenseRestoreArrayWrite(B, &ptr));
+    PetscCheck(a->distributed_operator_holder->block_diagonal_hmatrix, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Block diagonal sub-HMatrix not found; set block_tree_consistency to PETSC_TRUE");
+    PetscCall(MatCreate(PETSC_COMM_SELF, &B));
+    PetscCall(MatSetSizes(B, A->rmap->n, A->rmap->n, A->rmap->n, A->rmap->n));
+    PetscCall(MatSetType(B, MATHTOOL));
+    PetscCall(MatSetUp(B));
+    B->assembled    = PETSC_TRUE;
+    B->preallocated = PETSC_TRUE;
+    PetscCall(MatShellGetContext(B, &c));
+    c->dim                    = a->dim;
+    c->epsilon                = a->epsilon;
+    c->eta                    = a->eta;
+    c->block_tree_consistency = a->block_tree_consistency;
+    c->permutation            = a->permutation;
+    c->recompression          = a->recompression;
+    c->compressor             = a->compressor;
+    c->clustering             = a->clustering;
+    /* non-owning pointer into A's hmatrix; valid as long as A is alive (A holds B via "DiagonalBlock") */
+    c->block_diagonal_hmatrix = a->distributed_operator_holder->block_diagonal_hmatrix;
     PetscCall(MatPropagateSymmetryOptions(A, B));
     PetscCall(PetscObjectCompose((PetscObject)A, "DiagonalBlock", (PetscObject)B));
     *b = B;
@@ -87,7 +101,9 @@ static PetscErrorCode MatMult_Htool(Mat A, Vec x, Vec y)
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(VecGetArrayRead(x, &in));
   PetscCall(VecGetArrayWrite(y, &out));
-  if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
+  if (a->block_diagonal_hmatrix) {
+    htool::add_hmatrix_vector_product('N', PetscScalar(1), *a->block_diagonal_hmatrix, in, PetscScalar(0), out);
+  } else if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   else htool::internal_add_distributed_operator_vector_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   PetscCall(VecRestoreArrayRead(x, &in));
   PetscCall(VecRestoreArrayWrite(y, &out));
@@ -104,7 +120,9 @@ static PetscErrorCode MatMultTranspose_Htool(Mat A, Vec x, Vec y)
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(VecGetArrayRead(x, &in));
   PetscCall(VecGetArrayWrite(y, &out));
-  if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('T', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
+  if (a->block_diagonal_hmatrix) {
+    htool::add_hmatrix_vector_product('T', PetscScalar(1), *a->block_diagonal_hmatrix, in, PetscScalar(0), out);
+  } else if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('T', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   else htool::internal_add_distributed_operator_vector_product_local_to_local<PetscScalar>('T', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   PetscCall(VecRestoreArrayRead(x, &in));
   PetscCall(VecRestoreArrayWrite(y, &out));
@@ -156,7 +174,7 @@ static PetscErrorCode MatIncreaseOverlap_Htool(Mat A, PetscInt is_max, IS is[], 
 static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *submat[])
 {
   Mat_Htool         *a;
-  Mat                D, B, BT;
+  Mat                D, Ddense, B, BT;
   const PetscScalar *copy;
   PetscScalar       *ptr, shift, scale;
   const PetscInt    *idxr, *idxc, *it;
@@ -192,9 +210,12 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                  */
                 m = std::distance(idxr, it); /* shift of the coefficient (0,0) of block D from above */
                 PetscCall(MatGetDiagonalBlock(A, &D));
-                PetscCall(MatDenseGetArrayRead(D, &copy));
+                /* D is now a MatHtool; convert to dense to access its array */
+                PetscCall(MatConvert(D, MATDENSE, MAT_INITIAL_MATRIX, &Ddense));
+                PetscCall(MatDenseGetArrayRead(Ddense, &copy));
                 for (PetscInt k = 0; k < A->rmap->n; ++k) PetscCall(PetscArraycpy(ptr + (m + k) * nrow + m, copy + k * A->rmap->n, A->rmap->n)); /* block D from above */
-                PetscCall(MatDenseRestoreArrayRead(D, &copy));
+                PetscCall(MatDenseRestoreArrayRead(Ddense, &copy));
+                PetscCall(MatDestroy(&Ddense));
                 if (m) {
                   a->wrapper->copy_submatrix(nrow, m, idxr, idxc, ptr); /* vertical block B from above */
                   /* entry-wise assembly may be costly, so transpose already-computed entries when possible */
@@ -299,11 +320,15 @@ static PetscErrorCode MatView_Htool(Mat A, PetscViewer pv)
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
-  hmatrix_information = htool::get_distributed_hmatrix_information(a->distributed_operator_holder->hmatrix, PetscObjectComm((PetscObject)A));
+  if (a->block_diagonal_hmatrix) {
+    hmatrix_information = htool::get_hmatrix_information(*a->block_diagonal_hmatrix);
+  } else {
+    hmatrix_information = htool::get_distributed_hmatrix_information(a->distributed_operator_holder->hmatrix, PetscObjectComm((PetscObject)A));
+  }
   PetscCall(PetscObjectTypeCompare((PetscObject)pv, PETSCVIEWERASCII, &flg));
   if (flg) {
     PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
-    PetscCall(PetscViewerASCIIPrintf(pv, "symmetry: %c\n", a->distributed_operator_holder->block_diagonal_hmatrix->get_symmetry()));
+    PetscCall(PetscViewerASCIIPrintf(pv, "symmetry: %c\n", a->block_diagonal_hmatrix ? a->block_diagonal_hmatrix->get_symmetry() : a->distributed_operator_holder->block_diagonal_hmatrix->get_symmetry()));
     if (PetscAbsScalar(scale - 1.0) > PETSC_MACHINE_EPSILON) {
 #if defined(PETSC_USE_COMPLEX)
       PetscCall(PetscViewerASCIIPrintf(pv, "scaling: %g+%gi\n", (double)PetscRealPart(scale), (double)PetscImaginaryPart(scale)));
@@ -327,7 +352,7 @@ static PetscErrorCode MatView_Htool(Mat A, PetscViewer pv)
     PetscCall(PetscViewerASCIIPrintf(pv, "clustering: %s\n", MatHtoolClusteringTypes[a->clustering]));
     PetscCall(PetscViewerASCIIPrintf(pv, "compression ratio: %s\n", hmatrix_information["Compression_ratio"].c_str()));
     PetscCall(PetscViewerASCIIPrintf(pv, "space saving: %s\n", hmatrix_information["Space_saving"].c_str()));
-    PetscCall(PetscViewerASCIIPrintf(pv, "block tree consistency: %s\n", PetscBools[a->distributed_operator_holder->hmatrix.is_block_tree_consistent()]));
+    if (!a->block_diagonal_hmatrix) PetscCall(PetscViewerASCIIPrintf(pv, "block tree consistency: %s\n", PetscBools[a->distributed_operator_holder->hmatrix.is_block_tree_consistent()]));
     PetscCall(PetscViewerASCIIPrintf(pv, "recompression: %s\n", PetscBools[a->recompression]));
     PetscCall(PetscViewerASCIIPrintf(pv, "number of dense (resp. low rank) matrices: %s (resp. %s)\n", hmatrix_information["Number_of_dense_blocks"].c_str(), hmatrix_information["Number_of_low_rank_blocks"].c_str()));
     PetscCall(
@@ -350,6 +375,7 @@ static PetscErrorCode MatGetRow_Htool(Mat A, PetscInt row, PetscInt *nz, PetscIn
   PetscFunctionBegin;
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
   PetscCall(MatShellGetContext(A, &a));
+  PetscCheck(!a->block_diagonal_hmatrix, PETSC_COMM_SELF, PETSC_ERR_SUP, "MatGetRow() not supported for diagonal block sub-MatHtool");
   if (nz) *nz = A->cmap->N;
   if (idx || v) { /* even if !idx, need to set idxc for htool::copy_submatrix() */
     PetscCall(PetscMalloc1(A->cmap->N, &idxc));
@@ -418,6 +444,7 @@ static PetscErrorCode MatAssemblyEnd_Htool(Mat A, MatAssemblyType)
   PetscFunctionBegin;
   for (size_t i = 0; i < PETSC_STATIC_ARRAY_LENGTH(HtoolCite); ++i) PetscCall(PetscCitationsRegister(HtoolCitations[i], HtoolCite + i));
   PetscCall(MatShellGetContext(A, &a));
+  if (a->block_diagonal_hmatrix) PetscFunctionReturn(PETSC_SUCCESS); /* sub-block MatHtool; already assembled, nothing to do */
   delete a->wrapper;
   a->target_cluster.reset();
   a->source_cluster.reset();
@@ -520,6 +547,7 @@ static PetscErrorCode MatProductNumeric_Htool(Mat C)
   PetscCall(MatDenseGetArrayRead(product->B, &in));
   PetscCall(MatDenseGetArrayWrite(C, &out));
   PetscCall(MatShellGetContext(product->A, &a));
+  PetscCheck(!a->block_diagonal_hmatrix, PetscObjectComm((PetscObject)C), PETSC_ERR_SUP, "MatMatMult not supported for diagonal block sub-MatHtool");
   switch (product->type) {
   case MATPRODUCT_AB:
     if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_matrix_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, N, nullptr);
@@ -577,6 +605,7 @@ static PetscErrorCode MatHtoolGetHierarchicalMat_Htool(Mat A, const htool::Distr
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
+  PetscCheck(!a->block_diagonal_hmatrix, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "MatHtoolGetHierarchicalMat() not supported for diagonal block sub-MatHtool");
   *distributed_operator = &a->distributed_operator_holder->distributed_operator;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -803,7 +832,11 @@ static PetscErrorCode MatConvert_Htool_Dense(Mat A, MatType, MatReuse reuse, Mat
   PetscCall(MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY));
   PetscCall(MatDenseGetArrayWrite(C, &array));
-  htool::copy_to_dense_in_user_numbering(a->distributed_operator_holder->hmatrix, array);
+  if (a->block_diagonal_hmatrix) {
+    htool::copy_to_dense_in_user_numbering(*a->block_diagonal_hmatrix, array);
+  } else {
+    htool::copy_to_dense_in_user_numbering(a->distributed_operator_holder->hmatrix, array);
+  }
   PetscCall(MatDenseRestoreArrayWrite(C, &array));
   PetscCall(MatShift(C, shift));
   PetscCall(MatScale(C, scale));
@@ -973,7 +1006,7 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
-  B = new htool::HMatrix<PetscScalar>(a->distributed_operator_holder->hmatrix);
+  B = new htool::HMatrix<PetscScalar>(a->block_diagonal_hmatrix ? *a->block_diagonal_hmatrix : a->distributed_operator_holder->hmatrix);
   if (ftype == MAT_FACTOR_LU) htool::sequential_lu_factorization(*B);
   else htool::sequential_cholesky_factorization('L', *B);
   PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", B, nullptr));
