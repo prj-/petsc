@@ -431,6 +431,59 @@ class TestMatrix(unittest.TestCase):
 
         del AA.multTranspose
 
+    def testHtool(self):
+        if not PETSc.Sys.hasExternalPackage('htool'):
+            return
+        if PETSc.COMM_WORLD.size > 1:
+            return
+        N = 50
+        dim = 3
+        coords = numpy.linspace(
+            (1.0, 2.0, 3.0), (10.0, 20.0, 30.0), N, dtype=PETSc.RealType
+        )
+
+        # kernel: 1 / (0.01 + ||x - y||)
+        def kernel(sdim, M, N, rows, cols, v, ctx):
+            c = ctx
+            for i in range(M):
+                for j in range(N):
+                    diff = c[rows[i]] - c[cols[j]]
+                    v[i, j] = 1.0 / (0.01 + numpy.sqrt(numpy.dot(diff, diff)))
+
+        A = PETSc.Mat()
+        A.createHtoolFromKernel(
+            [[N, N], [N, N]], dim, coords, coords, kernel, coords
+        )
+        A.setFromOptions()
+        A.assemble()
+
+        # test permutations
+        iss = A.HtoolGetPermutationSource()
+        ist = A.HtoolGetPermutationTarget()
+        self.assertIsNotNone(iss)
+        self.assertIsNotNone(ist)
+
+        # test use permutation toggle
+        A.HtoolUsePermutation(False)
+        A.HtoolUsePermutation(True)
+
+        # test recompression toggle
+        A.HtoolUseRecompression(False)
+        A.HtoolUseRecompression(True)
+
+        # compare against dense conversion
+        D = A.convert('dense')
+        x, y = A.createVecs()
+        x.setRandom()
+        A.mult(x, y)
+        y2 = D.createVecLeft()
+        D.mult(x, y2)
+        y.axpy(-1.0, y2)
+        self.assertTrue(y.norm() < 1.0e-10 * y2.norm())
+
+        A.destroy()
+        D.destroy()
+
     def testGetType(self):
         ctx = self.A.getPythonContext()
         pytype = f'{ctx.__module__}.{type(ctx).__name__}'
