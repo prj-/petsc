@@ -425,8 +425,8 @@ cdef extern from * nogil:
     PetscErrorCode MatH2OpusCompress(PetscMat, PetscReal)
     PetscErrorCode MatH2OpusLowRankUpdate(PetscMat, PetscMat, PetscMat, PetscScalar)
 
-    ctypedef PetscErrorCode (*MatHtoolKernel)(PetscInt, PetscInt, PetscInt, const PetscInt*, const PetscInt*, PetscScalar*, void*)
-    PetscErrorCode MatCreateHtoolFromKernel(MPI_Comm, PetscInt, PetscInt, PetscInt, PetscInt, PetscInt, const PetscReal[], const PetscReal[], MatHtoolKernel, void*, PetscMat*)
+    ctypedef PetscErrorCode MatHtoolKernel(PetscInt, PetscInt, PetscInt, const PetscInt*, const PetscInt*, PetscScalar*, void*) except PETSC_ERR_PYTHON
+    PetscErrorCode MatCreateHtoolFromKernel(MPI_Comm, PetscInt, PetscInt, PetscInt, PetscInt, PetscInt, const PetscReal[], const PetscReal[], MatHtoolKernel*, void*, PetscMat*)
     PetscErrorCode MatHtoolGetPermutationSource(PetscMat, PetscIS*)
     PetscErrorCode MatHtoolGetPermutationTarget(PetscMat, PetscIS*)
     PetscErrorCode MatHtoolUsePermutation(PetscMat, PetscBool)
