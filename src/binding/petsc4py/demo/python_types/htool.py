@@ -29,18 +29,20 @@ from petsc4py import PETSc  # noqa: E402
 # Problem setup
 # ---------------------------------------------------------------------------
 
-N = 100   # number of points (global)
-dim = 3   # spatial dimension
+N = 1000  # number of points (global)
+dim = 3  # spatial dimension
 
 # Generate N points in R^dim distributed uniformly along a line.
 comm = PETSc.COMM_WORLD
 rank = comm.rank
 size = comm.size
 
+
 # Each MPI rank owns a contiguous block of rows/columns.
 # Distribute N rows as evenly as possible across MPI ranks.
 def _local_size(total, nproc, iproc):
     return total // nproc + (1 if iproc < total % nproc else 0)
+
 
 local_rows = _local_size(N, size, rank)
 coords = numpy.linspace(
@@ -52,7 +54,7 @@ coords = numpy.linspace(
 # Compute global offset for this rank.
 offset = sum(_local_size(N, size, r) for r in range(rank))
 # Local coordinates for this rank.
-local_coords = coords[offset:offset + local_rows]
+local_coords = coords[offset : offset + local_rows]
 
 # ---------------------------------------------------------------------------
 # Kernel functor
@@ -75,6 +77,7 @@ local_coords = coords[offset:offset + local_rows]
 # ctx : object
 #     User context; here it is the full global coordinate array.
 
+
 def kernel(sdim, M, N, rows, cols, v, ctx):
     """Evaluate 1 / (0.01 + ||x - y||) for all (target, source) pairs."""
     gcoords = ctx  # global coordinate array, shape (N_global, sdim)
@@ -91,45 +94,106 @@ def kernel(sdim, M, N, rows, cols, v, ctx):
 # ---------------------------------------------------------------------------
 A = PETSc.Mat()
 A.createHtoolFromKernel(
-    [[local_rows, N], [local_rows, N]],   # size: ((local_rows, global_rows), (local_cols, global_cols))
+    [
+        [local_rows, N],
+        [local_rows, N],
+    ],  # size: ((local_rows, global_rows), (local_cols, global_cols))
     dim,
-    local_coords,        # local target coordinates
-    local_coords,        # local source coordinates (same for square matrix)
+    local_coords,  # local target coordinates
+    local_coords,  # local source coordinates (same for square matrix)
     kernel,
-    coords,              # kernelctx: full global coordinates for index lookup
+    coords,  # kernelctx: full global coordinates for index lookup
     comm=comm,
 )
 A.setFromOptions()
 A.assemble()
 
-PETSc.Sys.Print(f"Created MATHTOOL matrix of size {A.getSize()}")
-PETSc.Sys.Print(f"  local size: {A.getLocalSize()}")
+
+PETSc.Sys.Print(f'Created MATHTOOL matrix of size {A.getSize()}')
+PETSc.Sys.Print(f'  local size: {A.getLocalSize()}')
 
 # ---------------------------------------------------------------------------
 # Retrieve Htool permutations
 # ---------------------------------------------------------------------------
 iss = A.HtoolGetPermutationSource()
 ist = A.HtoolGetPermutationTarget()
-PETSc.Sys.Print(f"Source permutation size: {iss.getSize()}")
-PETSc.Sys.Print(f"Target permutation size: {ist.getSize()}")
+PETSc.Sys.Print(f'Source permutation size: {iss.getSize()}')
+PETSc.Sys.Print(f'Target permutation size: {ist.getSize()}')
+
+A.view()
+
+A_dense = A.convert('dense')
+# A_dense.view()
+
+# ---------------------------------------------------------------------------
+# Assemble parallel dense matrix for comparison
+# ---------------------------------------------------------------------------
+D = PETSc.Mat().createDense(size=[N, N], comm=comm)
+
+D.setUp()
+# Get ownership range for rows
+rstart, rend = D.getOwnershipRange()
+M = rend - rstart
+print(rstart, rend, M)
+
+rows = numpy.arange(rstart, rend, dtype=PETSc.IntType)
+cols = numpy.arange(N, dtype=PETSc.IntType)
+
+# Allocate full local block
+v = numpy.zeros((M, N), order='C', dtype=PETSc.RealType)
+
+# Single kernel call for all local rows
+kernel(dim, M, N, rows, cols, v, coords)
+
+# Insert everything at once
+D.setValues(rows, cols, v)
+
+D.assemble()
+
+# D.view()
 
 # ---------------------------------------------------------------------------
 # Verify by comparing mat-vec product with dense matrix
 # ---------------------------------------------------------------------------
 x, y_htool = A.createVecs()
 x.setRandom()
+y_dense_htool = D.createVecLeft()
+y_dense = D.createVecLeft()
 
 A.mult(x, y_htool)
-
-D = A.convert('dense')
-y_dense = D.createVecLeft()
+A_dense.mult(x, y_dense_htool)
 D.mult(x, y_dense)
 
-y_htool.axpy(-1.0, y_dense)
-rel_err = y_htool.norm() / y_dense.norm()
-PETSc.Sys.Print(f"Relative error ||y_htool - y_dense|| / ||y_dense|| = {rel_err:.2e}")
-assert rel_err < 1.0e-4, f"Relative error too large: {rel_err}"
-PETSc.Sys.Print("Verification passed.")
-D.destroy()
+y_dense_htool.axpy(-1.0, y_htool)
+rel_err = y_dense_htool.norm() / y_htool.norm()
 
+y_htool.axpy(-1.0, y_dense)
+comp_err = y_htool.norm() / y_dense.norm()
+
+PETSc.Sys.Print(
+    f'Relative error ||y_dense_htool - y_htool|| / ||y_htool|| = {rel_err:.2e}'
+)
+PETSc.Sys.Print(f'Relative error ||y_htool - y_dense|| / ||y_dense|| = {comp_err:.2e}')
+assert rel_err < 1.0e-10, f'Relative error too large: {rel_err}'
+assert comp_err < 1.0e-4, f'Compression error too large: {comp_err}'
+PETSc.Sys.Print('Verification passed.')
+D.destroy()
+A_dense.destroy()
 A.destroy()
+
+
+# if comm.size == 1:
+#     x, y_htool = A.createVecs()
+
+#     D = A.convert('dense')
+#     y_dense = D.createVecLeft()
+#     D.mult(x, y_dense)
+
+#     y_htool.axpy(-1.0, y_dense)
+#     rel_err = y_htool.norm() / y_dense.norm()
+#     PETSc.Sys.Print(f"Relative error ||y_htool - y_dense|| / ||y_dense|| = {rel_err:.2e}")
+#     assert rel_err < 1.0e-4, f"Relative error too large: {rel_err}"
+#     PETSc.Sys.Print("Verification passed.")
+#     D.destroy()
+
+# A.destroy()
