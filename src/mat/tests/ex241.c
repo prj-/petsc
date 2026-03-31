@@ -252,7 +252,9 @@ int main(int argc, char **argv)
     PetscCall(VecNorm(yd_htool, NORM_INFINITY, &ref));
     PetscCall(VecAXPY(yd_dense, -1.0, yd_htool));
     PetscCall(VecNorm(yd_dense, NORM_INFINITY, &dnorm));
-    /* tolerance accounts for H-matrix compression error (proportional to epsilon) */
+    /* tolerance accounts for H-matrix compression error: ||D_approx - D|| <= epsilon * ||D||,
+     * so ||D*x - D_approx*x|| <= epsilon * ||D||_2 * ||x||; we allow 100x slack and add
+     * PETSC_MACHINE_EPSILON * 1e3 for the case of exact (near-zero epsilon) compression */
     PetscCheck(dnorm <= 1.0e2 * epsilon * ref + PETSC_MACHINE_EPSILON * 1.0e3, PETSC_COMM_SELF, PETSC_ERR_PLIB, "||D_htool*x - D_dense*x|| / ||D_htool*x|| = %g (epsilon = %g)", (double)(ref > 0 ? dnorm / ref : dnorm), (double)epsilon);
     PetscCall(VecDestroy(&xd));
     PetscCall(VecDestroy(&yd_htool));

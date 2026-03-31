@@ -4,26 +4,26 @@
 const char *const MatHtoolCompressorTypes[] = {"sympartialACA", "fullACA", "SVD"};
 const char *const MatHtoolClusteringTypes[] = {"PCARegular", "PCAGeometric", "BoundingBox1Regular", "BoundingBox1Geometric"};
 const char       *HtoolCitations[2]         = {"@article{marchand2020two,\n"
-                                                             "  Author = {Marchand, Pierre and Claeys, Xavier and Jolivet, Pierre and Nataf, Fr\\'ed\\'eric and Tournier, Pierre-Henri},\n"
-                                                             "  Title = {Two-level preconditioning for $h$-version boundary element approximation of hypersingular operator with {GenEO}},\n"
-                                                             "  Year = {2020},\n"
-                                                             "  Publisher = {Elsevier},\n"
-                                                             "  Journal = {Numerische Mathematik},\n"
-                                                             "  Volume = {146},\n"
-                                                             "  Pages = {597--628},\n"
-                                                             "  Url = {https://github.com/htool-ddm/htool}\n"
-                                                             "}\n",
+                                               "  Author = {Marchand, Pierre and Claeys, Xavier and Jolivet, Pierre and Nataf, Fr\\'ed\\'eric and Tournier, Pierre-Henri},\n"
+                                               "  Title = {Two-level preconditioning for $h$-version boundary element approximation of hypersingular operator with {GenEO}},\n"
+                                               "  Year = {2020},\n"
+                                               "  Publisher = {Elsevier},\n"
+                                               "  Journal = {Numerische Mathematik},\n"
+                                               "  Volume = {146},\n"
+                                               "  Pages = {597--628},\n"
+                                               "  Url = {https://github.com/htool-ddm/htool}\n"
+                                               "}\n",
                                                "@article{Marchand2026,\n"
-                                                             "  Author = {Marchand, Pierre and Tournier, Pierre-Henri and Jolivet, Pierre},\n"
-                                                             "  Title = {{Htool-DDM}: A {C++} library for parallel solvers and compressed linear systems},\n"
-                                                             "  Year = {2026},\n"
-                                                             "  Publisher = {The Open Journal},\n"
-                                                             "  Journal = {Journal of Open Source Software},\n"
-                                                             "  Volume = {11},\n"
-                                                             "  Number = {118},\n"
-                                                             "  Pages = {9279},\n"
-                                                             "  Url = {https://doi.org/10.21105/joss.09279}\n"
-                                                             "}\n"};
+                                               "  Author = {Marchand, Pierre and Tournier, Pierre-Henri and Jolivet, Pierre},\n"
+                                               "  Title = {{Htool-DDM}: A {C++} library for parallel solvers and compressed linear systems},\n"
+                                               "  Year = {2026},\n"
+                                               "  Publisher = {The Open Journal},\n"
+                                               "  Journal = {Journal of Open Source Software},\n"
+                                               "  Volume = {11},\n"
+                                               "  Number = {118},\n"
+                                               "  Pages = {9279},\n"
+                                               "  Url = {https://doi.org/10.21105/joss.09279}\n"
+                                               "}\n"};
 static PetscBool  HtoolCite[2]              = {PETSC_FALSE, PETSC_FALSE};
 
 static PetscErrorCode MatGetDiagonal_Htool(Mat A, Vec v)
@@ -37,11 +37,8 @@ static PetscErrorCode MatGetDiagonal_Htool(Mat A, Vec v)
   PetscCheck(flg, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Only congruent layouts supported");
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(VecGetArrayWrite(v, &x));
-  if (a->block_diagonal_hmatrix) {
-    PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(*a->block_diagonal_hmatrix, x));
-  } else {
-    PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(a->distributed_operator_holder->hmatrix, x));
-  }
+  if (a->block_diagonal_hmatrix) PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(*a->block_diagonal_hmatrix, x));
+  else PetscCallExternalVoid("copy_diagonal_in_user_numbering", htool::copy_diagonal_in_user_numbering(a->distributed_operator_holder->hmatrix, x));
   PetscCall(VecRestoreArrayWrite(v, &x));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -101,9 +98,8 @@ static PetscErrorCode MatMult_Htool(Mat A, Vec x, Vec y)
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(VecGetArrayRead(x, &in));
   PetscCall(VecGetArrayWrite(y, &out));
-  if (a->block_diagonal_hmatrix) {
-    htool::add_hmatrix_vector_product('N', PetscScalar(1), *a->block_diagonal_hmatrix, in, PetscScalar(0), out);
-  } else if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
+  if (a->block_diagonal_hmatrix) htool::add_hmatrix_vector_product('N', PetscScalar(1), *a->block_diagonal_hmatrix, in, PetscScalar(0), out);
+  else if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   else htool::internal_add_distributed_operator_vector_product_local_to_local<PetscScalar>('N', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   PetscCall(VecRestoreArrayRead(x, &in));
   PetscCall(VecRestoreArrayWrite(y, &out));
@@ -120,9 +116,8 @@ static PetscErrorCode MatMultTranspose_Htool(Mat A, Vec x, Vec y)
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(VecGetArrayRead(x, &in));
   PetscCall(VecGetArrayWrite(y, &out));
-  if (a->block_diagonal_hmatrix) {
-    htool::add_hmatrix_vector_product('T', PetscScalar(1), *a->block_diagonal_hmatrix, in, PetscScalar(0), out);
-  } else if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('T', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
+  if (a->block_diagonal_hmatrix) htool::add_hmatrix_vector_product('T', PetscScalar(1), *a->block_diagonal_hmatrix, in, PetscScalar(0), out);
+  else if (a->permutation == PETSC_TRUE) htool::add_distributed_operator_vector_product_local_to_local<PetscScalar>('T', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   else htool::internal_add_distributed_operator_vector_product_local_to_local<PetscScalar>('T', 1.0, a->distributed_operator_holder->distributed_operator, in, 0.0, out, nullptr);
   PetscCall(VecRestoreArrayRead(x, &in));
   PetscCall(VecRestoreArrayWrite(y, &out));
@@ -320,11 +315,8 @@ static PetscErrorCode MatView_Htool(Mat A, PetscViewer pv)
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
-  if (a->block_diagonal_hmatrix) {
-    hmatrix_information = htool::get_hmatrix_information(*a->block_diagonal_hmatrix);
-  } else {
-    hmatrix_information = htool::get_distributed_hmatrix_information(a->distributed_operator_holder->hmatrix, PetscObjectComm((PetscObject)A));
-  }
+  if (a->block_diagonal_hmatrix) hmatrix_information = htool::get_hmatrix_information(*a->block_diagonal_hmatrix);
+  else hmatrix_information = htool::get_distributed_hmatrix_information(a->distributed_operator_holder->hmatrix, PetscObjectComm((PetscObject)A));
   PetscCall(PetscObjectTypeCompare((PetscObject)pv, PETSCVIEWERASCII, &flg));
   if (flg) {
     PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
