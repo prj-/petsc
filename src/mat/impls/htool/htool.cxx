@@ -1,4 +1,5 @@
 #include <../src/mat/impls/htool/htool.hpp> /*I "petscmat.h" I*/
+#include <petscdraw.h>
 #include <set>
 
 const char *const MatHtoolCompressorTypes[] = {"sympartialACA", "fullACA", "SVD"};
@@ -290,6 +291,67 @@ static PetscErrorCode MatDestroy_Htool(Mat A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+static PetscErrorCode MatView_Htool_Draw_Zoom(PetscDraw draw, void *Aa)
+{
+  Mat                                                         A = (Mat)Aa;
+  Mat_Htool                                                  *a;
+  PetscInt                                                    M;
+  PetscReal                                                   x_l, x_r, y_l, y_r, tw, th;
+  char                                                        str[16];
+  std::vector<const htool::HMatrix<PetscScalar, PetscReal> *> local_dense_blocks, local_low_rank_blocks;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  M = A->rmap->N;
+  PetscCallExternalVoid("htool::get_leaves", htool::get_leaves(a->distributed_operator_holder->hmatrix, local_dense_blocks, local_low_rank_blocks));
+  PetscCall(PetscDrawStringGetSize(draw, &tw, &th));
+  PetscDrawCollectiveBegin(draw);
+  for (const auto *block : local_dense_blocks) {
+    x_l = (PetscReal)block->get_source_cluster().get_offset();
+    x_r = x_l + (PetscReal)block->get_source_cluster().get_size();
+    y_l = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
+    y_r = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset();
+    PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, PETSC_DRAW_RED, PETSC_DRAW_RED, PETSC_DRAW_RED, PETSC_DRAW_RED));
+  }
+  for (const auto *block : local_low_rank_blocks) {
+    x_l = (PetscReal)block->get_source_cluster().get_offset();
+    x_r = x_l + (PetscReal)block->get_source_cluster().get_size();
+    y_l = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
+    y_r = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset();
+    PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_FORESTGREEN));
+    PetscCall(PetscSNPrintf(str, sizeof(str), "%d", block->get_rank()));
+    if (x_r - x_l > 4 * tw && y_r - y_l > 2 * th) PetscCall(PetscDrawStringCentered(draw, 0.5 * (x_l + x_r), 0.5 * (y_l + y_r), PETSC_DRAW_WHITE, str));
+  }
+  PetscDrawCollectiveEnd(draw);
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatView_Htool_Draw(Mat A, PetscViewer viewer)
+{
+  PetscDraw draw;
+  PetscBool isnull;
+  PetscReal xr, yr, xl, yl, h, w;
+
+  PetscFunctionBegin;
+  PetscCall(PetscViewerDrawGetDraw(viewer, 0, &draw));
+  PetscCall(PetscDrawIsNull(draw, &isnull));
+  if (isnull) PetscFunctionReturn(PETSC_SUCCESS);
+  xr = (PetscReal)A->cmap->N;
+  yr = (PetscReal)A->rmap->N;
+  h  = yr / 10.0;
+  w  = xr / 10.0;
+  xr += w;
+  yr += h;
+  xl = -w;
+  yl = -h;
+  PetscCall(PetscDrawSetCoordinates(draw, xl, yl, xr, yr));
+  PetscCall(PetscObjectCompose((PetscObject)A, "Zoomviewer", (PetscObject)viewer));
+  PetscCall(PetscDrawZoom(draw, MatView_Htool_Draw_Zoom, A));
+  PetscCall(PetscObjectCompose((PetscObject)A, "Zoomviewer", NULL));
+  PetscCall(PetscDrawSave(draw));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 static PetscErrorCode MatView_Htool(Mat A, PetscViewer pv)
 {
   Mat_Htool                         *a;
@@ -299,6 +361,11 @@ static PetscErrorCode MatView_Htool(Mat A, PetscViewer pv)
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
+  PetscCall(PetscObjectTypeCompare((PetscObject)pv, PETSCVIEWERDRAW, &flg));
+  if (flg) {
+    PetscCall(MatView_Htool_Draw(A, pv));
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
   hmatrix_information = htool::get_distributed_hmatrix_information(a->distributed_operator_holder->hmatrix, PetscObjectComm((PetscObject)A));
   PetscCall(PetscObjectTypeCompare((PetscObject)pv, PETSCVIEWERASCII, &flg));
   if (flg) {
