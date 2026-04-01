@@ -1,30 +1,31 @@
 #include <../src/mat/impls/htool/htool.hpp> /*I "petscmat.h" I*/
 #include <petscdraw.h>
+#include <climits>
 #include <set>
 
 const char *const MatHtoolCompressorTypes[] = {"sympartialACA", "fullACA", "SVD"};
 const char *const MatHtoolClusteringTypes[] = {"PCARegular", "PCAGeometric", "BoundingBox1Regular", "BoundingBox1Geometric"};
 const char       *HtoolCitations[2]         = {"@article{marchand2020two,\n"
-                                               "  Author = {Marchand, Pierre and Claeys, Xavier and Jolivet, Pierre and Nataf, Fr\\'ed\\'eric and Tournier, Pierre-Henri},\n"
-                                               "  Title = {Two-level preconditioning for $h$-version boundary element approximation of hypersingular operator with {GenEO}},\n"
-                                               "  Year = {2020},\n"
-                                               "  Publisher = {Elsevier},\n"
-                                               "  Journal = {Numerische Mathematik},\n"
-                                               "  Volume = {146},\n"
-                                               "  Pages = {597--628},\n"
-                                               "  Url = {https://github.com/htool-ddm/htool}\n"
-                                               "}\n",
+                                                             "  Author = {Marchand, Pierre and Claeys, Xavier and Jolivet, Pierre and Nataf, Fr\\'ed\\'eric and Tournier, Pierre-Henri},\n"
+                                                             "  Title = {Two-level preconditioning for $h$-version boundary element approximation of hypersingular operator with {GenEO}},\n"
+                                                             "  Year = {2020},\n"
+                                                             "  Publisher = {Elsevier},\n"
+                                                             "  Journal = {Numerische Mathematik},\n"
+                                                             "  Volume = {146},\n"
+                                                             "  Pages = {597--628},\n"
+                                                             "  Url = {https://github.com/htool-ddm/htool}\n"
+                                                             "}\n",
                                                "@article{Marchand2026,\n"
-                                               "  Author = {Marchand, Pierre and Tournier, Pierre-Henri and Jolivet, Pierre},\n"
-                                               "  Title = {{Htool-DDM}: A {C++} library for parallel solvers and compressed linear systems},\n"
-                                               "  Year = {2026},\n"
-                                               "  Publisher = {The Open Journal},\n"
-                                               "  Journal = {Journal of Open Source Software},\n"
-                                               "  Volume = {11},\n"
-                                               "  Number = {118},\n"
-                                               "  Pages = {9279},\n"
-                                               "  Url = {https://doi.org/10.21105/joss.09279}\n"
-                                               "}\n"};
+                                                             "  Author = {Marchand, Pierre and Tournier, Pierre-Henri and Jolivet, Pierre},\n"
+                                                             "  Title = {{Htool-DDM}: A {C++} library for parallel solvers and compressed linear systems},\n"
+                                                             "  Year = {2026},\n"
+                                                             "  Publisher = {The Open Journal},\n"
+                                                             "  Journal = {Journal of Open Source Software},\n"
+                                                             "  Volume = {11},\n"
+                                                             "  Number = {118},\n"
+                                                             "  Pages = {9279},\n"
+                                                             "  Url = {https://doi.org/10.21105/joss.09279}\n"
+                                                             "}\n"};
 static PetscBool  HtoolCite[2]              = {PETSC_FALSE, PETSC_FALSE};
 
 static PetscErrorCode MatGetDiagonal_Htool(Mat A, Vec v)
@@ -293,17 +294,28 @@ static PetscErrorCode MatDestroy_Htool(Mat A)
 
 static PetscErrorCode MatView_Htool_Draw_Zoom(PetscDraw draw, void *Aa)
 {
-  Mat                                                         A = (Mat)Aa;
-  Mat_Htool                                                  *a;
-  PetscInt                                                    M;
-  PetscReal                                                   x_l, x_r, y_l, y_r, tw, th;
-  char                                                        str[16];
+  Mat        A = (Mat)Aa;
+  Mat_Htool *a;
+  PetscInt   M;
+  PetscReal  x_l, x_r, y_l, y_r, tw, th;
+  int        rank, global_minrank, global_maxrank, local_minrank = INT_MAX, local_maxrank = 0, color;
+  char       str[16];
+  /* green color ramp from light (low rank) to dark (high rank) */
+  static const int                                            greens[] = {PETSC_DRAW_YELLOWGREEN, PETSC_DRAW_LIMEGREEN, PETSC_DRAW_GREEN, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_DARKGREEN};
   std::vector<const htool::HMatrix<PetscScalar, PetscReal> *> local_dense_blocks, local_low_rank_blocks;
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
   M = A->rmap->N;
   PetscCallExternalVoid("htool::get_leaves", htool::get_leaves(a->distributed_operator_holder->hmatrix, local_dense_blocks, local_low_rank_blocks));
+  for (const auto *block : local_low_rank_blocks) {
+    rank = block->get_rank();
+    if (rank < local_minrank) local_minrank = rank;
+    if (rank > local_maxrank) local_maxrank = rank;
+  }
+  PetscCallMPI(MPI_Allreduce(&local_minrank, &global_minrank, 1, MPI_INT, MPI_MIN, PetscObjectComm((PetscObject)A)));
+  PetscCallMPI(MPI_Allreduce(&local_maxrank, &global_maxrank, 1, MPI_INT, MPI_MAX, PetscObjectComm((PetscObject)A)));
+  if (global_minrank == INT_MAX) global_minrank = global_maxrank; /* no low-rank blocks anywhere */
   PetscCall(PetscDrawStringGetSize(draw, &tw, &th));
   PetscDrawCollectiveBegin(draw);
   for (const auto *block : local_dense_blocks) {
@@ -312,14 +324,28 @@ static PetscErrorCode MatView_Htool_Draw_Zoom(PetscDraw draw, void *Aa)
     y_l = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
     y_r = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset();
     PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, PETSC_DRAW_RED, PETSC_DRAW_RED, PETSC_DRAW_RED, PETSC_DRAW_RED));
+    PetscCall(PetscDrawLine(draw, x_l, y_l, x_r, y_l, PETSC_DRAW_BLACK));
+    PetscCall(PetscDrawLine(draw, x_r, y_l, x_r, y_r, PETSC_DRAW_BLACK));
+    PetscCall(PetscDrawLine(draw, x_r, y_r, x_l, y_r, PETSC_DRAW_BLACK));
+    PetscCall(PetscDrawLine(draw, x_l, y_r, x_l, y_l, PETSC_DRAW_BLACK));
   }
   for (const auto *block : local_low_rank_blocks) {
-    x_l = (PetscReal)block->get_source_cluster().get_offset();
-    x_r = x_l + (PetscReal)block->get_source_cluster().get_size();
-    y_l = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
-    y_r = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset();
-    PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_FORESTGREEN, PETSC_DRAW_FORESTGREEN));
-    PetscCall(PetscSNPrintf(str, sizeof(str), "%d", block->get_rank()));
+    rank = block->get_rank();
+    x_l  = (PetscReal)block->get_source_cluster().get_offset();
+    x_r  = x_l + (PetscReal)block->get_source_cluster().get_size();
+    y_l  = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
+    y_r  = (PetscReal)M - (PetscReal)block->get_target_cluster().get_offset();
+    if (global_maxrank > global_minrank) {
+      color = greens[(int)((PetscReal)(rank - global_minrank) / (PetscReal)(global_maxrank - global_minrank) * (PETSC_STATIC_ARRAY_LENGTH(greens) - 1) + 0.5)];
+    } else {
+      color = greens[PETSC_STATIC_ARRAY_LENGTH(greens) / 2];
+    }
+    PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, color, color, color, color));
+    PetscCall(PetscDrawLine(draw, x_l, y_l, x_r, y_l, PETSC_DRAW_BLACK));
+    PetscCall(PetscDrawLine(draw, x_r, y_l, x_r, y_r, PETSC_DRAW_BLACK));
+    PetscCall(PetscDrawLine(draw, x_r, y_r, x_l, y_r, PETSC_DRAW_BLACK));
+    PetscCall(PetscDrawLine(draw, x_l, y_r, x_l, y_l, PETSC_DRAW_BLACK));
+    PetscCall(PetscSNPrintf(str, sizeof(str), "%d", rank));
     if (x_r - x_l > 4 * tw && y_r - y_l > 2 * th) PetscCall(PetscDrawStringCentered(draw, 0.5 * (x_l + x_r), 0.5 * (y_l + y_r), PETSC_DRAW_WHITE, str));
   }
   PetscDrawCollectiveEnd(draw);
