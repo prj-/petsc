@@ -231,32 +231,66 @@ int main(int argc, char **argv)
     }
   }
   PetscCall(PetscRandomDestroy(&rdm));
-  /* verify that MatGetDiagonalBlock returns a sub-MatHtool and that its MatMult is correct */
+  /* verify that MatGetDiagonalBlock returns a sub-MatHtool consistent with global MatMatMult:
+   * B2 (M x nprocs) has column i nonzero only on rows owned by process i (random values),
+   * so (A*B2)_local[:,rank] == Gblock * B2_local[:,rank] (both sides use the same H-matrix data) */
   {
-    Mat         Dblock, Ddense;
-    Vec         xd, yd_htool, yd_dense;
-    PetscBool   is_htool;
-    PetscRandom rdm2;
-    PetscReal   dnorm, ref;
+    Mat                Gblock, B2, P2;
+    Vec                x_local, y_local;
+    PetscBool          is_htool;
+    PetscMPIInt        rank;
+    PetscInt           lda2, ldaP2, cstart_b2, cstart_p2, lc;
+    PetscScalar       *b2w, *xarr, *yarr;
+    const PetscScalar *b2r, *p2r;
+    PetscRandom        rdm2;
+    PetscReal          dnorm, ref;
 
-    PetscCall(MatGetDiagonalBlock(A, &Dblock));
-    PetscCall(PetscObjectTypeCompare((PetscObject)Dblock, MATHTOOL, &is_htool));
-    PetscCheck(is_htool, PETSC_COMM_SELF, PETSC_ERR_PLIB, "MatGetDiagonalBlock did not return a MATHTOOL");
+    PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
     PetscCall(PetscRandomCreate(PETSC_COMM_SELF, &rdm2));
-    PetscCall(MatCreateVecs(Dblock, &xd, &yd_htool));
-    PetscCall(VecSetRandom(xd, rdm2));
-    PetscCall(MatMult(Dblock, xd, yd_htool));
-    PetscCall(MatConvert(Dblock, MATDENSE, MAT_INITIAL_MATRIX, &Ddense));
-    PetscCall(VecDuplicate(yd_htool, &yd_dense));
-    PetscCall(MatMult(Ddense, xd, yd_dense));
-    PetscCall(VecNorm(yd_htool, NORM_INFINITY, &ref));
-    PetscCall(VecAXPY(yd_dense, -1.0, yd_htool));
-    PetscCall(VecNorm(yd_dense, NORM_INFINITY, &dnorm));
-    PetscCheck(dnorm / ref <= epsilon, PETSC_COMM_SELF, PETSC_ERR_PLIB, "||D_htool*x - D_dense*x|| / ||D_htool*x|| = %g (epsilon = %g)", dnorm / ref, (double)epsilon);
-    PetscCall(VecDestroy(&xd));
-    PetscCall(VecDestroy(&yd_htool));
-    PetscCall(VecDestroy(&yd_dense));
-    PetscCall(MatDestroy(&Ddense));
+    /* build B2: M x nprocs dense matrix; column i random on process i's rows, zero elsewhere */
+    PetscCall(MatCreateDense(PETSC_COMM_WORLD, m, PETSC_DECIDE, M, size, NULL, &B2));
+    PetscCall(MatZeroEntries(B2));
+    PetscCall(MatGetOwnershipRangeColumn(B2, &cstart_b2, NULL));
+    PetscCall(MatDenseGetLDA(B2, &lda2));
+    lc = (PetscInt)rank - cstart_b2; /* local column index of global column `rank` */
+    PetscCall(MatDenseGetArray(B2, &b2w));
+    for (PetscInt i = 0; i < m; i++) PetscCall(PetscRandomGetValue(rdm2, &b2w[lc * lda2 + i]));
+    PetscCall(MatDenseRestoreArray(B2, &b2w));
+    PetscCall(MatAssemblyBegin(B2, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(B2, MAT_FINAL_ASSEMBLY));
+    /* P2 = A * B2 (MatMatMult on the full H-matrix) */
+    PetscCall(MatMatMult(A, B2, MAT_INITIAL_MATRIX, PETSC_DETERMINE, &P2));
+    PetscCall(MatAssemblyBegin(P2, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(P2, MAT_FINAL_ASSEMBLY));
+    /* get the diagonal block: should be a MATHTOOL sub-block */
+    PetscCall(MatGetDiagonalBlock(A, &Gblock));
+    PetscCall(PetscObjectTypeCompare((PetscObject)Gblock, MATHTOOL, &is_htool));
+    PetscCheck(is_htool, PETSC_COMM_SELF, PETSC_ERR_PLIB, "MatGetDiagonalBlock did not return a MATHTOOL");
+    /* x_local = column `rank` of B2 restricted to local rows (the nonzero part) */
+    PetscCall(MatCreateVecs(Gblock, &x_local, &y_local));
+    PetscCall(MatDenseGetArrayRead(B2, &b2r));
+    PetscCall(VecGetArray(x_local, &xarr));
+    for (PetscInt i = 0; i < m; i++) xarr[i] = b2r[lc * lda2 + i];
+    PetscCall(VecRestoreArray(x_local, &xarr));
+    PetscCall(MatDenseRestoreArrayRead(B2, &b2r));
+    /* y_local = Gblock * x_local; compare with column `rank` of P2's local rows */
+    PetscCall(MatMult(Gblock, x_local, y_local));
+    PetscCall(MatGetOwnershipRangeColumn(P2, &cstart_p2, NULL));
+    PetscCall(MatDenseGetArrayRead(P2, &p2r));
+    PetscCall(MatDenseGetLDA(P2, &ldaP2));
+    PetscCall(VecGetArray(y_local, &yarr));
+    for (PetscInt i = 0; i < m; i++) yarr[i] -= p2r[((PetscInt)rank - cstart_p2) * ldaP2 + i];
+    PetscCall(VecRestoreArray(y_local, &yarr));
+    PetscCall(MatDenseRestoreArrayRead(P2, &p2r));
+    PetscCall(VecNorm(y_local, NORM_INFINITY, &dnorm));
+    PetscCall(MatMult(Gblock, x_local, y_local)); /* recompute for reference norm */
+    PetscCall(VecNorm(y_local, NORM_INFINITY, &ref));
+    /* both sides apply the same H-matrix data, so the difference is at most floating-point noise */
+    PetscCheck(dnorm <= PETSC_SMALL * ref + PETSC_MACHINE_EPSILON, PETSC_COMM_SELF, PETSC_ERR_PLIB, "||Gblock*x - (A*B2)_local||_inf = %g (ref = %g)", (double)dnorm, (double)ref);
+    PetscCall(VecDestroy(&x_local));
+    PetscCall(VecDestroy(&y_local));
+    PetscCall(MatDestroy(&B2));
+    PetscCall(MatDestroy(&P2));
     PetscCall(PetscRandomDestroy(&rdm2));
   }
   PetscCall(MatDestroy(&A));
