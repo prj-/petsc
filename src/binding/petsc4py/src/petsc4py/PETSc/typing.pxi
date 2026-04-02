@@ -45,6 +45,10 @@ cdef NNZSpec
 
 cdef MatNullFunction
 
+# --- Mat/Htool ---
+
+cdef MatHtoolKernelFunction
+
 # --- DM ---
 
 cdef DMCoarsenHookFunction
