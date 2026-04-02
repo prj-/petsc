@@ -2342,6 +2342,8 @@ PETSC_EXTERN PetscErrorCode MatHtoolSetBlockTreeConsistency(Mat, PetscBool);
 
 .seealso: [](ch_matrices), `Mat`, `MatCreateHtoolFromKernel()`, `MATHTOOL`, `MatHtoolClusteringType`, `MatHtoolGetCompressorType()`, `MatHtoolSetCompressorType()`
 E*/
+typedef enum {
+  MAT_HTOOL_COMPRESSOR_SYMPARTIAL_ACA,
   MAT_HTOOL_COMPRESSOR_FULL_ACA,
   MAT_HTOOL_COMPRESSOR_SVD
 } MatHtoolCompressorType;
@@ -2362,6 +2364,8 @@ E*/
 
 .seealso: [](ch_matrices), `Mat`, `MatCreateHtoolFromKernel()`, `MATHTOOL`, `MatHtoolCompressorType`, `MatHtoolGetClusteringType()`, `MatHtoolSetClusteringType()`
 E*/
+typedef enum {
+  MAT_HTOOL_CLUSTERING_PCA_REGULAR,
   MAT_HTOOL_CLUSTERING_PCA_GEOMETRIC,
   MAT_HTOOL_CLUSTERING_BOUNDING_BOX_1_REGULAR,
   MAT_HTOOL_CLUSTERING_BOUNDING_BOX_1_GEOMETRIC

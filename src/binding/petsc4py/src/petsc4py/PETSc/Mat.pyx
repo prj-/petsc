@@ -282,26 +282,6 @@ class MatSORType(object):
     APPLY_LOWER           = SOR_APPLY_LOWER
 
 
-class MatSORType(object):
-    """Matrix SOR type.
-
-    See Also
-    --------
-    petsc.MatSORType
-
-    """
-    FORWARD_SWEEP         = SOR_FORWARD_SWEEP
-    BACKWARD_SWEEP        = SOR_BACKWARD_SWEEP
-    SYMMETRY_SWEEP        = SOR_SYMMETRIC_SWEEP
-    LOCAL_FORWARD_SWEEP   = SOR_LOCAL_FORWARD_SWEEP
-    LOCAL_BACKWARD_SWEEP  = SOR_LOCAL_BACKWARD_SWEEP
-    LOCAL_SYMMETRIC_SWEEP = SOR_LOCAL_SYMMETRIC_SWEEP
-    ZERO_INITIAL_GUESS    = SOR_ZERO_INITIAL_GUESS
-    EISENSTAT             = SOR_EISENSTAT
-    APPLY_UPPER           = SOR_APPLY_UPPER
-    APPLY_LOWER           = SOR_APPLY_LOWER
-
-
 class MatHtoolCompressorType(object):
     """Htool compressor type.
 
@@ -5386,21 +5366,6 @@ cdef class Mat(Object):
         CHKERR(MatHtoolUsePermutation(self.mat, _use))
         return self
 
-    def HtoolUseRecompression(self, use: bool) -> Self:
-        """Set whether to recompress the matrix after assembly.
-
-        Logically collective.
-
-        Parameters
-        ----------
-        use
-            Whether to use recompression.
-
-        See Also
-        --------
-        petsc.MatHtoolUseRecompression
-
-        """
     def HtoolUseRecompression(self, use: bool) -> Self:
         """Set whether to recompress the matrix after assembly.
 
