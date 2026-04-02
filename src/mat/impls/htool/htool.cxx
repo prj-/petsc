@@ -1628,7 +1628,7 @@ PETSC_INTERN PetscErrorCode MatSolverTypeRegister_Htool(void)
 
   Level: intermediate
 
-.seealso: [](ch_matrices), `Mat`, `MatCreate()`, `MATHTOOL`, `PCSetCoordinates()`, `MatHtoolSetKernel()`, `MatHtoolCompressorType`, `MatHtoolClusteringType`, `MatHtoolGetEpsilon()`, `MatHtoolSetEpsilon()`, `MatHtoolGetEta()`, `MatHtoolSetEta()`, `MatHtoolGetMaxLeafSize()`, `MatHtoolSetMaxLeafSize()`, `MatHtoolGetCompressorType()`, `MatHtoolSetCompressorType()`, `MatHtoolGetClusteringType()`, `MatHtoolSetClusteringType()`, `MATH2OPUS`, `MatCreateH2OpusFromKernel()`
+.seealso: [](ch_matrices), `Mat`, `MatCreate()`, `MATHTOOL`, `PCSetCoordinates()`, `MatHtoolSetKernel()`, `MatHtoolCompressorType`, `MatHtoolClusteringType`, `MatHtoolGetEpsilon()`, `MatHtoolSetEpsilon()`, `MatHtoolGetEta()`, `MatHtoolSetEta()`, `MatHtoolGetMaxLeafSize()`, `MatHtoolSetMaxLeafSize()`, `MatHtoolGetMinTargetDepth()`, `MatHtoolSetMinTargetDepth()`, `MatHtoolGetMinSourceDepth()`, `MatHtoolSetMinSourceDepth()`, `MatHtoolGetBlockTreeConsistency()`, `MatHtoolSetBlockTreeConsistency()`, `MatHtoolGetCompressorType()`, `MatHtoolSetCompressorType()`, `MatHtoolGetClusteringType()`, `MatHtoolSetClusteringType()`, `MATH2OPUS`, `MatCreateH2OpusFromKernel()`
 @*/
 PetscErrorCode MatCreateHtoolFromKernel(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, PetscInt spacedim, const PetscReal coords_target[], const PetscReal coords_source[], MatHtoolKernelFn *kernel, void *kernelctx, Mat *B)
 {
