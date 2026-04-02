@@ -273,6 +273,22 @@ static PetscErrorCode MatDestroy_Htool(Mat A)
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetPermutationTarget_C", nullptr));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolUsePermutation_C", nullptr));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolUseRecompression_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetEpsilon_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetEpsilon_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetEta_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetEta_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetMaxLeafSize_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetMaxLeafSize_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetMinTargetDepth_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetMinTargetDepth_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetMinSourceDepth_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetMinSourceDepth_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetBlockTreeConsistency_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetBlockTreeConsistency_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetCompressorType_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetCompressorType_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetClusteringType_C", nullptr));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetClusteringType_C", nullptr));
   PetscCall(PetscObjectQuery((PetscObject)A, "KernelTranspose", (PetscObject *)&container));
   if (container) { /* created in MatTranspose_Htool() */
     PetscCall(PetscContainerGetPointer(container, &kernelt));
@@ -778,6 +794,534 @@ PetscErrorCode MatHtoolUseRecompression(Mat A, PetscBool use)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+static PetscErrorCode MatHtoolGetEpsilon_Htool(Mat A, PetscReal *epsilon)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *epsilon = a->epsilon;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetEpsilon - Gets the relative error tolerance in Frobenius norm used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. epsilon - relative error tolerance
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolSetEpsilon()`
+@*/
+PetscErrorCode MatHtoolGetEpsilon(Mat A, PetscReal *epsilon)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(epsilon, 2);
+  PetscTryMethod(A, "MatHtoolGetEpsilon_C", (Mat, PetscReal *), (A, epsilon));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetEpsilon_Htool(Mat A, PetscReal epsilon)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->epsilon = epsilon;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetEpsilon - Sets the relative error tolerance in Frobenius norm used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A       - hierarchical matrix
+- epsilon - relative error tolerance
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolGetEpsilon()`
+@*/
+PetscErrorCode MatHtoolSetEpsilon(Mat A, PetscReal epsilon)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveReal(A, epsilon, 2);
+  PetscTryMethod(A, "MatHtoolSetEpsilon_C", (Mat, PetscReal), (A, epsilon));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetEta_Htool(Mat A, PetscReal *eta)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *eta = a->eta;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetEta - Gets the admissibility condition tolerance used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. eta - admissibility condition tolerance
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolSetEta()`
+@*/
+PetscErrorCode MatHtoolGetEta(Mat A, PetscReal *eta)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(eta, 2);
+  PetscTryMethod(A, "MatHtoolGetEta_C", (Mat, PetscReal *), (A, eta));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetEta_Htool(Mat A, PetscReal eta)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->eta = eta;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetEta - Sets the admissibility condition tolerance used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A   - hierarchical matrix
+- eta - admissibility condition tolerance
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolGetEta()`
+@*/
+PetscErrorCode MatHtoolSetEta(Mat A, PetscReal eta)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveReal(A, eta, 2);
+  PetscTryMethod(A, "MatHtoolSetEta_C", (Mat, PetscReal), (A, eta));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetMaxLeafSize_Htool(Mat A, PetscInt *max_leaf_size)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *max_leaf_size = a->max_cluster_leaf_size;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetMaxLeafSize - Gets the maximum size of a leaf in the cluster tree used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. max_leaf_size - maximum leaf size
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolSetMaxLeafSize()`
+@*/
+PetscErrorCode MatHtoolGetMaxLeafSize(Mat A, PetscInt *max_leaf_size)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(max_leaf_size, 2);
+  PetscTryMethod(A, "MatHtoolGetMaxLeafSize_C", (Mat, PetscInt *), (A, max_leaf_size));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetMaxLeafSize_Htool(Mat A, PetscInt max_leaf_size)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->max_cluster_leaf_size = max_leaf_size;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetMaxLeafSize - Sets the maximum size of a leaf in the cluster tree used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A             - hierarchical matrix
+- max_leaf_size - maximum leaf size
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolGetMaxLeafSize()`
+@*/
+PetscErrorCode MatHtoolSetMaxLeafSize(Mat A, PetscInt max_leaf_size)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveInt(A, max_leaf_size, 2);
+  PetscTryMethod(A, "MatHtoolSetMaxLeafSize_C", (Mat, PetscInt), (A, max_leaf_size));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetMinTargetDepth_Htool(Mat A, PetscInt *min_target_depth)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *min_target_depth = a->depth[0];
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetMinTargetDepth - Gets the minimum depth of the target cluster tree used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. min_target_depth - minimum depth of the target cluster tree
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolSetMinTargetDepth()`, `MatHtoolGetMinSourceDepth()`
+@*/
+PetscErrorCode MatHtoolGetMinTargetDepth(Mat A, PetscInt *min_target_depth)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(min_target_depth, 2);
+  PetscTryMethod(A, "MatHtoolGetMinTargetDepth_C", (Mat, PetscInt *), (A, min_target_depth));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetMinTargetDepth_Htool(Mat A, PetscInt min_target_depth)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->depth[0] = min_target_depth;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetMinTargetDepth - Sets the minimum depth of the target cluster tree used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A                - hierarchical matrix
+- min_target_depth - minimum depth of the target cluster tree
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolGetMinTargetDepth()`, `MatHtoolSetMinSourceDepth()`
+@*/
+PetscErrorCode MatHtoolSetMinTargetDepth(Mat A, PetscInt min_target_depth)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveInt(A, min_target_depth, 2);
+  PetscTryMethod(A, "MatHtoolSetMinTargetDepth_C", (Mat, PetscInt), (A, min_target_depth));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetMinSourceDepth_Htool(Mat A, PetscInt *min_source_depth)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *min_source_depth = a->depth[1];
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetMinSourceDepth - Gets the minimum depth of the source cluster tree used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. min_source_depth - minimum depth of the source cluster tree
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolSetMinSourceDepth()`, `MatHtoolGetMinTargetDepth()`
+@*/
+PetscErrorCode MatHtoolGetMinSourceDepth(Mat A, PetscInt *min_source_depth)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(min_source_depth, 2);
+  PetscTryMethod(A, "MatHtoolGetMinSourceDepth_C", (Mat, PetscInt *), (A, min_source_depth));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetMinSourceDepth_Htool(Mat A, PetscInt min_source_depth)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->depth[1] = min_source_depth;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetMinSourceDepth - Sets the minimum depth of the source cluster tree used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A                - hierarchical matrix
+- min_source_depth - minimum depth of the source cluster tree
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolGetMinSourceDepth()`, `MatHtoolSetMinTargetDepth()`
+@*/
+PetscErrorCode MatHtoolSetMinSourceDepth(Mat A, PetscInt min_source_depth)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveInt(A, min_source_depth, 2);
+  PetscTryMethod(A, "MatHtoolSetMinSourceDepth_C", (Mat, PetscInt), (A, min_source_depth));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetBlockTreeConsistency_Htool(Mat A, PetscBool *block_tree_consistency)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *block_tree_consistency = a->block_tree_consistency;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetBlockTreeConsistency - Gets whether a `MATHTOOL` matrix enforces block tree consistency.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. block_tree_consistency - whether block tree consistency is enforced
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolSetBlockTreeConsistency()`
+@*/
+PetscErrorCode MatHtoolGetBlockTreeConsistency(Mat A, PetscBool *block_tree_consistency)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(block_tree_consistency, 2);
+  PetscTryMethod(A, "MatHtoolGetBlockTreeConsistency_C", (Mat, PetscBool *), (A, block_tree_consistency));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetBlockTreeConsistency_Htool(Mat A, PetscBool block_tree_consistency)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->block_tree_consistency = block_tree_consistency;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetBlockTreeConsistency - Sets whether a `MATHTOOL` matrix should enforce block tree consistency.
+
+  Logically Collective
+
+  Input Parameters:
++ A                     - hierarchical matrix
+- block_tree_consistency - whether to enforce block tree consistency
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolGetBlockTreeConsistency()`
+@*/
+PetscErrorCode MatHtoolSetBlockTreeConsistency(Mat A, PetscBool block_tree_consistency)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveBool(A, block_tree_consistency, 2);
+  PetscTryMethod(A, "MatHtoolSetBlockTreeConsistency_C", (Mat, PetscBool), (A, block_tree_consistency));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetCompressorType_Htool(Mat A, MatHtoolCompressorType *compressor)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *compressor = a->compressor;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetCompressorType - Gets the type of compressor used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. compressor - type of compressor
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolCompressorType`, `MatHtoolSetCompressorType()`
+@*/
+PetscErrorCode MatHtoolGetCompressorType(Mat A, MatHtoolCompressorType *compressor)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(compressor, 2);
+  PetscTryMethod(A, "MatHtoolGetCompressorType_C", (Mat, MatHtoolCompressorType *), (A, compressor));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetCompressorType_Htool(Mat A, MatHtoolCompressorType compressor)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->compressor = compressor;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetCompressorType - Sets the type of compressor used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A          - hierarchical matrix
+- compressor - type of compressor
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolCompressorType`, `MatHtoolGetCompressorType()`
+@*/
+PetscErrorCode MatHtoolSetCompressorType(Mat A, MatHtoolCompressorType compressor)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveEnum(A, compressor, 2);
+  PetscTryMethod(A, "MatHtoolSetCompressorType_C", (Mat, MatHtoolCompressorType), (A, compressor));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolGetClusteringType_Htool(Mat A, MatHtoolClusteringType *clustering)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  *clustering = a->clustering;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolGetClusteringType - Gets the type of clustering used by a `MATHTOOL` matrix.
+
+  Not Collective
+
+  Input Parameter:
+. A - hierarchical matrix
+
+  Output Parameter:
+. clustering - type of clustering
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolClusteringType`, `MatHtoolSetClusteringType()`
+@*/
+PetscErrorCode MatHtoolGetClusteringType(Mat A, MatHtoolClusteringType *clustering)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscAssertPointer(clustering, 2);
+  PetscTryMethod(A, "MatHtoolGetClusteringType_C", (Mat, MatHtoolClusteringType *), (A, clustering));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode MatHtoolSetClusteringType_Htool(Mat A, MatHtoolClusteringType clustering)
+{
+  Mat_Htool *a;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetContext(A, &a));
+  a->clustering = clustering;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  MatHtoolSetClusteringType - Sets the type of clustering used by a `MATHTOOL` matrix.
+
+  Logically Collective
+
+  Input Parameters:
++ A          - hierarchical matrix
+- clustering - type of clustering
+
+  Level: advanced
+
+.seealso: [](ch_matrices), `Mat`, `MATHTOOL`, `MatHtoolClusteringType`, `MatHtoolGetClusteringType()`
+@*/
+PetscErrorCode MatHtoolSetClusteringType(Mat A, MatHtoolClusteringType clustering)
+{
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+  PetscValidLogicalCollectiveEnum(A, clustering, 2);
+  PetscTryMethod(A, "MatHtoolSetClusteringType_C", (Mat, MatHtoolClusteringType), (A, clustering));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 static PetscErrorCode MatConvert_Htool_Dense(Mat A, MatType, MatReuse reuse, Mat *B)
 {
   Mat          C;
@@ -1084,7 +1628,7 @@ PETSC_INTERN PetscErrorCode MatSolverTypeRegister_Htool(void)
 
   Level: intermediate
 
-.seealso: [](ch_matrices), `Mat`, `MatCreate()`, `MATHTOOL`, `PCSetCoordinates()`, `MatHtoolSetKernel()`, `MatHtoolCompressorType`, `MATH2OPUS`, `MatCreateH2OpusFromKernel()`
+.seealso: [](ch_matrices), `Mat`, `MatCreate()`, `MATHTOOL`, `PCSetCoordinates()`, `MatHtoolSetKernel()`, `MatHtoolCompressorType`, `MatHtoolClusteringType`, `MatHtoolGetEpsilon()`, `MatHtoolSetEpsilon()`, `MatHtoolGetEta()`, `MatHtoolSetEta()`, `MatHtoolGetMaxLeafSize()`, `MatHtoolSetMaxLeafSize()`, `MatHtoolGetCompressorType()`, `MatHtoolSetCompressorType()`, `MatHtoolGetClusteringType()`, `MatHtoolSetClusteringType()`, `MATH2OPUS`, `MatCreateH2OpusFromKernel()`
 @*/
 PetscErrorCode MatCreateHtoolFromKernel(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, PetscInt spacedim, const PetscReal coords_target[], const PetscReal coords_source[], MatHtoolKernelFn *kernel, void *kernelctx, Mat *B)
 {
@@ -1173,6 +1717,22 @@ PETSC_EXTERN PetscErrorCode MatCreate_Htool(Mat A)
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetPermutationTarget_C", MatHtoolGetPermutationTarget_Htool));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolUsePermutation_C", MatHtoolUsePermutation_Htool));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolUseRecompression_C", MatHtoolUseRecompression_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetEpsilon_C", MatHtoolGetEpsilon_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetEpsilon_C", MatHtoolSetEpsilon_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetEta_C", MatHtoolGetEta_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetEta_C", MatHtoolSetEta_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetMaxLeafSize_C", MatHtoolGetMaxLeafSize_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetMaxLeafSize_C", MatHtoolSetMaxLeafSize_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetMinTargetDepth_C", MatHtoolGetMinTargetDepth_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetMinTargetDepth_C", MatHtoolSetMinTargetDepth_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetMinSourceDepth_C", MatHtoolGetMinSourceDepth_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetMinSourceDepth_C", MatHtoolSetMinSourceDepth_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetBlockTreeConsistency_C", MatHtoolGetBlockTreeConsistency_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetBlockTreeConsistency_C", MatHtoolSetBlockTreeConsistency_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetCompressorType_C", MatHtoolGetCompressorType_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetCompressorType_C", MatHtoolSetCompressorType_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolGetClusteringType_C", MatHtoolGetClusteringType_Htool));
+  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatHtoolSetClusteringType_C", MatHtoolSetClusteringType_Htool));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatShellSetContext_C", MatShellSetContext_Immutable));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatShellSetContextDestroy_C", MatShellSetContextDestroy_Immutable));
   PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatShellSetManageScalingShifts_C", MatShellSetManageScalingShifts_Immutable));

@@ -471,6 +471,58 @@ class TestMatrix(unittest.TestCase):
         A.HtoolUseRecompression(False)
         A.HtoolUseRecompression(True)
 
+        # test epsilon getter/setter
+        eps = A.HtoolGetEpsilon()
+        self.assertIsNotNone(eps)
+        A.HtoolSetEpsilon(eps)
+        self.assertAlmostEqual(A.HtoolGetEpsilon(), eps)
+
+        # test eta getter/setter
+        eta = A.HtoolGetEta()
+        self.assertIsNotNone(eta)
+        A.HtoolSetEta(eta)
+        self.assertAlmostEqual(A.HtoolGetEta(), eta)
+
+        # test max leaf size getter/setter
+        max_leaf = A.HtoolGetMaxLeafSize()
+        self.assertIsNotNone(max_leaf)
+        A.HtoolSetMaxLeafSize(max_leaf)
+        self.assertEqual(A.HtoolGetMaxLeafSize(), max_leaf)
+
+        # test min target depth getter/setter
+        min_tgt = A.HtoolGetMinTargetDepth()
+        self.assertIsNotNone(min_tgt)
+        A.HtoolSetMinTargetDepth(min_tgt)
+        self.assertEqual(A.HtoolGetMinTargetDepth(), min_tgt)
+
+        # test min source depth getter/setter
+        min_src = A.HtoolGetMinSourceDepth()
+        self.assertIsNotNone(min_src)
+        A.HtoolSetMinSourceDepth(min_src)
+        self.assertEqual(A.HtoolGetMinSourceDepth(), min_src)
+
+        # test block tree consistency getter/setter
+        btc = A.HtoolGetBlockTreeConsistency()
+        self.assertIsNotNone(btc)
+        A.HtoolSetBlockTreeConsistency(btc)
+        self.assertEqual(A.HtoolGetBlockTreeConsistency(), btc)
+
+        # test compressor type getter/setter
+        ct = A.HtoolGetCompressorType()
+        self.assertIsNotNone(ct)
+        A.HtoolSetCompressorType(ct)
+        self.assertEqual(A.HtoolGetCompressorType(), ct)
+        A.HtoolSetCompressorType(PETSc.Mat.HtoolCompressorType.SVD)
+        self.assertEqual(A.HtoolGetCompressorType(), PETSc.Mat.HtoolCompressorType.SVD)
+
+        # test clustering type getter/setter
+        clt = A.HtoolGetClusteringType()
+        self.assertIsNotNone(clt)
+        A.HtoolSetClusteringType(clt)
+        self.assertEqual(A.HtoolGetClusteringType(), clt)
+        A.HtoolSetClusteringType(PETSc.Mat.HtoolClusteringType.PCA_GEOMETRIC)
+        self.assertEqual(A.HtoolGetClusteringType(), PETSc.Mat.HtoolClusteringType.PCA_GEOMETRIC)
+
         # compare against dense conversion
         D = A.convert('dense')
         x, y = A.createVecs()
