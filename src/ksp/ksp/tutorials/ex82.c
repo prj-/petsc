@@ -99,14 +99,19 @@ int main(int argc, char **argv)
 /*TEST
 
    build:
-      requires: htool hpddm
+      requires: htool
 
    test:
-      requires: htool hpddm slepc defined(PETSC_HAVE_DYNAMIC_LIBRARIES) defined(PETSC_USE_SHARED_LIBRARIES)
+      requires: hpddm slepc defined(PETSC_HAVE_DYNAMIC_LIBRARIES) defined(PETSC_USE_SHARED_LIBRARIES)
       nsize: 4
       # different numbers of iterations depending on PetscScalar type
       filter: sed -e "s/symmetry: S/symmetry: N/g" -e "/number of dense/d" -e "s/Linear solve converged due to CONVERGED_RTOL iterations 13/Linear solve converged due to CONVERGED_RTOL iterations 18/g"
       args: -ksp_view -ksp_converged_reason -mat_htool_epsilon 1e-2 -m_local 200 -pc_type hpddm -pc_hpddm_define_subdomains -pc_hpddm_levels_1_sub_pc_type lu -pc_hpddm_levels_1_eps_nev 1 -pc_hpddm_coarse_pc_type lu -pc_hpddm_levels_1_eps_gen_non_hermitian -symmetric {{false true}shared output} -overlap 2
       output_file: output/ex82_1.out
+
+   test:
+      nsize: 4
+      args: -ksp_max_it 20 -mat_htool_epsilon 1e-2 -m_local 200 -ksp_error_if_not_converged
+      output_file: output/empty.out
 
 TEST*/
