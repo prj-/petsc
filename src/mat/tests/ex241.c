@@ -1,4 +1,3 @@
-#include "petscsys.h"
 static char help[] = "Tests MATHTOOL\n\n";
 
 #include <petscmat.h>
