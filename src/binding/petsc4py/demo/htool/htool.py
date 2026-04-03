@@ -20,7 +20,6 @@ from mpi4py import MPI
 from petsc4py import PETSc
 
 N = PETSc.Options().getInt("-N", 1000) # number of points (global)
-epsilon = PETSc.Options().getReal("-mat_htool_epsilon", 1e-5)
 dim = 3 # spatial dimension
 
 # Generate N points in R^3 distributed uniformly along a line
@@ -81,6 +80,7 @@ A.createHtoolFromKernel(
     comm=PETSc.COMM_WORLD
 )
 A.setFromOptions()
+epsilon = A.HtoolGetEta()
 A.assemble()
 A.viewFromOptions('-A_view')
 
