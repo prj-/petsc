@@ -350,10 +350,10 @@ static PetscErrorCode MatView_Htool_Draw_Zoom(PetscDraw draw, void *ptr)
   PetscCall(PetscDrawStringGetSize(draw, &w, &h));
   PetscDrawCollectiveBegin(draw);
   for (const auto *block : dense_blocks) {
-    x_l = (PetscReal)block->get_source_cluster().get_offset();
-    x_r = x_l + (PetscReal)block->get_source_cluster().get_size();
-    y_l = (PetscReal)A->rmap->N - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
-    y_r = (PetscReal)A->rmap->N - (PetscReal)block->get_target_cluster().get_offset();
+    x_l = x_r = (PetscReal)block->get_source_cluster().get_offset();
+    x_r += (PetscReal)block->get_source_cluster().get_size();
+    y_l = y_r = (PetscReal)(A->rmap->N - block->get_target_cluster().get_offset());
+    y_l -= (PetscReal)block->get_target_cluster().get_size();
     PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, PETSC_DRAW_RED, PETSC_DRAW_RED, PETSC_DRAW_RED, PETSC_DRAW_RED));
     PetscCall(PetscDrawLine(draw, x_l, y_l, x_r, y_l, PETSC_DRAW_BLACK));
     PetscCall(PetscDrawLine(draw, x_r, y_l, x_r, y_r, PETSC_DRAW_BLACK));
@@ -364,10 +364,10 @@ static PetscErrorCode MatView_Htool_Draw_Zoom(PetscDraw draw, void *ptr)
     PetscReal      th;
     const PetscInt rank = block->get_rank();
 
-    x_l = (PetscReal)block->get_source_cluster().get_offset();
-    x_r = x_l + (PetscReal)block->get_source_cluster().get_size();
-    y_l = (PetscReal)A->rmap->N - (PetscReal)block->get_target_cluster().get_offset() - (PetscReal)block->get_target_cluster().get_size();
-    y_r = (PetscReal)A->rmap->N - (PetscReal)block->get_target_cluster().get_offset();
+    x_l = x_r = (PetscReal)block->get_source_cluster().get_offset();
+    x_r += (PetscReal)block->get_source_cluster().get_size();
+    y_l = y_r = (PetscReal)(A->rmap->N - block->get_target_cluster().get_offset());
+    y_l -= (PetscReal)block->get_target_cluster().get_size();
     if (min_max[1] > min_max[0]) color = greens[(int)((PetscReal)(rank - min_max[0]) / (PetscReal)(min_max[1] - min_max[0]) * (PETSC_STATIC_ARRAY_LENGTH(greens) - 1) + 0.5)];
     else color = greens[PETSC_STATIC_ARRAY_LENGTH(greens) - 1];
     PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, color, color, color, color));
