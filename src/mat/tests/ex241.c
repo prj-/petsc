@@ -36,16 +36,18 @@ static PetscErrorCode GenEntriesRectangular(PetscInt sdim, PetscInt M, PetscInt 
 
 int main(int argc, char **argv)
 {
-  Mat               A, AT, D, B, P, R, RT;
-  PetscInt          m = 100, dim = 3, M, K = 10, begin, n = 0, N, bs;
-  PetscMPIInt       rank, size;
-  PetscScalar      *ptr;
-  PetscReal        *coords, *gcoords, *scoords, *gscoords, *ctx[2], norm, epsilon = PetscSqrtReal(PETSC_SMALL);
-  MatHtoolKernelFn *kernel = GenEntries;
-  PetscBool         flg, sym = PETSC_FALSE, recompression = PETSC_FALSE;
-  PetscRandom       rdm;
-  IS                iss, ist, is[2];
-  Vec               right, left, perm;
+  Mat                    A, AT, D, B, P, R, RT;
+  PetscInt               m = 100, dim = 3, M, K = 10, begin, n = 0, N, bs, maxleafsize, mintargetdepth, minsourcedepth;
+  PetscMPIInt            rank, size;
+  PetscScalar           *ptr;
+  PetscReal             *coords, *gcoords, *scoords, *gscoords, *ctx[2], norm, epsilon, eta;
+  MatHtoolKernelFn      *kernel = GenEntries;
+  MatHtoolClusteringType clusteringtype;
+  MatHtoolCompressorType compressortype;
+  PetscBool              flg, sym = PETSC_FALSE, recompression = PETSC_FALSE, blocktreeconsistency;
+  PetscRandom            rdm;
+  IS                     iss, ist, is[2];
+  Vec                    right, left, perm;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, (char *)NULL, help));
@@ -55,7 +57,6 @@ int main(int argc, char **argv)
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-K", &K, NULL));
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-symmetric", &sym, NULL));
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-recompression", &recompression, NULL));
-  PetscCall(PetscOptionsGetReal(NULL, NULL, "-mat_htool_epsilon", &epsilon, NULL));
   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
   PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD, &size));
   M = size * m;
@@ -73,6 +74,14 @@ int main(int argc, char **argv)
   PetscCall(MatSetOption(A, MAT_SYMMETRIC, sym));
   PetscCall(MatHtoolUseRecompression(A, recompression));
   PetscCall(MatSetFromOptions(A));
+  PetscCall(MatHtoolGetEpsilon(A, &epsilon));
+  PetscCall(MatHtoolGetEta(A, &eta));
+  PetscCall(MatHtoolGetMaxClusterLeafSize(A, &maxleafsize));
+  PetscCall(MatHtoolGetMinTargetDepth(A, &mintargetdepth));
+  PetscCall(MatHtoolGetMinSourceDepth(A, &minsourcedepth));
+  PetscCall(MatHtoolGetBlockTreeConsistency(A, &blocktreeconsistency));
+  PetscCall(MatHtoolGetCompressorType(A, &compressortype));
+  PetscCall(MatHtoolGetClusteringType(A, &clusteringtype));
   PetscCall(MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY));
   PetscCall(MatViewFromOptions(A, NULL, "-A_view"));
