@@ -358,12 +358,47 @@ html_static_path = []
 _process_demos('poisson2d/poisson2d.py')
 
 
+def _cleanup_petsc_intersphinx_cache(app):
+    """Remove stale 'petsc' entries from the intersphinx cache.
+
+    When ``doc_url`` changes between builds (e.g. switching between the main
+    and release branches), the environment pickle may contain a 'petsc' cache
+    entry keyed by the *old* URI while the current build adds a second entry
+    keyed by the *new* URI.  Because both entries share the name ``'petsc'``,
+    ``sorted(named_vals)`` inside ``sphinx.ext.intersphinx.load_mappings``
+    falls through to comparing the inventory dicts with ``<``, which raises
+    ``TypeError: '<' not supported between instances of 'dict' and 'dict'``.
+
+    Running this handler at priority 100 (before intersphinx's default
+    priority-500 ``load_mappings``) ensures that any stale 'petsc' entry
+    whose URI differs from the one currently configured is removed before
+    ``load_mappings`` rebuilds ``named_inventory``.
+    """
+    env = app.builder.env
+    if not hasattr(env, 'intersphinx_cache'):
+        return
+    petsc_entry = app.config.intersphinx_mapping.get('petsc')
+    if not petsc_entry or not isinstance(petsc_entry, (list, tuple)):
+        return
+    current_uri = petsc_entry[0]
+    stale = [
+        uri for uri, entry in env.intersphinx_cache.items()
+        if isinstance(entry, (list, tuple))
+        and len(entry) >= 1
+        and entry[0] == 'petsc'
+        and uri != current_uri
+    ]
+    for uri in stale:
+        del env.intersphinx_cache[uri]
+
+
 def setup(app):
     _setup_mpi4py_typing()
     _patch_domain_python()
     _monkey_patch_returns()
     _monkey_patch_see_also()
     _setup_autodoc(app)
+    app.connect('builder-inited', _cleanup_petsc_intersphinx_cache, priority=100)
 
     try:
         from petsc4py import PETSc
