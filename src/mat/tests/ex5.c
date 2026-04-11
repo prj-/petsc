@@ -275,6 +275,13 @@ int main(int argc, char **args)
       requires: cuda
 
    test:
+      suffix: aijcusparse_3
+      args: -mat_type seqaijcusparse -vec_type cuda -test_diagonalscale
+      filter: grep -v type
+      output_file: output/ex5_31.out
+      requires: cuda
+
+   test:
       suffix: sell_1
       args: -mat_type sell -mat_sell_slice_height 8
       output_file: output/ex5_41.out
