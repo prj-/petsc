@@ -49,6 +49,7 @@ static PetscErrorCode MatSeqAIJCUSPARSEMultStruct_Destroy(Mat_SeqAIJCUSPARSETriF
 static PetscErrorCode MatSetFromOptions_SeqAIJCUSPARSE(Mat, PetscOptionItems PetscOptionsObject);
 static PetscErrorCode MatAXPY_SeqAIJCUSPARSE(Mat, PetscScalar, Mat, MatStructure);
 static PetscErrorCode MatScale_SeqAIJCUSPARSE(Mat, PetscScalar);
+static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat, Vec, Vec);
 static PetscErrorCode MatMult_SeqAIJCUSPARSE(Mat, Vec, Vec);
 static PetscErrorCode MatMultAdd_SeqAIJCUSPARSE(Mat, Vec, Vec, Vec);
 static PetscErrorCode MatMultTranspose_SeqAIJCUSPARSE(Mat, Vec, Vec);
@@ -3771,6 +3772,60 @@ static PetscErrorCode MatGetDiagonal_SeqAIJCUSPARSE(Mat A, Vec diag)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+__global__ static void DiagonalScaleLeft_CSR(const int *row, PetscScalar *val, const PetscScalar *l, PetscInt m)
+{
+  const PetscInt i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i < m) {
+    const PetscScalar scale = l[i];
+    for (int j = row[i]; j < row[i + 1]; j++) val[j] *= scale;
+  }
+}
+
+__global__ static void DiagonalScaleRight_CSR(const int *col, PetscScalar *val, const PetscScalar *r, PetscInt nz)
+{
+  const PetscInt k = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (k < nz) val[k] *= r[col[k]];
+}
+
+static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat A, Vec ll, Vec rr)
+{
+  Mat_SeqAIJ         *aij = (Mat_SeqAIJ *)A->data;
+  Mat_SeqAIJCUSPARSE *cusp;
+  CsrMatrix          *csr;
+  PetscScalar        *av;
+  const PetscScalar  *lv, *rv;
+  PetscInt            m, n, nz = aij->nz;
+
+  PetscFunctionBegin;
+  PetscCall(PetscLogGpuTimeBegin());
+  PetscCall(MatSeqAIJCUSPARSEGetArray(A, &av));
+  cusp = (Mat_SeqAIJCUSPARSE *)A->spptr;
+  csr  = (CsrMatrix *)cusp->mat->mat;
+  if (ll) {
+    PetscCall(VecGetLocalSize(ll, &m));
+    PetscCheck(m == A->rmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Left scaling vector wrong length");
+    PetscCall(VecCUDAGetArrayRead(ll, &lv));
+    DiagonalScaleLeft_CSR<<<(int)((A->rmap->n + 255) / 256), 256, 0, PetscDefaultCudaStream>>>(csr->row_offsets->data().get(), av, lv, A->rmap->n);
+    PetscCallCUDA(cudaPeekAtLastError());
+    PetscCall(VecCUDARestoreArrayRead(ll, &lv));
+    PetscCall(PetscLogGpuFlops(nz));
+  }
+  if (rr) {
+    PetscCall(VecGetLocalSize(rr, &n));
+    PetscCheck(n == A->cmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Right scaling vector wrong length");
+    PetscCall(VecCUDAGetArrayRead(rr, &rv));
+    DiagonalScaleRight_CSR<<<(int)((nz + 255) / 256), 256, 0, PetscDefaultCudaStream>>>(csr->column_indices->data().get(), av, rv, nz);
+    PetscCallCUDA(cudaPeekAtLastError());
+    PetscCall(VecCUDARestoreArrayRead(rr, &rv));
+    PetscCall(PetscLogGpuFlops(nz));
+  }
+  PetscCall(MatSeqAIJCUSPARSERestoreArray(A, &av));
+  PetscCall(PetscLogGpuTimeEnd());
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 static PetscErrorCode MatAssemblyEnd_SeqAIJCUSPARSE(Mat A, MatAssemblyType mode)
 {
   PetscFunctionBegin;
@@ -4012,6 +4067,7 @@ static PetscErrorCode MatBindToCPU_SeqAIJCUSPARSE(Mat A, PetscBool flg)
 
     A->ops->scale                     = MatScale_SeqAIJ;
     A->ops->getdiagonal               = MatGetDiagonal_SeqAIJ;
+    A->ops->diagonalscale             = MatDiagonalScale_SeqAIJ;
     A->ops->axpy                      = MatAXPY_SeqAIJ;
     A->ops->zeroentries               = MatZeroEntries_SeqAIJ;
     A->ops->mult                      = MatMult_SeqAIJ;
@@ -4032,6 +4088,7 @@ static PetscErrorCode MatBindToCPU_SeqAIJCUSPARSE(Mat A, PetscBool flg)
   } else {
     A->ops->scale                     = MatScale_SeqAIJCUSPARSE;
     A->ops->getdiagonal               = MatGetDiagonal_SeqAIJCUSPARSE;
+    A->ops->diagonalscale             = MatDiagonalScale_SeqAIJCUSPARSE;
     A->ops->axpy                      = MatAXPY_SeqAIJCUSPARSE;
     A->ops->zeroentries               = MatZeroEntries_SeqAIJCUSPARSE;
     A->ops->mult                      = MatMult_SeqAIJCUSPARSE;
