@@ -241,7 +241,7 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                       PetscCall(MatCreateDense(PETSC_COMM_SELF, blk_sz[kr], blk_sz[kc], blk_sz[kr], blk_sz[kc], nullptr, &submats[kr * nnest + kc]));
                     }
                   }
-                  /* NULL IS arguments: nest blocks are contiguous, no renumbering needed; use -pc_fieldsplit_XYZ_fields to define splits */
+                  /* NULL IS arguments: nest blocks are contiguous, no renumbering needed */
                   PetscCall(MatCreateNest(PETSC_COMM_SELF, nnest, NULL, nnest, NULL, submats, (*submat) + i));
                   for (PetscInt k = 0; k < nnest * nnest; k++) PetscCall(MatDestroy(&submats[k]));
                 }

@@ -14,11 +14,16 @@ PetscLogStage PCMPIStage;
 PETSC_INTERN PetscErrorCode PCGetDefaultType_Private(PC pc, const char *type[])
 {
   PetscMPIInt size;
-  PetscBool   hasopblock, hasopsolve, flg1, flg2, set, flg3, isnormal;
+  PetscBool   hasopblock, hasopsolve, flg1, flg2, set, flg3, isnormal, isnest;
 
   PetscFunctionBegin;
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)pc), &size));
   if (pc->pmat) {
+    PetscCall(PetscObjectTypeCompare((PetscObject)pc->pmat, MATNEST, &isnest));
+    if (isnest) {
+      *type = PCFIELDSPLIT;
+      PetscFunctionReturn(PETSC_SUCCESS);
+    }
     PetscCall(MatHasOperation(pc->pmat, MATOP_GET_DIAGONAL_BLOCK, &hasopblock));
     PetscCall(MatHasOperation(pc->pmat, MATOP_SOLVE, &hasopsolve));
     if (size == 1) {
