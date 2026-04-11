@@ -198,7 +198,7 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                 if (PetscUnlikely(it[j] != A->rmap->rstart + j)) flg = PETSC_FALSE;
               if (flg) { /* complete local diagonal block in IS? */
                 PetscInt     nb, nd, na, nnest, didx, bidx = -1, aidx = -1;
-                IS           isrow[3], iscol[3];
+                PetscInt     blk_sz[3], blk_off[3];
                 Mat          submats[9];
                 PetscScalar *ptr_sub;
 
@@ -216,30 +216,22 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                 if (nb > 0) bidx = 0;
                 if (na > 0) aidx = nnest - 1;
 
+                /* block sizes and offsets indexed by nest position */
+                if (nb > 0) {
+                  blk_sz[bidx]  = nb;
+                  blk_off[bidx] = 0;
+                }
+                blk_sz[didx]  = nd;
+                blk_off[didx] = nb;
+                if (na > 0) {
+                  blk_sz[aidx]  = na;
+                  blk_off[aidx] = nb + nd;
+                }
+
                 PetscCall(MatGetDiagonalBlock(A, &D));
 
                 if (scall != MAT_REUSE_MATRIX) {
-                  PetscInt isidx = 0;
-                  PetscInt blk_sz[3];
-                  PetscInt blk_cnt = 0;
-
                   for (PetscInt k = 0; k < nnest * nnest; k++) submats[k] = nullptr;
-                  if (nb > 0) {
-                    PetscCall(ISCreateStride(PETSC_COMM_SELF, nb, 0, 1, &isrow[isidx]));
-                    PetscCall(ISDuplicate(isrow[isidx], &iscol[isidx]));
-                    blk_sz[blk_cnt++] = nb;
-                    isidx++;
-                  }
-                  PetscCall(ISCreateStride(PETSC_COMM_SELF, nd, nb, 1, &isrow[isidx]));
-                  PetscCall(ISDuplicate(isrow[isidx], &iscol[isidx]));
-                  blk_sz[blk_cnt++] = nd;
-                  isidx++;
-                  if (na > 0) {
-                    PetscCall(ISCreateStride(PETSC_COMM_SELF, na, nb + nd, 1, &isrow[isidx]));
-                    PetscCall(ISDuplicate(isrow[isidx], &iscol[isidx]));
-                    blk_sz[blk_cnt++] = na;
-                    isidx++;
-                  }
                   /* diagonal MatHtool block and dense off-diagonal blocks */
                   submats[didx * nnest + didx] = D;
                   PetscCall(PetscObjectReference((PetscObject)D));
@@ -249,25 +241,10 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                       PetscCall(MatCreateDense(PETSC_COMM_SELF, blk_sz[kr], blk_sz[kc], blk_sz[kr], blk_sz[kc], nullptr, &submats[kr * nnest + kc]));
                     }
                   }
-                  PetscCall(MatCreateNest(PETSC_COMM_SELF, nnest, isrow, nnest, iscol, submats, (*submat) + i));
-                  for (PetscInt k = 0; k < nnest; k++) {
-                    PetscCall(ISDestroy(&isrow[k]));
-                    PetscCall(ISDestroy(&iscol[k]));
-                  }
+                  /* NULL IS arguments: nest blocks are contiguous, no renumbering needed; use -pc_fieldsplit_XYZ_fields to define splits */
+                  PetscCall(MatCreateNest(PETSC_COMM_SELF, nnest, NULL, nnest, NULL, submats, (*submat) + i));
                   for (PetscInt k = 0; k < nnest * nnest; k++) PetscCall(MatDestroy(&submats[k]));
                 }
-
-                /* offset into idxr/idxc for each partition: before (bidx), diagonal (didx), after (aidx) */
-                PetscInt blk_off[3];
-                if (nb > 0) blk_off[bidx] = 0;
-                blk_off[didx] = nb;
-                if (na > 0) blk_off[aidx] = nb + nd;
-
-                /* block sizes indexed by nest position */
-                PetscInt blk_sz2[3];
-                if (nb > 0) blk_sz2[bidx] = nb;
-                blk_sz2[didx] = nd;
-                if (na > 0) blk_sz2[aidx] = na;
 
                 /* fill dense off-diagonal blocks; upper-triangle (kc >= kr) first, then exploit symmetry */
                 for (PetscInt kr = 0; kr < nnest; kr++) {
@@ -276,7 +253,7 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                     if ((A->symmetric == PETSC_BOOL3_TRUE || A->hermitian == PETSC_BOOL3_TRUE) && kc < kr) continue; /* fill via symmetry below */
                     PetscCall(MatNestGetSubMat((*submat)[i], kr, kc, &B));
                     PetscCall(MatDenseGetArrayWrite(B, &ptr_sub));
-                    a->wrapper->copy_submatrix(blk_sz2[kr], blk_sz2[kc], idxr + blk_off[kr], idxc + blk_off[kc], ptr_sub);
+                    a->wrapper->copy_submatrix(blk_sz[kr], blk_sz[kc], idxr + blk_off[kr], idxc + blk_off[kc], ptr_sub);
                     PetscCall(MatDenseRestoreArrayWrite(B, &ptr_sub));
                   }
                 }
