@@ -3772,6 +3772,18 @@ static PetscErrorCode MatGetDiagonal_SeqAIJCUSPARSE(Mat A, Vec diag)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+struct DiagonalScaleLeft_CSR_Functor {
+  const int        *row_ptr;
+  PetscScalar      *val_ptr;
+  const PetscScalar *lv_ptr;
+
+  __host__ __device__ void operator()(int i) const
+  {
+    const PetscScalar s = lv_ptr[i];
+    for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) val_ptr[j] *= s;
+  }
+};
+
 static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat A, Vec ll, Vec rr)
 {
   Mat_SeqAIJ         *aij = (Mat_SeqAIJ *)A->data;
@@ -3790,13 +3802,8 @@ static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat A, Vec ll, Vec rr)
     PetscCall(VecGetLocalSize(ll, &m));
     PetscCheck(m == A->rmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Left scaling vector wrong length");
     PetscCall(VecCUDAGetArrayRead(ll, &lv));
-    const int        *row_ptr = csr->row_offsets->data().get();
-    PetscScalar      *val_ptr = av;
-    const PetscScalar *lv_ptr = lv;
-    PetscCallThrust(thrust::for_each(thrust::cuda::par.on(PetscDefaultCudaStream), thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(A->rmap->n), [row_ptr, val_ptr, lv_ptr] __device__(int i) {
-      const PetscScalar s = lv_ptr[i];
-      for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) val_ptr[j] *= s;
-    }));
+    DiagonalScaleLeft_CSR_Functor functor{csr->row_offsets->data().get(), av, lv};
+    PetscCallThrust(thrust::for_each(thrust::cuda::par.on(PetscDefaultCudaStream), thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(A->rmap->n), functor));
     PetscCall(VecCUDARestoreArrayRead(ll, &lv));
     PetscCall(PetscLogGpuFlops(nz));
   }
