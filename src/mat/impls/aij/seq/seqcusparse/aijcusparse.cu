@@ -3772,23 +3772,6 @@ static PetscErrorCode MatGetDiagonal_SeqAIJCUSPARSE(Mat A, Vec diag)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-__global__ static void DiagonalScaleLeft_CSR(const int *row, PetscScalar *val, const PetscScalar *l, PetscInt m)
-{
-  const PetscInt i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i < m) {
-    const PetscScalar scale = l[i];
-    for (int j = row[i]; j < row[i + 1]; j++) val[j] *= scale;
-  }
-}
-
-__global__ static void DiagonalScaleRight_CSR(const int *col, PetscScalar *val, const PetscScalar *r, PetscInt nz)
-{
-  const PetscInt k = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (k < nz) val[k] *= r[col[k]];
-}
-
 static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat A, Vec ll, Vec rr)
 {
   Mat_SeqAIJ         *aij = (Mat_SeqAIJ *)A->data;
@@ -3807,8 +3790,13 @@ static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat A, Vec ll, Vec rr)
     PetscCall(VecGetLocalSize(ll, &m));
     PetscCheck(m == A->rmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Left scaling vector wrong length");
     PetscCall(VecCUDAGetArrayRead(ll, &lv));
-    DiagonalScaleLeft_CSR<<<(int)((A->rmap->n + 255) / 256), 256, 0, PetscDefaultCudaStream>>>(csr->row_offsets->data().get(), av, lv, A->rmap->n);
-    PetscCallCUDA(cudaPeekAtLastError());
+    const int        *row_ptr = csr->row_offsets->data().get();
+    PetscScalar      *val_ptr = av;
+    const PetscScalar *lv_ptr = lv;
+    PetscCallThrust(thrust::for_each(thrust::cuda::par.on(PetscDefaultCudaStream), thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(A->rmap->n), [row_ptr, val_ptr, lv_ptr] __device__(int i) {
+      const PetscScalar s = lv_ptr[i];
+      for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) val_ptr[j] *= s;
+    }));
     PetscCall(VecCUDARestoreArrayRead(ll, &lv));
     PetscCall(PetscLogGpuFlops(nz));
   }
@@ -3816,8 +3804,11 @@ static PetscErrorCode MatDiagonalScale_SeqAIJCUSPARSE(Mat A, Vec ll, Vec rr)
     PetscCall(VecGetLocalSize(rr, &n));
     PetscCheck(n == A->cmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Right scaling vector wrong length");
     PetscCall(VecCUDAGetArrayRead(rr, &rv));
-    DiagonalScaleRight_CSR<<<(int)((nz + 255) / 256), 256, 0, PetscDefaultCudaStream>>>(csr->column_indices->data().get(), av, rv, nz);
-    PetscCallCUDA(cudaPeekAtLastError());
+#if CCCL_VERSION >= 3001000
+    PetscCallThrust(thrust::transform(thrust::cuda::par.on(PetscDefaultCudaStream), csr->values->begin(), csr->values->end(), thrust::make_permutation_iterator(thrust::device_pointer_cast(rv), csr->column_indices->begin()), csr->values->begin(), cuda::std::multiplies<PetscScalar>()));
+#else
+    PetscCallThrust(thrust::transform(thrust::cuda::par.on(PetscDefaultCudaStream), csr->values->begin(), csr->values->end(), thrust::make_permutation_iterator(thrust::device_pointer_cast(rv), csr->column_indices->begin()), csr->values->begin(), thrust::multiplies<PetscScalar>()));
+#endif
     PetscCall(VecCUDARestoreArrayRead(rr, &rv));
     PetscCall(PetscLogGpuFlops(nz));
   }
