@@ -12,6 +12,7 @@
 #include <petsc/private/vecimpl.h>
 #undef VecType
 #include <../src/mat/impls/aij/seq/seqhipsparse/hipsparsematimpl.h>
+#include <../src/mat/impls/aij/seq/cupm/mataijseqcupm.hpp>
 #include <thrust/adjacent_difference.h>
 #include <thrust/iterator/transform_iterator.h>
 #if PETSC_CPP_VERSION >= 14
@@ -3183,7 +3184,7 @@ static PetscErrorCode MatMultTransposeAdd_SeqAIJHIPSPARSE(Mat A, Vec xx, Vec yy,
 static PetscErrorCode MatAssemblyEnd_SeqAIJHIPSPARSE(Mat A, MatAssemblyType mode)
 {
   PetscFunctionBegin;
-  PetscCall(MatAssemblyEnd_SeqAIJ(A, mode));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::AssemblyEnd(A, mode));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -3252,8 +3253,7 @@ static PetscErrorCode MatDestroy_SeqAIJHIPSPARSE(Mat A)
 static PetscErrorCode MatDuplicate_SeqAIJHIPSPARSE(Mat A, MatDuplicateOption cpvalues, Mat *B)
 {
   PetscFunctionBegin;
-  PetscCall(MatDuplicate_SeqAIJ(A, cpvalues, B));
-  PetscCall(MatConvert_SeqAIJ_SeqAIJHIPSPARSE(*B, MATSEQAIJHIPSPARSE, MAT_INPLACE_MATRIX, B));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::Duplicate(A, cpvalues, B));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -3320,19 +3320,7 @@ static PetscErrorCode MatAXPY_SeqAIJHIPSPARSE(Mat Y, PetscScalar a, Mat X, MatSt
     PetscCall(MatSeqAIJHIPSPARSERestoreArrayRead(X, &ax));
     PetscCall(MatSeqAIJHIPSPARSERestoreArray(Y, &ay));
   } else if (str == SAME_NONZERO_PATTERN) {
-    hipblasHandle_t hipblasv2handle;
-    PetscBLASInt    one = 1, bnz = 1;
-
-    PetscCall(MatSeqAIJHIPSPARSEGetArrayRead(X, &ax));
-    PetscCall(MatSeqAIJHIPSPARSEGetArray(Y, &ay));
-    PetscCall(PetscHIPBLASGetHandle(&hipblasv2handle));
-    PetscCall(PetscBLASIntCast(x->nz, &bnz));
-    PetscCall(PetscLogGpuTimeBegin());
-    PetscCallHIPBLAS(hipblasXaxpy(hipblasv2handle, bnz, &a, ax, one, ay, one));
-    PetscCall(PetscLogGpuFlops(2.0 * bnz));
-    PetscCall(PetscLogGpuTimeEnd());
-    PetscCall(MatSeqAIJHIPSPARSERestoreArrayRead(X, &ax));
-    PetscCall(MatSeqAIJHIPSPARSERestoreArray(Y, &ay));
+    PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::AXPY_SameNZ(Y, a, X));
   } else {
     PetscCall(MatSeqAIJHIPSPARSEInvalidateTranspose(Y, PETSC_FALSE));
     PetscCall(MatAXPY_SeqAIJ(Y, a, X, str));
@@ -3342,105 +3330,29 @@ static PetscErrorCode MatAXPY_SeqAIJHIPSPARSE(Mat Y, PetscScalar a, Mat X, MatSt
 
 static PetscErrorCode MatScale_SeqAIJHIPSPARSE(Mat Y, PetscScalar a)
 {
-  Mat_SeqAIJ     *y = (Mat_SeqAIJ *)Y->data;
-  PetscScalar    *ay;
-  hipblasHandle_t hipblasv2handle;
-  PetscBLASInt    one = 1, bnz = 1;
-
   PetscFunctionBegin;
-  PetscCall(MatSeqAIJHIPSPARSEGetArray(Y, &ay));
-  PetscCall(PetscHIPBLASGetHandle(&hipblasv2handle));
-  PetscCall(PetscBLASIntCast(y->nz, &bnz));
-  PetscCall(PetscLogGpuTimeBegin());
-  PetscCallHIPBLAS(hipblasXscal(hipblasv2handle, bnz, &a, ay, one));
-  PetscCall(PetscLogGpuFlops(bnz));
-  PetscCall(PetscLogGpuTimeEnd());
-  PetscCall(MatSeqAIJHIPSPARSERestoreArray(Y, &ay));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::Scale(Y, a));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-struct DiagonalScaleLeft_CSR_Functor {
-  const int        *row_ptr;
-  PetscScalar      *val_ptr;
-  const PetscScalar *lv_ptr;
-  const PetscInt    *cprow; /* cprow[i] gives actual row for compressed row i, or NULL if not compressed */
-
-  __host__ __device__ void operator()(int i) const
-  {
-    const int         row = cprow ? (int)cprow[i] : i;
-    const PetscScalar s   = lv_ptr[row];
-    for (int j = row_ptr[i]; j < row_ptr[i + 1]; j++) val_ptr[j] *= s;
-  }
-};
-
 static PetscErrorCode MatDiagonalScale_SeqAIJHIPSPARSE(Mat A, Vec ll, Vec rr)
 {
-  Mat_SeqAIJ          *aij = (Mat_SeqAIJ *)A->data;
-  Mat_SeqAIJHIPSPARSE *hisp;
-  CsrMatrix           *csr;
-  PetscScalar         *av;
-  const PetscScalar   *lv, *rv;
-  PetscInt             m, n, nz = aij->nz;
-
   PetscFunctionBegin;
-  PetscCall(PetscLogGpuTimeBegin());
-  PetscCall(MatSeqAIJHIPSPARSEGetArray(A, &av));
-  hisp = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-  csr  = (CsrMatrix *)hisp->mat->mat;
-  if (ll) {
-    PetscCall(VecGetLocalSize(ll, &m));
-    PetscCheck(m == A->rmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Left scaling vector wrong length");
-    PetscCall(VecHIPGetArrayRead(ll, &lv));
-    const PetscInt *cprow = hisp->mat->cprowIndices ? hisp->mat->cprowIndices->data().get() : NULL;
-    DiagonalScaleLeft_CSR_Functor functor{csr->row_offsets->data().get(), av, lv, cprow};
-    PetscCallThrust(thrust::for_each(thrust::hip::par.on(PetscDefaultHipStream), thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(csr->num_rows), functor));
-    PetscCall(VecHIPRestoreArrayRead(ll, &lv));
-    PetscCall(PetscLogGpuFlops(nz));
-  }
-  if (rr) {
-    PetscCall(VecGetLocalSize(rr, &n));
-    PetscCheck(n == A->cmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Right scaling vector wrong length");
-    PetscCall(VecHIPGetArrayRead(rr, &rv));
-    PetscCallThrust(thrust::transform(thrust::hip::par.on(PetscDefaultHipStream), csr->values->begin(), csr->values->end(), thrust::make_permutation_iterator(thrust::device_pointer_cast(rv), csr->column_indices->begin()), csr->values->begin(), thrust::multiplies<PetscScalar>()));
-    PetscCall(VecHIPRestoreArrayRead(rr, &rv));
-    PetscCall(PetscLogGpuFlops(nz));
-  }
-  PetscCall(MatSeqAIJHIPSPARSERestoreArray(A, &av));
-  PetscCall(PetscLogGpuTimeEnd());
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::DiagonalScale(A, ll, rr));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static PetscErrorCode MatZeroEntries_SeqAIJHIPSPARSE(Mat A)
 {
-  PetscBool   both = PETSC_FALSE;
-  Mat_SeqAIJ *a    = (Mat_SeqAIJ *)A->data;
-
   PetscFunctionBegin;
-  if (A->factortype == MAT_FACTOR_NONE) {
-    Mat_SeqAIJHIPSPARSE *spptr = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-    if (spptr->mat) {
-      CsrMatrix *matrix = (CsrMatrix *)spptr->mat->mat;
-      if (matrix->values) {
-        both = PETSC_TRUE;
-        thrust::fill(thrust::device, matrix->values->begin(), matrix->values->end(), 0.);
-      }
-    }
-    if (spptr->matTranspose) {
-      CsrMatrix *matrix = (CsrMatrix *)spptr->matTranspose->mat;
-      if (matrix->values) thrust::fill(thrust::device, matrix->values->begin(), matrix->values->end(), 0.);
-    }
-  }
-  //PetscCall(MatZeroEntries_SeqAIJ(A));
-  PetscCall(PetscArrayzero(a->a, a->i[A->rmap->n]));
-  if (both) A->offloadmask = PETSC_OFFLOAD_BOTH;
-  else A->offloadmask = PETSC_OFFLOAD_CPU;
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::ZeroEntries(A));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static PetscErrorCode MatGetCurrentMemType_SeqAIJHIPSPARSE(PETSC_UNUSED Mat A, PetscMemType *m)
 {
   PetscFunctionBegin;
-  *m = PETSC_MEMTYPE_HIP;
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::GetCurrentMemType(A, m));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -3772,103 +3684,22 @@ static PetscErrorCode MatSeqAIJHIPSPARSEInvalidateTranspose(Mat A, PetscBool des
 
 static PetscErrorCode MatCOOStructDestroy_SeqAIJHIPSPARSE(PetscCtxRt data)
 {
-  MatCOOStruct_SeqAIJ *coo = *(MatCOOStruct_SeqAIJ **)data;
-
   PetscFunctionBegin;
-  PetscCallHIP(hipFree(coo->perm));
-  PetscCallHIP(hipFree(coo->jmap));
-  PetscCall(PetscFree(coo));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::COOStructDestroy(data));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static PetscErrorCode MatSetPreallocationCOO_SeqAIJHIPSPARSE(Mat mat, PetscCount coo_n, PetscInt coo_i[], PetscInt coo_j[])
 {
-  PetscBool            dev_ij = PETSC_FALSE;
-  PetscMemType         mtype  = PETSC_MEMTYPE_HOST;
-  PetscInt            *i, *j;
-  PetscContainer       container_h;
-  MatCOOStruct_SeqAIJ *coo_h, *coo_d;
-
   PetscFunctionBegin;
-  PetscCall(PetscGetMemType(coo_i, &mtype));
-  if (PetscMemTypeDevice(mtype)) {
-    dev_ij = PETSC_TRUE;
-    PetscCall(PetscMalloc2(coo_n, &i, coo_n, &j));
-    PetscCallHIP(hipMemcpy(i, coo_i, coo_n * sizeof(PetscInt), hipMemcpyDeviceToHost));
-    PetscCallHIP(hipMemcpy(j, coo_j, coo_n * sizeof(PetscInt), hipMemcpyDeviceToHost));
-  } else {
-    i = coo_i;
-    j = coo_j;
-  }
-  PetscCall(MatSetPreallocationCOO_SeqAIJ(mat, coo_n, i, j));
-  if (dev_ij) PetscCall(PetscFree2(i, j));
-  mat->offloadmask = PETSC_OFFLOAD_CPU;
-  // Create the GPU memory
-  PetscCall(MatSeqAIJHIPSPARSECopyToGPU(mat));
-
-  // Copy the COO struct to device
-  PetscCall(PetscObjectQuery((PetscObject)mat, "__PETSc_MatCOOStruct_Host", (PetscObject *)&container_h));
-  PetscCall(PetscContainerGetPointer(container_h, &coo_h));
-  PetscCall(PetscMalloc1(1, &coo_d));
-  *coo_d = *coo_h; // do a shallow copy and then amend some fields that need to be different
-  PetscCallHIP(hipMalloc((void **)&coo_d->jmap, (coo_h->nz + 1) * sizeof(PetscCount)));
-  PetscCallHIP(hipMemcpy(coo_d->jmap, coo_h->jmap, (coo_h->nz + 1) * sizeof(PetscCount), hipMemcpyHostToDevice));
-  PetscCallHIP(hipMalloc((void **)&coo_d->perm, coo_h->Atot * sizeof(PetscCount)));
-  PetscCallHIP(hipMemcpy(coo_d->perm, coo_h->perm, coo_h->Atot * sizeof(PetscCount), hipMemcpyHostToDevice));
-
-  // Put the COO struct in a container and then attach that to the matrix
-  PetscCall(PetscObjectContainerCompose((PetscObject)mat, "__PETSc_MatCOOStruct_Device", coo_d, MatCOOStructDestroy_SeqAIJHIPSPARSE));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::SetPreallocationCOO(mat, coo_n, coo_i, coo_j));
   PetscFunctionReturn(PETSC_SUCCESS);
-}
-
-__global__ static void MatAddCOOValues(const PetscScalar kv[], PetscCount nnz, const PetscCount jmap[], const PetscCount perm[], InsertMode imode, PetscScalar a[])
-{
-  PetscCount       i         = blockIdx.x * blockDim.x + threadIdx.x;
-  const PetscCount grid_size = gridDim.x * blockDim.x;
-  for (; i < nnz; i += grid_size) {
-    PetscScalar sum = 0.0;
-    for (PetscCount k = jmap[i]; k < jmap[i + 1]; k++) sum += kv[perm[k]];
-    a[i] = (imode == INSERT_VALUES ? 0.0 : a[i]) + sum;
-  }
 }
 
 static PetscErrorCode MatSetValuesCOO_SeqAIJHIPSPARSE(Mat A, const PetscScalar v[], InsertMode imode)
 {
-  Mat_SeqAIJ          *seq  = (Mat_SeqAIJ *)A->data;
-  Mat_SeqAIJHIPSPARSE *dev  = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-  PetscCount           Annz = seq->nz;
-  PetscMemType         memtype;
-  const PetscScalar   *v1 = v;
-  PetscScalar         *Aa;
-  PetscContainer       container;
-  MatCOOStruct_SeqAIJ *coo;
-
   PetscFunctionBegin;
-  if (!dev->mat) PetscCall(MatSeqAIJHIPSPARSECopyToGPU(A));
-
-  PetscCall(PetscObjectQuery((PetscObject)A, "__PETSc_MatCOOStruct_Device", (PetscObject *)&container));
-  PetscCall(PetscContainerGetPointer(container, &coo));
-
-  PetscCall(PetscGetMemType(v, &memtype));
-  if (PetscMemTypeHost(memtype)) { /* If user gave v[] in host, we might need to copy it to device if any */
-    PetscCallHIP(hipMalloc((void **)&v1, coo->n * sizeof(PetscScalar)));
-    PetscCallHIP(hipMemcpy((void *)v1, v, coo->n * sizeof(PetscScalar), hipMemcpyHostToDevice));
-  }
-
-  if (imode == INSERT_VALUES) PetscCall(MatSeqAIJHIPSPARSEGetArrayWrite(A, &Aa));
-  else PetscCall(MatSeqAIJHIPSPARSEGetArray(A, &Aa));
-
-  PetscCall(PetscLogGpuTimeBegin());
-  if (Annz) {
-    hipLaunchKernelGGL(HIP_KERNEL_NAME(MatAddCOOValues), dim3((Annz + 255) / 256), dim3(256), 0, PetscDefaultHipStream, v1, Annz, coo->jmap, coo->perm, imode, Aa);
-    PetscCallHIP(hipPeekAtLastError());
-  }
-  PetscCall(PetscLogGpuTimeEnd());
-
-  if (imode == INSERT_VALUES) PetscCall(MatSeqAIJHIPSPARSERestoreArrayWrite(A, &Aa));
-  else PetscCall(MatSeqAIJHIPSPARSERestoreArray(A, &Aa));
-
-  if (PetscMemTypeHost(memtype)) PetscCallHIP(hipFree((void *)v1));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::SetValuesCOO(A, v, imode));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -4125,6 +3956,33 @@ PetscErrorCode MatSeqAIJHIPSPARSERestoreArrayWrite(Mat A, PetscScalar *a[])
   *a = NULL;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
+
+/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (HIP specialisation) */
+struct MatSeqAIJHIPSPARSE_Policy {
+  typedef Mat_SeqAIJHIPSPARSE          mat_struct_type;
+  typedef Mat_SeqAIJHIPSPARSEMultStruct mult_struct_type;
+
+  static int storage_format_csr() { return (int)MAT_HIPSPARSE_CSR; }
+
+  static PetscErrorCode GetArray(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArray(A, a); }
+  static PetscErrorCode RestoreArray(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArray(A, a); }
+  static PetscErrorCode GetArrayRead(Mat A, const PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArrayRead(A, a); }
+  static PetscErrorCode RestoreArrayRead(Mat A, const PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArrayRead(A, a); }
+  static PetscErrorCode GetArrayWrite(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArrayWrite(A, a); }
+  static PetscErrorCode RestoreArrayWrite(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArrayWrite(A, a); }
+  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJHIPSPARSECopyToGPU(A); }
+  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJHIPSPARSEInvalidateTranspose(A, d); }
+  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJHIPSPARSE(B, t, r, C); }
+  static const char    *mat_type_name;
+
+  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecHIPGetArrayRead(v, a); }
+  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecHIPRestoreArrayRead(v, a); }
+  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecHIPGetArrayWrite(v, a); }
+  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecHIPRestoreArrayWrite(v, a); }
+};
+const char *MatSeqAIJHIPSPARSE_Policy::mat_type_name = MATSEQAIJHIPSPARSE;
+
+using MatSeqAIJHIPSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::HIP, MatSeqAIJHIPSPARSE_Policy>;
 
 struct IJCompare4 {
   __host__ __device__ inline bool operator()(const thrust::tuple<int, int, PetscScalar, int> &t1, const thrust::tuple<int, int, PetscScalar, int> &t2)
@@ -4405,34 +4263,7 @@ PetscErrorCode MatSeqAIJHIPSPARSEMergeMats(Mat A, Mat B, MatReuse reuse, Mat *C)
 
 static PetscErrorCode MatSeqAIJCopySubArray_SeqAIJHIPSPARSE(Mat A, PetscInt n, const PetscInt idx[], PetscScalar v[])
 {
-  bool               dmem;
-  const PetscScalar *av;
-
   PetscFunctionBegin;
-  dmem = isHipMem(v);
-  PetscCall(MatSeqAIJHIPSPARSEGetArrayRead(A, &av));
-  if (n && idx) {
-    THRUSTINTARRAY widx(n);
-    widx.assign(idx, idx + n);
-    PetscCall(PetscLogCpuToGpu(n * sizeof(PetscInt)));
-
-    THRUSTARRAY                    *w = NULL;
-    thrust::device_ptr<PetscScalar> dv;
-    if (dmem) dv = thrust::device_pointer_cast(v);
-    else {
-      w  = new THRUSTARRAY(n);
-      dv = w->data();
-    }
-    thrust::device_ptr<const PetscScalar> dav = thrust::device_pointer_cast(av);
-
-    auto zibit = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_permutation_iterator(dav, widx.begin()), dv));
-    auto zieit = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_permutation_iterator(dav, widx.end()), dv + n));
-    thrust::for_each(zibit, zieit, VecHIPEquals());
-    if (w) PetscCallHIP(hipMemcpy(v, w->data().get(), n * sizeof(PetscScalar), hipMemcpyDeviceToHost));
-    delete w;
-  } else PetscCallHIP(hipMemcpy(v, av, n * sizeof(PetscScalar), dmem ? hipMemcpyDeviceToDevice : hipMemcpyDeviceToHost));
-
-  if (!dmem) PetscCall(PetscLogCpuToGpu(n * sizeof(PetscScalar)));
-  PetscCall(MatSeqAIJHIPSPARSERestoreArrayRead(A, &av));
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::CopySubArray(A, n, idx, v));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
