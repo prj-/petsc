@@ -132,7 +132,7 @@ __global__ static void GetDiagonal_CSR(const int *row, const int *col, const Pet
      static PetscErrorCode CopyToGPU(Mat);
      static PetscErrorCode InvalidateTranspose(Mat, PetscBool);
      static PetscErrorCode ConvertFromSeqAIJ(Mat, MatType, MatReuse, Mat *);
-     static MatType        mat_type_name;   // "seqaijcusparse" / "seqaijhipsparse"
+     static const char    *mat_type_name;   // "seqaijcusparse" / "seqaijhipsparse"
 
      // Vec device-array access (device-type specific)
      static PetscErrorCode VecGetArrayRead  (Vec, const PetscScalar **);
@@ -326,7 +326,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscCallCUPM(cupmMalloc((void **)&coo_d->perm, coo_h->Atot * sizeof(PetscCount)));
     PetscCallCUPM(cupmMemcpy(coo_d->perm, coo_h->perm, coo_h->Atot * sizeof(PetscCount), cupmMemcpyHostToDevice));
 
-    PetscCall(PetscObjectContainerCompose((PetscObject)mat, "__PETSc_MatCOOStruct_Device", coo_d, COOStructDestroy));
+    PetscCall(PetscObjectContainerCompose((PetscObject)mat, "__PETSc_MatCOOStruct_Device", coo_d, MatSeqAIJCUSPARSE_CUPM::COOStructDestroy));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
