@@ -12,7 +12,7 @@
 #include <petsc/private/vecimpl.h>
 #undef VecType
 #include <../src/mat/impls/aij/seq/seqhipsparse/hipsparsematimpl.h>
-#include <../src/mat/impls/aij/seq/cupm/mataijseqcupm.hpp>
+#include <../src/mat/impls/aij/seq/cupm/aijcupm.hpp>
 #include <thrust/adjacent_difference.h>
 #include <thrust/iterator/transform_iterator.h>
 #if PETSC_CPP_VERSION >= 14

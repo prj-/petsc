@@ -11,7 +11,7 @@
 #include <petsc/private/vecimpl.h>
 #undef VecType
 #include <../src/mat/impls/aij/seq/seqcusparse/cusparsematimpl.h>
-#include <../src/mat/impls/aij/seq/cupm/mataijseqcupm.hpp>
+#include <../src/mat/impls/aij/seq/cupm/aijcupm.hpp>
 #include <thrust/adjacent_difference.h>
 #if PETSC_CPP_VERSION >= 14
   #define PETSC_HAVE_THRUST_ASYNC 1

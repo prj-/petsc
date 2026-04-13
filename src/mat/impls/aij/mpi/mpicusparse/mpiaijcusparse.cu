@@ -4,7 +4,7 @@
 #include <../src/mat/impls/aij/mpi/mpiaij.h> /*I "petscmat.h" I*/
 #include <../src/mat/impls/aij/seq/seqcusparse/cusparsematimpl.h>
 #include <../src/mat/impls/aij/mpi/mpicusparse/mpicusparsematimpl.h>
-#include <../src/mat/impls/aij/mpi/cupm/matmpiaijcupm.hpp>
+#include <../src/mat/impls/aij/mpi/cupm/mpiaijcupm.hpp>
 #include <thrust/advance.h>
 #include <thrust/partition.h>
 #include <thrust/sort.h>
