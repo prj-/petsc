@@ -285,7 +285,10 @@ struct MatMPIAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
       PetscCall(Policy::RestoreArray(A, &Aa));
       PetscCall(Policy::RestoreArray(B, &Ba));
     }
-    if (PetscMemTypeHost(memtype)) PetscCallCUPM(cupmFree((void *)v1));
+    if (PetscMemTypeHost(memtype)) {
+      void *v1_device = (void *)v1;
+      PetscCallCUPM(cupmFree(v1_device));
+    }
     mat->offloadmask = PETSC_OFFLOAD_GPU;
     PetscFunctionReturn(PETSC_SUCCESS);
   }

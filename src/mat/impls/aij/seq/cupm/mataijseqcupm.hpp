@@ -369,7 +369,10 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     if (imode == INSERT_VALUES) PetscCall(Policy::RestoreArrayWrite(A, &Aa));
     else PetscCall(Policy::RestoreArray(A, &Aa));
 
-    if (PetscMemTypeHost(memtype)) PetscCallCUPM(cupmFree((void *)v1));
+    if (PetscMemTypeHost(memtype)) {
+      void *v1_device = (void *)v1;
+      PetscCallCUPM(cupmFree(v1_device));
+    }
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
