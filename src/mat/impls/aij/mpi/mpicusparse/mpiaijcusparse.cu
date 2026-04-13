@@ -126,11 +126,6 @@ static PetscErrorCode MatSetFromOptions_MPIAIJCUSPARSE(Mat A, PetscOptionItems P
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-static PetscErrorCode MatAssemblyEnd_MPIAIJCUSPARSE(Mat A, MatAssemblyType mode)
-{
-  return MatMPIAIJCUSPARSE_CUPM_t::AssemblyEnd(A, mode);
-}
-
 static PetscErrorCode MatDestroy_MPIAIJCUSPARSE(Mat A)
 {
   Mat_MPIAIJ         *aij            = (Mat_MPIAIJ *)A->data;
