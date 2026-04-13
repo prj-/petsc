@@ -439,4 +439,3 @@ struct MatMPIAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
 
 } // namespace Petsc
 
-
