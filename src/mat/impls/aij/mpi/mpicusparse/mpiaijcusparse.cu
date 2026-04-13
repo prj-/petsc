@@ -13,6 +13,7 @@
 struct MatMPIAIJCUSPARSE_Policy {
   typedef Mat_MPIAIJCUSPARSE mat_struct_type;
 
+  static const char *mpi_mat_type;
   static const char *seq_mat_type;
   static const char *vec_seq_type;
 
@@ -32,6 +33,7 @@ struct MatMPIAIJCUSPARSE_Policy {
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 };
+const char *MatMPIAIJCUSPARSE_Policy::mpi_mat_type = MATMPIAIJCUSPARSE;
 const char *MatMPIAIJCUSPARSE_Policy::seq_mat_type = MATSEQAIJCUSPARSE;
 const char *MatMPIAIJCUSPARSE_Policy::vec_seq_type = VECSEQCUDA;
 
@@ -272,20 +274,7 @@ PETSC_EXTERN PetscErrorCode MatCreate_MPIAIJCUSPARSE(Mat A)
 @*/
 PetscErrorCode MatCreateAIJCUSPARSE(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt M, PetscInt N, PetscInt d_nz, const PetscInt d_nnz[], PetscInt o_nz, const PetscInt o_nnz[], Mat *A)
 {
-  PetscMPIInt size;
-
-  PetscFunctionBegin;
-  PetscCall(MatCreate(comm, A));
-  PetscCall(MatSetSizes(*A, m, n, M, N));
-  PetscCallMPI(MPI_Comm_size(comm, &size));
-  if (size > 1) {
-    PetscCall(MatSetType(*A, MATMPIAIJCUSPARSE));
-    PetscCall(MatMPIAIJSetPreallocation(*A, d_nz, d_nnz, o_nz, o_nnz));
-  } else {
-    PetscCall(MatSetType(*A, MATSEQAIJCUSPARSE));
-    PetscCall(MatSeqAIJSetPreallocation(*A, d_nz, d_nnz));
-  }
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatMPIAIJCUSPARSE_CUPM_t::CreateAIJ(comm, m, n, M, N, d_nz, d_nnz, o_nz, o_nnz, A);
 }
 
 /*MC

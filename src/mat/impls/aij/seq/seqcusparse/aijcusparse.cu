@@ -3794,12 +3794,7 @@ static PetscErrorCode MatAssemblyEnd_SeqAIJCUSPARSE(Mat A, MatAssemblyType mode)
 @*/
 PetscErrorCode MatCreateSeqAIJCUSPARSE(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt nz, const PetscInt nnz[], Mat *A)
 {
-  PetscFunctionBegin;
-  PetscCall(MatCreate(comm, A));
-  PetscCall(MatSetSizes(*A, m, n, m, n));
-  PetscCall(MatSetType(*A, MATSEQAIJCUSPARSE));
-  PetscCall(MatSeqAIJSetPreallocation_SeqAIJ(*A, nz, (PetscInt *)nnz));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::CreateSeqAIJ(comm, m, n, nz, nnz, A);
 }
 
 static PetscErrorCode MatDestroy_SeqAIJCUSPARSE(Mat A)
@@ -4422,20 +4417,7 @@ PetscErrorCode MatSeqAIJCUSPARSERestoreIJ(Mat A, PetscBool compressed, const int
 @*/
 PetscErrorCode MatSeqAIJCUSPARSEGetArrayRead(Mat A, const PetscScalar **a)
 {
-  Mat_SeqAIJCUSPARSE *cusp = (Mat_SeqAIJCUSPARSE *)A->spptr;
-  CsrMatrix          *csr;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJCUSPARSE);
-  PetscCheck(cusp->format != MAT_CUSPARSE_ELL && cusp->format != MAT_CUSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCall(MatSeqAIJCUSPARSECopyToGPU(A));
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJCUSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing CUDA memory");
-  *a = csr->values->data().get();
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::GetArrayRead(A, a);
 }
 
 /*@C
@@ -4453,12 +4435,7 @@ PetscErrorCode MatSeqAIJCUSPARSEGetArrayRead(Mat A, const PetscScalar **a)
 @*/
 PetscErrorCode MatSeqAIJCUSPARSERestoreArrayRead(Mat A, const PetscScalar **a)
 {
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJCUSPARSE);
-  *a = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::RestoreArrayRead(A, a);
 }
 
 /*@C
@@ -4481,22 +4458,7 @@ PetscErrorCode MatSeqAIJCUSPARSERestoreArrayRead(Mat A, const PetscScalar **a)
 @*/
 PetscErrorCode MatSeqAIJCUSPARSEGetArray(Mat A, PetscScalar **a)
 {
-  Mat_SeqAIJCUSPARSE *cusp = (Mat_SeqAIJCUSPARSE *)A->spptr;
-  CsrMatrix          *csr;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJCUSPARSE);
-  PetscCheck(cusp->format != MAT_CUSPARSE_ELL && cusp->format != MAT_CUSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCall(MatSeqAIJCUSPARSECopyToGPU(A));
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJCUSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing CUDA memory");
-  *a             = csr->values->data().get();
-  A->offloadmask = PETSC_OFFLOAD_GPU;
-  PetscCall(MatSeqAIJCUSPARSEInvalidateTranspose(A, PETSC_FALSE));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::GetArray(A, a);
 }
 /*@C
   MatSeqAIJCUSPARSERestoreArray - restore the read-write access array obtained from `MatSeqAIJCUSPARSEGetArray()`
@@ -4513,13 +4475,7 @@ PetscErrorCode MatSeqAIJCUSPARSEGetArray(Mat A, PetscScalar **a)
 @*/
 PetscErrorCode MatSeqAIJCUSPARSERestoreArray(Mat A, PetscScalar **a)
 {
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJCUSPARSE);
-  PetscCall(PetscObjectStateIncrease((PetscObject)A));
-  *a = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::RestoreArray(A, a);
 }
 
 /*@C
@@ -4544,21 +4500,7 @@ PetscErrorCode MatSeqAIJCUSPARSERestoreArray(Mat A, PetscScalar **a)
 @*/
 PetscErrorCode MatSeqAIJCUSPARSEGetArrayWrite(Mat A, PetscScalar **a)
 {
-  Mat_SeqAIJCUSPARSE *cusp = (Mat_SeqAIJCUSPARSE *)A->spptr;
-  CsrMatrix          *csr;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJCUSPARSE);
-  PetscCheck(cusp->format != MAT_CUSPARSE_ELL && cusp->format != MAT_CUSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJCUSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing CUDA memory");
-  *a             = csr->values->data().get();
-  A->offloadmask = PETSC_OFFLOAD_GPU;
-  PetscCall(MatSeqAIJCUSPARSEInvalidateTranspose(A, PETSC_FALSE));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::GetArrayWrite(A, a);
 }
 
 /*@C
@@ -4576,13 +4518,7 @@ PetscErrorCode MatSeqAIJCUSPARSEGetArrayWrite(Mat A, PetscScalar **a)
 @*/
 PetscErrorCode MatSeqAIJCUSPARSERestoreArrayWrite(Mat A, PetscScalar **a)
 {
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJCUSPARSE);
-  PetscCall(PetscObjectStateIncrease((PetscObject)A));
-  *a = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::RestoreArrayWrite(A, a);
 }
 
 /* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (CUDA specialisation) */
@@ -4594,12 +4530,6 @@ struct MatSeqAIJCUSPARSE_Policy {
   static int storage_format_ell() { return (int)MAT_CUSPARSE_ELL; }
   static int storage_format_hyb() { return (int)MAT_CUSPARSE_HYB; }
 
-  static PetscErrorCode GetArray(Mat A, PetscScalar **a) { return MatSeqAIJCUSPARSEGetArray(A, a); }
-  static PetscErrorCode RestoreArray(Mat A, PetscScalar **a) { return MatSeqAIJCUSPARSERestoreArray(A, a); }
-  static PetscErrorCode GetArrayRead(Mat A, const PetscScalar **a) { return MatSeqAIJCUSPARSEGetArrayRead(A, a); }
-  static PetscErrorCode RestoreArrayRead(Mat A, const PetscScalar **a) { return MatSeqAIJCUSPARSERestoreArrayRead(A, a); }
-  static PetscErrorCode GetArrayWrite(Mat A, PetscScalar **a) { return MatSeqAIJCUSPARSEGetArrayWrite(A, a); }
-  static PetscErrorCode RestoreArrayWrite(Mat A, PetscScalar **a) { return MatSeqAIJCUSPARSERestoreArrayWrite(A, a); }
   static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJCUSPARSECopyToGPU(A); }
   static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJCUSPARSEInvalidateTranspose(A, d); }
   static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJCUSPARSE(B, t, r, C); }

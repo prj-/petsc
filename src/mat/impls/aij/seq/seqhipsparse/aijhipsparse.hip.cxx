@@ -3223,12 +3223,7 @@ static PetscErrorCode MatAssemblyEnd_SeqAIJHIPSPARSE(Mat A, MatAssemblyType mode
 @*/
 PetscErrorCode MatCreateSeqAIJHIPSPARSE(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt nz, const PetscInt nnz[], Mat *A)
 {
-  PetscFunctionBegin;
-  PetscCall(MatCreate(comm, A));
-  PetscCall(MatSetSizes(*A, m, n, m, n));
-  PetscCall(MatSetType(*A, MATSEQAIJHIPSPARSE));
-  PetscCall(MatSeqAIJSetPreallocation_SeqAIJ(*A, nz, (PetscInt *)nnz));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::CreateSeqAIJ(comm, m, n, nz, nnz, A);
 }
 
 static PetscErrorCode MatDestroy_SeqAIJHIPSPARSE(Mat A)
@@ -3815,20 +3810,7 @@ PetscErrorCode MatSeqAIJHIPSPARSERestoreIJ(Mat A, PetscBool compressed, const in
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSEGetArrayRead(Mat A, const PetscScalar *a[])
 {
-  Mat_SeqAIJHIPSPARSE *cusp = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-  CsrMatrix           *csr;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  PetscCheck(cusp->format != MAT_HIPSPARSE_ELL && cusp->format != MAT_HIPSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCall(MatSeqAIJHIPSPARSECopyToGPU(A));
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJHIPSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing HIP memory");
-  *a = csr->values->data().get();
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::GetArrayRead(A, a);
 }
 
 /*@C
@@ -3846,12 +3828,7 @@ PetscErrorCode MatSeqAIJHIPSPARSEGetArrayRead(Mat A, const PetscScalar *a[])
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSERestoreArrayRead(Mat A, const PetscScalar *a[])
 {
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  *a = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::RestoreArrayRead(A, a);
 }
 
 /*@C
@@ -3874,22 +3851,7 @@ PetscErrorCode MatSeqAIJHIPSPARSERestoreArrayRead(Mat A, const PetscScalar *a[])
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSEGetArray(Mat A, PetscScalar *a[])
 {
-  Mat_SeqAIJHIPSPARSE *cusp = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-  CsrMatrix           *csr;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  PetscCheck(cusp->format != MAT_HIPSPARSE_ELL && cusp->format != MAT_HIPSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCall(MatSeqAIJHIPSPARSECopyToGPU(A));
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJHIPSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing HIP memory");
-  *a             = csr->values->data().get();
-  A->offloadmask = PETSC_OFFLOAD_GPU;
-  PetscCall(MatSeqAIJHIPSPARSEInvalidateTranspose(A, PETSC_FALSE));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::GetArray(A, a);
 }
 /*@C
   MatSeqAIJHIPSPARSERestoreArray - restore the read-write access array obtained from `MatSeqAIJHIPSPARSEGetArray()`
@@ -3906,13 +3868,7 @@ PetscErrorCode MatSeqAIJHIPSPARSEGetArray(Mat A, PetscScalar *a[])
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSERestoreArray(Mat A, PetscScalar *a[])
 {
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  PetscCall(PetscObjectStateIncrease((PetscObject)A));
-  *a = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::RestoreArray(A, a);
 }
 
 /*@C
@@ -3935,21 +3891,7 @@ PetscErrorCode MatSeqAIJHIPSPARSERestoreArray(Mat A, PetscScalar *a[])
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSEGetArrayWrite(Mat A, PetscScalar *a[])
 {
-  Mat_SeqAIJHIPSPARSE *cusp = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-  CsrMatrix           *csr;
-
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  PetscCheck(cusp->format != MAT_HIPSPARSE_ELL && cusp->format != MAT_HIPSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJHIPSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing HIP memory");
-  *a             = csr->values->data().get();
-  A->offloadmask = PETSC_OFFLOAD_GPU;
-  PetscCall(MatSeqAIJHIPSPARSEInvalidateTranspose(A, PETSC_FALSE));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::GetArrayWrite(A, a);
 }
 
 /*@C
@@ -3967,13 +3909,7 @@ PetscErrorCode MatSeqAIJHIPSPARSEGetArrayWrite(Mat A, PetscScalar *a[])
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSERestoreArrayWrite(Mat A, PetscScalar *a[])
 {
-  PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscAssertPointer(a, 2);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  PetscCall(PetscObjectStateIncrease((PetscObject)A));
-  *a = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJHIPSPARSE_CUPM_t::RestoreArrayWrite(A, a);
 }
 
 /* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (HIP specialisation) */
@@ -3985,12 +3921,6 @@ struct MatSeqAIJHIPSPARSE_Policy {
   static int storage_format_ell() { return (int)MAT_HIPSPARSE_ELL; }
   static int storage_format_hyb() { return (int)MAT_HIPSPARSE_HYB; }
 
-  static PetscErrorCode GetArray(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArray(A, a); }
-  static PetscErrorCode RestoreArray(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArray(A, a); }
-  static PetscErrorCode GetArrayRead(Mat A, const PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArrayRead(A, a); }
-  static PetscErrorCode RestoreArrayRead(Mat A, const PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArrayRead(A, a); }
-  static PetscErrorCode GetArrayWrite(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArrayWrite(A, a); }
-  static PetscErrorCode RestoreArrayWrite(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArrayWrite(A, a); }
   static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJHIPSPARSECopyToGPU(A); }
   static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJHIPSPARSEInvalidateTranspose(A, d); }
   static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJHIPSPARSE(B, t, r, C); }

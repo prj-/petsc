@@ -122,15 +122,7 @@ __global__ static void GetDiagonal_CSR(const int *row, const int *col, const Pet
      static int storage_format_ell();
      static int storage_format_hyb();
 
-     // Matrix CSR device-array access
-     static PetscErrorCode GetArray     (Mat, PetscScalar **);
-     static PetscErrorCode RestoreArray (Mat, PetscScalar **);
-     static PetscErrorCode GetArrayRead (Mat, const PetscScalar **);
-     static PetscErrorCode RestoreArrayRead(Mat, const PetscScalar **);
-     static PetscErrorCode GetArrayWrite(Mat, PetscScalar **);
-     static PetscErrorCode RestoreArrayWrite(Mat, PetscScalar **);
-
-     // Bookkeeping helpers
+     // Bookkeeping helpers (device-type specific)
      static PetscErrorCode CopyToGPU(Mat);
      static PetscErrorCode InvalidateTranspose(Mat, PetscBool);
      static PetscErrorCode ConvertFromSeqAIJ(Mat, MatType, MatReuse, Mat *);
@@ -234,14 +226,14 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscBLASInt     one = 1, bnz = 1;
 
     PetscFunctionBegin;
-    PetscCall(Policy::GetArray(Y, &ay));
+    PetscCall(GetArray(Y, &ay));
     PetscCall(GetHandles_(&blashandle));
     PetscCall(PetscBLASIntCast(y->nz, &bnz));
     PetscCall(PetscLogGpuTimeBegin());
     PetscCallCUPMBLAS(cupmBlasXscal(blashandle, bnz, &a, ay, one));
     PetscCall(PetscLogGpuFlops(bnz));
     PetscCall(PetscLogGpuTimeEnd());
-    PetscCall(Policy::RestoreArray(Y, &ay));
+    PetscCall(RestoreArray(Y, &ay));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
@@ -258,7 +250,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscFunctionBegin;
     PetscCall(GetHandles_(&stream));
     PetscCall(PetscLogGpuTimeBegin());
-    PetscCall(Policy::GetArray(A, &av));
+    PetscCall(GetArray(A, &av));
     devstruct = (MatStructType *)A->spptr;
     csr       = (CsrMatrix *)devstruct->mat->mat;
     if (ll) {
@@ -287,7 +279,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
       PetscCall(Policy::VecRestoreArrayRead(rr, &rv));
       PetscCall(PetscLogGpuFlops(nz));
     }
-    PetscCall(Policy::RestoreArray(A, &av));
+    PetscCall(RestoreArray(A, &av));
     PetscCall(PetscLogGpuTimeEnd());
     PetscFunctionReturn(PETSC_SUCCESS);
   }
@@ -398,8 +390,8 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
       PetscCallCUPM(cupmMemcpy((void *)v1, v, coo->n * sizeof(PetscScalar), cupmMemcpyHostToDevice));
     }
 
-    if (imode == INSERT_VALUES) PetscCall(Policy::GetArrayWrite(A, &Aa));
-    else PetscCall(Policy::GetArray(A, &Aa));
+    if (imode == INSERT_VALUES) PetscCall(GetArrayWrite(A, &Aa));
+    else PetscCall(GetArray(A, &Aa));
 
     PetscCall(GetHandles_(&stream));
     PetscCall(PetscLogGpuTimeBegin());
@@ -409,8 +401,8 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     }
     PetscCall(PetscLogGpuTimeEnd());
 
-    if (imode == INSERT_VALUES) PetscCall(Policy::RestoreArrayWrite(A, &Aa));
-    else PetscCall(Policy::RestoreArray(A, &Aa));
+    if (imode == INSERT_VALUES) PetscCall(RestoreArrayWrite(A, &Aa));
+    else PetscCall(RestoreArray(A, &Aa));
 
     if (PetscMemTypeHost(memtype)) {
       void *v1_device = (void *)v1;
@@ -429,7 +421,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscFunctionBegin;
     PetscCall(PetscCUPMGetMemType(v, &mtype));
     dmem = PetscMemTypeDevice(mtype);
-    PetscCall(Policy::GetArrayRead(A, &av));
+    PetscCall(GetArrayRead(A, &av));
     if (n && idx) {
       THRUSTINTARRAY widx(n);
       widx.assign(idx, idx + n);
@@ -455,7 +447,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
       PetscCallCUPM(cupmMemcpy(v, av, n * sizeof(PetscScalar), dmem ? cupmMemcpyDeviceToDevice : cupmMemcpyDeviceToHost));
     }
     if (!dmem) PetscCall(PetscLogCpuToGpu(n * sizeof(PetscScalar)));
-    PetscCall(Policy::RestoreArrayRead(A, &av));
+    PetscCall(RestoreArrayRead(A, &av));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
@@ -474,16 +466,16 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscBLASInt       one = 1, bnz = 1;
 
     PetscFunctionBegin;
-    PetscCall(Policy::GetArrayRead(X, &ax));
-    PetscCall(Policy::GetArray(Y, &ay));
+    PetscCall(GetArrayRead(X, &ax));
+    PetscCall(GetArray(Y, &ay));
     PetscCall(GetHandles_(&blashandle));
     PetscCall(PetscBLASIntCast(x->nz, &bnz));
     PetscCall(PetscLogGpuTimeBegin());
     PetscCallCUPMBLAS(cupmBlasXaxpy(blashandle, bnz, &a, ax, one, ay, one));
     PetscCall(PetscLogGpuFlops(2.0 * bnz));
     PetscCall(PetscLogGpuTimeEnd());
-    PetscCall(Policy::RestoreArrayRead(X, &ax));
-    PetscCall(Policy::RestoreArray(Y, &ay));
+    PetscCall(RestoreArrayRead(X, &ax));
+    PetscCall(RestoreArray(Y, &ay));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
@@ -513,6 +505,117 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     }
     PetscFunctionReturn(PETSC_SUCCESS);
   }
+
+  /* -------------------------------------------------------------------
+     Tier 4 – Device array access (moved here from vendor files so both
+     SeqAIJCUSPARSE and SeqAIJHIPSPARSE share one implementation).
+     ------------------------------------------------------------------- */
+
+  /* GetArrayRead: read-only access to device CSR value array */
+  static PetscErrorCode GetArrayRead(Mat A, const PetscScalar **a) noexcept
+  {
+    MatStructType *cusp = (MatStructType *)A->spptr;
+    CsrMatrix     *csr;
+
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscAssertPointer(a, 2);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    PetscCheck(cusp->format != (decltype(cusp->format))Policy::storage_format_ell() && cusp->format != (decltype(cusp->format))Policy::storage_format_hyb(), PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
+    PetscCall(Policy::CopyToGPU(A));
+    PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing MultStruct");
+    csr = (CsrMatrix *)cusp->mat->mat;
+    PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing device memory");
+    *a = csr->values->data().get();
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* RestoreArrayRead: release read-only access obtained from GetArrayRead */
+  static PetscErrorCode RestoreArrayRead(Mat A, const PetscScalar **a) noexcept
+  {
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscAssertPointer(a, 2);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    *a = NULL;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* GetArray: read-write access to device CSR value array */
+  static PetscErrorCode GetArray(Mat A, PetscScalar **a) noexcept
+  {
+    MatStructType *cusp = (MatStructType *)A->spptr;
+    CsrMatrix     *csr;
+
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscAssertPointer(a, 2);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    PetscCheck(cusp->format != (decltype(cusp->format))Policy::storage_format_ell() && cusp->format != (decltype(cusp->format))Policy::storage_format_hyb(), PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
+    PetscCall(Policy::CopyToGPU(A));
+    PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing MultStruct");
+    csr = (CsrMatrix *)cusp->mat->mat;
+    PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing device memory");
+    *a             = csr->values->data().get();
+    A->offloadmask = PETSC_OFFLOAD_GPU;
+    PetscCall(Policy::InvalidateTranspose(A, PETSC_FALSE));
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* RestoreArray: restore read-write access obtained from GetArray */
+  static PetscErrorCode RestoreArray(Mat A, PetscScalar **a) noexcept
+  {
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscAssertPointer(a, 2);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    PetscCall(PetscObjectStateIncrease((PetscObject)A));
+    *a = NULL;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* GetArrayWrite: write-only access to device CSR value array (no host→device copy) */
+  static PetscErrorCode GetArrayWrite(Mat A, PetscScalar **a) noexcept
+  {
+    MatStructType *cusp = (MatStructType *)A->spptr;
+    CsrMatrix     *csr;
+
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscAssertPointer(a, 2);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    PetscCheck(cusp->format != (decltype(cusp->format))Policy::storage_format_ell() && cusp->format != (decltype(cusp->format))Policy::storage_format_hyb(), PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
+    PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing MultStruct");
+    csr = (CsrMatrix *)cusp->mat->mat;
+    PetscCheck(csr->values, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing device memory");
+    *a             = csr->values->data().get();
+    A->offloadmask = PETSC_OFFLOAD_GPU;
+    PetscCall(Policy::InvalidateTranspose(A, PETSC_FALSE));
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* RestoreArrayWrite: restore write-only access obtained from GetArrayWrite */
+  static PetscErrorCode RestoreArrayWrite(Mat A, PetscScalar **a) noexcept
+  {
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscAssertPointer(a, 2);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    PetscCall(PetscObjectStateIncrease((PetscObject)A));
+    *a = NULL;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* CreateSeqAIJ: allocate and preallocate a seq sparse matrix of this type */
+  static PetscErrorCode CreateSeqAIJ(MPI_Comm comm, PetscInt m, PetscInt n, PetscInt nz, const PetscInt nnz[], Mat *A) noexcept
+  {
+    PetscFunctionBegin;
+    PetscCall(MatCreate(comm, A));
+    PetscCall(MatSetSizes(*A, m, n, m, n));
+    PetscCall(MatSetType(*A, Policy::mat_type_name));
+    PetscCall(MatSeqAIJSetPreallocation_SeqAIJ(*A, nz, (PetscInt *)nnz));
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
 };
 
 } // namespace impl
@@ -527,3 +630,4 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
 
 /* External declarations needed by the shared template */
 PETSC_INTERN PetscErrorCode MatGetDiagonal_SeqAIJ(Mat A, Vec xx);
+PETSC_INTERN PetscErrorCode MatSeqAIJSetPreallocation_SeqAIJ(Mat, PetscInt, PetscInt[]);
