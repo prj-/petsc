@@ -439,6 +439,4 @@ struct MatMPIAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
 
 } // namespace Petsc
 
-PETSC_INTERN PetscErrorCode MatSetPreallocationCOO_MPIAIJ(Mat, PetscCount, PetscInt[], PetscInt[]);
-PETSC_INTERN PetscErrorCode MatAssemblyEnd_MPIAIJ(Mat, MatAssemblyType);
-PETSC_INTERN PetscErrorCode MatMPIAIJGetSeqAIJ(Mat, Mat *, Mat *, const PetscInt **);
+
