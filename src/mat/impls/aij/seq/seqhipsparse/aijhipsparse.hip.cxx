@@ -3768,29 +3768,8 @@ static PetscErrorCode MatSetValuesCOO_SeqAIJHIPSPARSE(Mat A, const PetscScalar v
 @*/
 PetscErrorCode MatSeqAIJHIPSPARSEGetIJ(Mat A, PetscBool compressed, const int *i[], const int *j[])
 {
-  Mat_SeqAIJHIPSPARSE *cusp = (Mat_SeqAIJHIPSPARSE *)A->spptr;
-  Mat_SeqAIJ          *a    = (Mat_SeqAIJ *)A->data;
-  CsrMatrix           *csr;
-
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  if (!i || !j) PetscFunctionReturn(PETSC_SUCCESS);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  PetscCheck(cusp->format != MAT_HIPSPARSE_ELL && cusp->format != MAT_HIPSPARSE_HYB, PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
-  PetscCall(MatSeqAIJHIPSPARSECopyToGPU(A));
-  PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing Mat_SeqAIJHIPSPARSEMultStruct");
-  csr = (CsrMatrix *)cusp->mat->mat;
-  if (i) {
-    if (!compressed && a->compressedrow.use) { /* need full row offset */
-      if (!cusp->rowoffsets_gpu) {
-        cusp->rowoffsets_gpu = new THRUSTINTARRAY32(A->rmap->n + 1);
-        cusp->rowoffsets_gpu->assign(a->i, a->i + A->rmap->n + 1);
-        PetscCall(PetscLogCpuToGpu((A->rmap->n + 1) * sizeof(PetscInt)));
-      }
-      *i = cusp->rowoffsets_gpu->data().get();
-    } else *i = csr->row_offsets->data().get();
-  }
-  if (j) *j = csr->column_indices->data().get();
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::GetIJ(A, compressed, i, j));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -3812,10 +3791,7 @@ PetscErrorCode MatSeqAIJHIPSPARSEGetIJ(Mat A, PetscBool compressed, const int *i
 PetscErrorCode MatSeqAIJHIPSPARSERestoreIJ(Mat A, PetscBool compressed, const int *i[], const int *j[])
 {
   PetscFunctionBegin;
-  PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
-  PetscCheckTypeName(A, MATSEQAIJHIPSPARSE);
-  if (i) *i = NULL;
-  if (j) *j = NULL;
+  PetscCall(MatSeqAIJHIPSPARSE_CUPM_t::RestoreIJ(A, compressed, i, j));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -4006,6 +3982,8 @@ struct MatSeqAIJHIPSPARSE_Policy {
   typedef Mat_SeqAIJHIPSPARSEMultStruct mult_struct_type;
 
   static int storage_format_csr() { return (int)MAT_HIPSPARSE_CSR; }
+  static int storage_format_ell() { return (int)MAT_HIPSPARSE_ELL; }
+  static int storage_format_hyb() { return (int)MAT_HIPSPARSE_HYB; }
 
   static PetscErrorCode GetArray(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSEGetArray(A, a); }
   static PetscErrorCode RestoreArray(Mat A, PetscScalar **a) { return MatSeqAIJHIPSPARSERestoreArray(A, a); }

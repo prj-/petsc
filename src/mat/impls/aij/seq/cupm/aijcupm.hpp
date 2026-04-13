@@ -117,8 +117,10 @@ __global__ static void GetDiagonal_CSR(const int *row, const int *col, const Pet
      typedef ... mat_struct_type;       // Mat_SeqAIJCUSPARSE / Mat_SeqAIJHIPSPARSE
      typedef ... mult_struct_type;      // ...MultStruct equivalent
 
-     // Storage-format constant (value of the CSR enumerator)
+     // Storage-format constants (value of each format enumerator)
      static int storage_format_csr();
+     static int storage_format_ell();
+     static int storage_format_hyb();
 
      // Matrix CSR device-array access
      static PetscErrorCode GetArray     (Mat, PetscScalar **);
@@ -287,6 +289,47 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     }
     PetscCall(Policy::RestoreArray(A, &av));
     PetscCall(PetscLogGpuTimeEnd());
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* MatSeqAIJGetIJ: return device CSR row-pointer and column-index arrays */
+  static PetscErrorCode GetIJ(Mat A, PetscBool compressed, const int **i, const int **j) noexcept
+  {
+    MatStructType *cusp = (MatStructType *)A->spptr;
+    Mat_SeqAIJ    *a    = (Mat_SeqAIJ *)A->data;
+    CsrMatrix     *csr;
+
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    if (!i || !j) PetscFunctionReturn(PETSC_SUCCESS);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    PetscCheck(cusp->format != (decltype(cusp->format))Policy::storage_format_ell() && cusp->format != (decltype(cusp->format))Policy::storage_format_hyb(), PETSC_COMM_SELF, PETSC_ERR_SUP, "Not implemented");
+    PetscCall(Policy::CopyToGPU(A));
+    PetscCheck(cusp->mat, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing MultStruct");
+    csr = (CsrMatrix *)cusp->mat->mat;
+    if (i) {
+      if (!compressed && a->compressedrow.use) { /* need full row offset */
+        if (!cusp->rowoffsets_gpu) {
+          cusp->rowoffsets_gpu = new THRUSTINTARRAY32(A->rmap->n + 1);
+          cusp->rowoffsets_gpu->assign(a->i, a->i + A->rmap->n + 1);
+          PetscCall(PetscLogCpuToGpu((A->rmap->n + 1) * sizeof(PetscInt)));
+        }
+        *i = cusp->rowoffsets_gpu->data().get();
+      } else *i = csr->row_offsets->data().get();
+    }
+    if (j) *j = csr->column_indices->data().get();
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* MatSeqAIJRestoreIJ: nullify the pointers previously obtained with GetIJ */
+  static PetscErrorCode RestoreIJ(Mat A, PetscBool compressed, const int **i, const int **j) noexcept
+  {
+    PetscFunctionBegin;
+    PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
+    PetscCheckTypeName(A, Policy::mat_type_name);
+    if (i) *i = NULL;
+    if (j) *j = NULL;
+    (void)compressed;
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
