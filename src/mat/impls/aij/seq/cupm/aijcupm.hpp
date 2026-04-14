@@ -76,6 +76,22 @@ struct VecCUPMEquals {
 };
 
 /* --------------------------------------------------------------------------
+   Shared device comparator: lexicographic (row, col) order for 4-tuples.
+   Used by the thrust::merge call in MatMerge_SeqAIJCUSPARSE / SeqAIJHIPSPARSE.
+   Replaces the identical IJCompare4 structs in aijcusparse.cu and
+   aijhipsparse.hip.cxx.
+   -------------------------------------------------------------------------- */
+struct IJCompare4 {
+  template <typename Tuple>
+  __host__ __device__ inline bool operator()(const Tuple &t1, const Tuple &t2) const
+  {
+    if (thrust::get<0>(t1) < thrust::get<0>(t2)) return true;
+    if (thrust::get<0>(t1) == thrust::get<0>(t2)) return thrust::get<1>(t1) < thrust::get<1>(t2);
+    return false;
+  }
+};
+
+/* --------------------------------------------------------------------------
    Shared __global__ kernel: accumulate COO values into a CSR array.
    __global__ is valid for both nvcc and hipcc; the body is identical.
    -------------------------------------------------------------------------- */

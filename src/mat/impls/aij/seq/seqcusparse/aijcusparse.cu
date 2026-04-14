@@ -4544,15 +4544,6 @@ PetscErrorCode MatSeqAIJCUSPARSERestoreArrayWrite(Mat A, PetscScalar **a)
   return MatSeqAIJCUSPARSE_CUPM_t::RestoreArrayWrite(A, a);
 }
 
-struct IJCompare4 {
-  __host__ __device__ inline bool operator()(const thrust::tuple<int, int, PetscScalar, int> &t1, const thrust::tuple<int, int, PetscScalar, int> &t2)
-  {
-    if (thrust::get<0>(t1) < thrust::get<0>(t2)) return true;
-    if (thrust::get<0>(t1) == thrust::get<0>(t2)) return thrust::get<1>(t1) < thrust::get<1>(t2);
-    return false;
-  }
-};
-
 struct Shift {
   int _shift;
 
@@ -4678,7 +4669,7 @@ PetscErrorCode MatSeqAIJCUSPARSEMergeMats(Mat A, Mat B, MatReuse reuse, Mat *C)
 #else
       thrust::advance(p2, Annz);
 #endif
-      PetscCallThrust(thrust::merge(thrust::device, Azb, Aze, Bzb, Bze, Czb, IJCompare4()));
+      PetscCallThrust(thrust::merge(thrust::device, Azb, Aze, Bzb, Bze, Czb, Petsc::mat::aij::cupm::impl::IJCompare4()));
 #if PETSC_PKG_CUDA_VERSION_LT(10, 0, 0)
       thrust::transform(Bcib, Bcie, Bcib, Shift(-A->cmap->n));
 #endif
