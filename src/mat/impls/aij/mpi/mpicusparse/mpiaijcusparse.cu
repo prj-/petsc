@@ -16,6 +16,8 @@ struct MatMPIAIJCUSPARSE_Policy {
   static const char *mpi_mat_type;
   static const char *seq_mat_type;
   static const char *vec_seq_type;
+  static const char *set_format_c;
+  static const char *mpi_convert_hypre_c;
 
   static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJCUSPARSECopyToGPU(A); }
   static PetscErrorCode MergeMats(Mat A, Mat B, MatReuse r, Mat *C) { return MatSeqAIJCUSPARSEMergeMats(A, B, r, C); }
@@ -33,9 +35,11 @@ struct MatMPIAIJCUSPARSE_Policy {
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 };
-const char *MatMPIAIJCUSPARSE_Policy::mpi_mat_type = MATMPIAIJCUSPARSE;
-const char *MatMPIAIJCUSPARSE_Policy::seq_mat_type = MATSEQAIJCUSPARSE;
-const char *MatMPIAIJCUSPARSE_Policy::vec_seq_type = VECSEQCUDA;
+const char *MatMPIAIJCUSPARSE_Policy::mpi_mat_type          = MATMPIAIJCUSPARSE;
+const char *MatMPIAIJCUSPARSE_Policy::seq_mat_type          = MATSEQAIJCUSPARSE;
+const char *MatMPIAIJCUSPARSE_Policy::vec_seq_type          = VECSEQCUDA;
+const char *MatMPIAIJCUSPARSE_Policy::set_format_c          = "MatCUSPARSESetFormat_C";
+const char *MatMPIAIJCUSPARSE_Policy::mpi_convert_hypre_c   = "MatConvert_mpiaijcusparse_hypre_C";
 
 using MatMPIAIJCUSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatMPIAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::CUDA, MatMPIAIJCUSPARSE_Policy>;
 
@@ -130,20 +134,7 @@ static PetscErrorCode MatSetFromOptions_MPIAIJCUSPARSE(Mat A, PetscOptionItems P
 
 static PetscErrorCode MatDestroy_MPIAIJCUSPARSE(Mat A)
 {
-  Mat_MPIAIJ         *aij            = (Mat_MPIAIJ *)A->data;
-  Mat_MPIAIJCUSPARSE *cusparseStruct = (Mat_MPIAIJCUSPARSE *)aij->spptr;
-
-  PetscFunctionBegin;
-  PetscCheck(cusparseStruct, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing spptr");
-  PetscCallCXX(delete cusparseStruct);
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatMPIAIJSetPreallocation_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatMPIAIJGetLocalMatMerge_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetPreallocationCOO_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetValuesCOO_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatCUSPARSESetFormat_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatConvert_mpiaijcusparse_hypre_C", NULL));
-  PetscCall(MatDestroy_MPIAIJ(A));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatMPIAIJCUSPARSE_CUPM_t::Destroy(A);
 }
 
 /* defines MatSetValues_MPICUSPARSE_Hash() */

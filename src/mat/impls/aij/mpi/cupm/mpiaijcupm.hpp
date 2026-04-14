@@ -103,6 +103,10 @@ __global__ static void MatAddRemoteCOOValues_MPI(const PetscScalar kv[], PetscCo
 
      // Set cuSPARSE/hipSPARSE storage format on both sub-matrices
      static PetscErrorCode SetSubMatFormats(Mat, Mat, mat_struct_type *);
+
+     // Compose-function keys that differ between CUDA and HIP
+     static const char *set_format_c;          // "MatCUSPARSESetFormat_C"            / "MatHIPSPARSESetFormat_C"
+     static const char *mpi_convert_hypre_c;   // "MatConvert_mpiaijcusparse_hypre_C" / "_mpiaijhipsparse_hypre_C"
    ========================================================================== */
 
 template <device::cupm::DeviceType T, typename Policy>
@@ -448,6 +452,25 @@ struct MatMPIAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
       PetscCall(MatSetType(*A, Policy::seq_mat_type));
       PetscCall(MatSeqAIJSetPreallocation(*A, d_nz, d_nnz));
     }
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* MatDestroy: free vendor-specific state, deregister composed functions */
+  static PetscErrorCode Destroy(Mat A) noexcept
+  {
+    Mat_MPIAIJ   *aij       = (Mat_MPIAIJ *)A->data;
+    MatStructType *mpiStruct = (MatStructType *)aij->spptr;
+
+    PetscFunctionBegin;
+    PetscCheck(mpiStruct, PETSC_COMM_SELF, PETSC_ERR_COR, "Missing spptr");
+    PetscCallCXX(delete mpiStruct);
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatMPIAIJSetPreallocation_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatMPIAIJGetLocalMatMerge_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetPreallocationCOO_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetValuesCOO_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::set_format_c, NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::mpi_convert_hypre_c, NULL));
+    PetscCall(MatDestroy_MPIAIJ(A));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 };

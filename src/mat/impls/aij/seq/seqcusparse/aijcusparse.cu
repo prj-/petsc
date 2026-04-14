@@ -3746,12 +3746,27 @@ struct MatSeqAIJCUSPARSE_Policy {
   static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJCUSPARSE(B, t, r, C); }
   static const char    *mat_type_name;
 
+  static PetscErrorCode Destroy(Mat A) { return MatSeqAIJCUSPARSE_Destroy(A); }
+  static PetscErrorCode TriFactorsDestroy(void **spptr) { return MatSeqAIJCUSPARSETriFactors_Destroy((Mat_SeqAIJCUSPARSETriFactors **)spptr); }
+  static const char *set_format_c;
+  static const char *set_use_cpu_solve_c;
+  static const char *product_seqdense_device_c;
+  static const char *product_seqdense_c;
+  static const char *product_self_c;
+  static const char *seq_convert_hypre_c;
+
   static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecCUDAGetArrayRead(v, a); }
   static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecCUDARestoreArrayRead(v, a); }
   static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecCUDAGetArrayWrite(v, a); }
   static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecCUDARestoreArrayWrite(v, a); }
 };
-const char *MatSeqAIJCUSPARSE_Policy::mat_type_name = MATSEQAIJCUSPARSE;
+const char *MatSeqAIJCUSPARSE_Policy::mat_type_name            = MATSEQAIJCUSPARSE;
+const char *MatSeqAIJCUSPARSE_Policy::set_format_c             = "MatCUSPARSESetFormat_C";
+const char *MatSeqAIJCUSPARSE_Policy::set_use_cpu_solve_c      = "MatCUSPARSESetUseCPUSolve_C";
+const char *MatSeqAIJCUSPARSE_Policy::product_seqdense_device_c = "MatProductSetFromOptions_seqaijcusparse_seqdensecuda_C";
+const char *MatSeqAIJCUSPARSE_Policy::product_seqdense_c       = "MatProductSetFromOptions_seqaijcusparse_seqdense_C";
+const char *MatSeqAIJCUSPARSE_Policy::product_self_c           = "MatProductSetFromOptions_seqaijcusparse_seqaijcusparse_C";
+const char *MatSeqAIJCUSPARSE_Policy::seq_convert_hypre_c      = "MatConvert_seqaijcusparse_hypre_C";
 
 using MatSeqAIJCUSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::CUDA, MatSeqAIJCUSPARSE_Policy>;
 
@@ -3823,24 +3838,7 @@ PetscErrorCode MatCreateSeqAIJCUSPARSE(MPI_Comm comm, PetscInt m, PetscInt n, Pe
 
 static PetscErrorCode MatDestroy_SeqAIJCUSPARSE(Mat A)
 {
-  PetscFunctionBegin;
-  if (A->factortype == MAT_FACTOR_NONE) {
-    PetscCall(MatSeqAIJCUSPARSE_Destroy(A));
-  } else {
-    PetscCall(MatSeqAIJCUSPARSETriFactors_Destroy((Mat_SeqAIJCUSPARSETriFactors **)&A->spptr));
-  }
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSeqAIJCopySubArray_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatCUSPARSESetFormat_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatCUSPARSESetUseCPUSolve_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatProductSetFromOptions_seqaijcusparse_seqdensecuda_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatProductSetFromOptions_seqaijcusparse_seqdense_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatProductSetFromOptions_seqaijcusparse_seqaijcusparse_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatFactorGetSolverType_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetPreallocationCOO_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetValuesCOO_C", NULL));
-  PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatConvert_seqaijcusparse_hypre_C", NULL));
-  PetscCall(MatDestroy_SeqAIJ(A));
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::Destroy(A);
 }
 
 static PetscErrorCode MatBindToCPU_SeqAIJCUSPARSE(Mat, PetscBool);

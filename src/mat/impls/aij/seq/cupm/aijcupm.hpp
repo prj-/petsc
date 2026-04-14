@@ -147,6 +147,18 @@ __global__ static void GetDiagonal_CSR(const int *row, const int *col, const Pet
      static PetscErrorCode ConvertFromSeqAIJ(Mat, MatType, MatReuse, Mat *);
      static const char    *mat_type_name;   // "seqaijcusparse" / "seqaijhipsparse"
 
+     // Destruction helpers (device-type specific)
+     static PetscErrorCode Destroy(Mat);
+     static PetscErrorCode TriFactorsDestroy(void **);
+
+     // Compose-function keys that differ between CUDA and HIP
+     static const char *set_format_c;          // "MatCUSPARSESetFormat_C"        / "MatHIPSPARSESetFormat_C"
+     static const char *set_use_cpu_solve_c;   // "MatCUSPARSESetUseCPUSolve_C"   / "MatHIPSPARSESetUseCPUSolve_C"
+     static const char *product_seqdense_device_c; // "...seqdensecuda_C"          / "...seqdensehip_C"
+     static const char *product_seqdense_c;    // "...seqdense_C"
+     static const char *product_self_c;        // "...seqaijcusparse_C"           / "...seqaijhipsparse_C"
+     static const char *seq_convert_hypre_c;   // "MatConvert_seqaijcusparse_hypre_C" / "_seqaijhipsparse_hypre_C"
+
      // Vec device-array access (device-type specific)
      static PetscErrorCode VecGetArrayRead  (Vec, const PetscScalar **);
      static PetscErrorCode VecRestoreArrayRead(Vec, const PetscScalar **);
@@ -633,6 +645,26 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscCall(MatSetSizes(*A, m, n, m, n));
     PetscCall(MatSetType(*A, Policy::mat_type_name));
     PetscCall(MatSeqAIJSetPreallocation_SeqAIJ(*A, nz, (PetscInt *)nnz));
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* MatDestroy: free vendor-specific state, deregister composed functions */
+  static PetscErrorCode Destroy(Mat A) noexcept
+  {
+    PetscFunctionBegin;
+    if (A->factortype == MAT_FACTOR_NONE) PetscCall(Policy::Destroy(A));
+    else PetscCall(Policy::TriFactorsDestroy(&A->spptr));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSeqAIJCopySubArray_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::set_format_c, NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::set_use_cpu_solve_c, NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::product_seqdense_device_c, NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::product_seqdense_c, NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::product_self_c, NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatFactorGetSolverType_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetPreallocationCOO_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, "MatSetValuesCOO_C", NULL));
+    PetscCall(PetscObjectComposeFunction((PetscObject)A, Policy::seq_convert_hypre_c, NULL));
+    PetscCall(MatDestroy_SeqAIJ(A));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 };
