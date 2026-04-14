@@ -67,9 +67,10 @@ static PetscErrorCode MatSeqAIJCUSPARSE_Destroy(Mat);
 static PetscErrorCode MatSeqAIJCUSPARSECopyFromGPU(Mat);
 static PetscErrorCode MatSeqAIJCUSPARSEInvalidateTranspose(Mat, PetscBool);
 
-static PetscErrorCode MatSeqAIJCopySubArray_SeqAIJCUSPARSE(Mat, PetscInt, const PetscInt[], PetscScalar[]);
-static PetscErrorCode MatSetPreallocationCOO_SeqAIJCUSPARSE(Mat, PetscCount, PetscInt[], PetscInt[]);
-static PetscErrorCode MatSetValuesCOO_SeqAIJCUSPARSE(Mat, const PetscScalar[], InsertMode);
+static PetscErrorCode        MatSeqAIJCopySubArray_SeqAIJCUSPARSE(Mat, PetscInt, const PetscInt[], PetscScalar[]);
+static PetscErrorCode        MatSetPreallocationCOO_SeqAIJCUSPARSE(Mat, PetscCount, PetscInt[], PetscInt[]);
+static PetscErrorCode        MatSetValuesCOO_SeqAIJCUSPARSE(Mat, const PetscScalar[], InsertMode);
+PETSC_INTERN PetscErrorCode  MatConvert_SeqAIJ_SeqAIJCUSPARSE(Mat, MatType, MatReuse, Mat *);
 
 PETSC_INTERN PetscErrorCode MatCUSPARSESetFormat_SeqAIJCUSPARSE(Mat A, MatCUSPARSEFormatOperation op, MatCUSPARSEStorageFormat format)
 {
@@ -3731,6 +3732,29 @@ static PetscErrorCode MatMultTransposeAdd_SeqAIJCUSPARSE(Mat A, Vec xx, Vec yy, 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (CUDA specialisation) */
+struct MatSeqAIJCUSPARSE_Policy {
+  typedef Mat_SeqAIJCUSPARSE          mat_struct_type;
+  typedef Mat_SeqAIJCUSPARSEMultStruct mult_struct_type;
+
+  static int storage_format_csr() { return (int)MAT_CUSPARSE_CSR; }
+  static int storage_format_ell() { return (int)MAT_CUSPARSE_ELL; }
+  static int storage_format_hyb() { return (int)MAT_CUSPARSE_HYB; }
+
+  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJCUSPARSECopyToGPU(A); }
+  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJCUSPARSEInvalidateTranspose(A, d); }
+  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJCUSPARSE(B, t, r, C); }
+  static const char    *mat_type_name;
+
+  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecCUDAGetArrayRead(v, a); }
+  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecCUDARestoreArrayRead(v, a); }
+  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecCUDAGetArrayWrite(v, a); }
+  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecCUDARestoreArrayWrite(v, a); }
+};
+const char *MatSeqAIJCUSPARSE_Policy::mat_type_name = MATSEQAIJCUSPARSE;
+
+using MatSeqAIJCUSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::CUDA, MatSeqAIJCUSPARSE_Policy>;
+
 static PetscErrorCode MatGetDiagonal_SeqAIJCUSPARSE(Mat A, Vec diag)
 {
   PetscFunctionBegin;
@@ -3819,9 +3843,8 @@ static PetscErrorCode MatDestroy_SeqAIJCUSPARSE(Mat A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-PETSC_INTERN PetscErrorCode MatConvert_SeqAIJ_SeqAIJCUSPARSE(Mat, MatType, MatReuse, Mat *);
-static PetscErrorCode       MatBindToCPU_SeqAIJCUSPARSE(Mat, PetscBool);
-static PetscErrorCode       MatDuplicate_SeqAIJCUSPARSE(Mat A, MatDuplicateOption cpvalues, Mat *B)
+static PetscErrorCode MatBindToCPU_SeqAIJCUSPARSE(Mat, PetscBool);
+static PetscErrorCode MatDuplicate_SeqAIJCUSPARSE(Mat A, MatDuplicateOption cpvalues, Mat *B)
 {
   PetscFunctionBegin;
   PetscCall(MatSeqAIJCUSPARSE_CUPM_t::Duplicate(A, cpvalues, B));
@@ -4520,29 +4543,6 @@ PetscErrorCode MatSeqAIJCUSPARSERestoreArrayWrite(Mat A, PetscScalar **a)
 {
   return MatSeqAIJCUSPARSE_CUPM_t::RestoreArrayWrite(A, a);
 }
-
-/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (CUDA specialisation) */
-struct MatSeqAIJCUSPARSE_Policy {
-  typedef Mat_SeqAIJCUSPARSE          mat_struct_type;
-  typedef Mat_SeqAIJCUSPARSEMultStruct mult_struct_type;
-
-  static int storage_format_csr() { return (int)MAT_CUSPARSE_CSR; }
-  static int storage_format_ell() { return (int)MAT_CUSPARSE_ELL; }
-  static int storage_format_hyb() { return (int)MAT_CUSPARSE_HYB; }
-
-  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJCUSPARSECopyToGPU(A); }
-  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJCUSPARSEInvalidateTranspose(A, d); }
-  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJCUSPARSE(B, t, r, C); }
-  static const char    *mat_type_name;
-
-  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecCUDAGetArrayRead(v, a); }
-  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecCUDARestoreArrayRead(v, a); }
-  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecCUDAGetArrayWrite(v, a); }
-  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecCUDARestoreArrayWrite(v, a); }
-};
-const char *MatSeqAIJCUSPARSE_Policy::mat_type_name = MATSEQAIJCUSPARSE;
-
-using MatSeqAIJCUSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::CUDA, MatSeqAIJCUSPARSE_Policy>;
 
 struct IJCompare4 {
   __host__ __device__ inline bool operator()(const thrust::tuple<int, int, PetscScalar, int> &t1, const thrust::tuple<int, int, PetscScalar, int> &t2)
