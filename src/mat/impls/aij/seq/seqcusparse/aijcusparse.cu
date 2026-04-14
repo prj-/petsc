@@ -2346,50 +2346,73 @@ static PetscErrorCode MatSeqAIJCUSPARSECopyFromGPU(Mat A)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (CUDA specialisation) */
+struct MatSeqAIJCUSPARSE_Policy {
+  typedef Mat_SeqAIJCUSPARSE          mat_struct_type;
+  typedef Mat_SeqAIJCUSPARSEMultStruct mult_struct_type;
+
+  static int storage_format_csr() { return (int)MAT_CUSPARSE_CSR; }
+  static int storage_format_ell() { return (int)MAT_CUSPARSE_ELL; }
+  static int storage_format_hyb() { return (int)MAT_CUSPARSE_HYB; }
+
+  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJCUSPARSECopyToGPU(A); }
+  static PetscErrorCode CopyFromGPU(Mat A) { return MatSeqAIJCUSPARSECopyFromGPU(A); }
+  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJCUSPARSEInvalidateTranspose(A, d); }
+  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJCUSPARSE(B, t, r, C); }
+  static const char    *mat_type_name;
+
+  static PetscErrorCode Destroy(Mat A) { return MatSeqAIJCUSPARSE_Destroy(A); }
+  static PetscErrorCode TriFactorsDestroy(void **spptr) { return MatSeqAIJCUSPARSETriFactors_Destroy((Mat_SeqAIJCUSPARSETriFactors **)spptr); }
+  static const char *set_format_c;
+  static const char *set_use_cpu_solve_c;
+  static const char *product_seqdense_device_c;
+  static const char *product_seqdense_c;
+  static const char *product_self_c;
+  static const char *seq_convert_hypre_c;
+
+  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecCUDAGetArrayRead(v, a); }
+  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecCUDARestoreArrayRead(v, a); }
+  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecCUDAGetArrayWrite(v, a); }
+  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecCUDARestoreArrayWrite(v, a); }
+};
+const char *MatSeqAIJCUSPARSE_Policy::mat_type_name            = MATSEQAIJCUSPARSE;
+const char *MatSeqAIJCUSPARSE_Policy::set_format_c             = "MatCUSPARSESetFormat_C";
+const char *MatSeqAIJCUSPARSE_Policy::set_use_cpu_solve_c      = "MatCUSPARSESetUseCPUSolve_C";
+const char *MatSeqAIJCUSPARSE_Policy::product_seqdense_device_c = "MatProductSetFromOptions_seqaijcusparse_seqdensecuda_C";
+const char *MatSeqAIJCUSPARSE_Policy::product_seqdense_c       = "MatProductSetFromOptions_seqaijcusparse_seqdense_C";
+const char *MatSeqAIJCUSPARSE_Policy::product_self_c           = "MatProductSetFromOptions_seqaijcusparse_seqaijcusparse_C";
+const char *MatSeqAIJCUSPARSE_Policy::seq_convert_hypre_c      = "MatConvert_seqaijcusparse_hypre_C";
+
+using MatSeqAIJCUSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::CUDA, MatSeqAIJCUSPARSE_Policy>;
+
 static PetscErrorCode MatSeqAIJGetArray_SeqAIJCUSPARSE(Mat A, PetscScalar *array[])
 {
-  PetscFunctionBegin;
-  PetscCall(MatSeqAIJCUSPARSECopyFromGPU(A));
-  *array = ((Mat_SeqAIJ *)A->data)->a;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::SeqAIJGetArray(A, array);
 }
 
 static PetscErrorCode MatSeqAIJRestoreArray_SeqAIJCUSPARSE(Mat A, PetscScalar *array[])
 {
-  PetscFunctionBegin;
-  A->offloadmask = PETSC_OFFLOAD_CPU;
-  *array         = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::SeqAIJRestoreArray(A, array);
 }
 
 static PetscErrorCode MatSeqAIJGetArrayRead_SeqAIJCUSPARSE(Mat A, const PetscScalar *array[])
 {
-  PetscFunctionBegin;
-  PetscCall(MatSeqAIJCUSPARSECopyFromGPU(A));
-  *array = ((Mat_SeqAIJ *)A->data)->a;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::SeqAIJGetArrayRead(A, array);
 }
 
-static PetscErrorCode MatSeqAIJRestoreArrayRead_SeqAIJCUSPARSE(Mat, const PetscScalar *array[])
+static PetscErrorCode MatSeqAIJRestoreArrayRead_SeqAIJCUSPARSE(Mat A, const PetscScalar *array[])
 {
-  PetscFunctionBegin;
-  *array = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::SeqAIJRestoreArrayRead(A, array);
 }
 
 static PetscErrorCode MatSeqAIJGetArrayWrite_SeqAIJCUSPARSE(Mat A, PetscScalar *array[])
 {
-  PetscFunctionBegin;
-  *array = ((Mat_SeqAIJ *)A->data)->a;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::SeqAIJGetArrayWrite(A, array);
 }
 
 static PetscErrorCode MatSeqAIJRestoreArrayWrite_SeqAIJCUSPARSE(Mat A, PetscScalar *array[])
 {
-  PetscFunctionBegin;
-  A->offloadmask = PETSC_OFFLOAD_CPU;
-  *array         = NULL;
-  PetscFunctionReturn(PETSC_SUCCESS);
+  return MatSeqAIJCUSPARSE_CUPM_t::SeqAIJRestoreArrayWrite(A, array);
 }
 
 static PetscErrorCode MatSeqAIJGetCSRAndMemType_SeqAIJCUSPARSE(Mat A, const PetscInt **i, const PetscInt **j, PetscScalar **a, PetscMemType *mtype)
@@ -3731,44 +3754,6 @@ static PetscErrorCode MatMultTransposeAdd_SeqAIJCUSPARSE(Mat A, Vec xx, Vec yy, 
   PetscCall(MatMultAddKernel_SeqAIJCUSPARSE(A, xx, yy, zz, PETSC_TRUE, PETSC_FALSE));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
-
-/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (CUDA specialisation) */
-struct MatSeqAIJCUSPARSE_Policy {
-  typedef Mat_SeqAIJCUSPARSE          mat_struct_type;
-  typedef Mat_SeqAIJCUSPARSEMultStruct mult_struct_type;
-
-  static int storage_format_csr() { return (int)MAT_CUSPARSE_CSR; }
-  static int storage_format_ell() { return (int)MAT_CUSPARSE_ELL; }
-  static int storage_format_hyb() { return (int)MAT_CUSPARSE_HYB; }
-
-  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJCUSPARSECopyToGPU(A); }
-  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJCUSPARSEInvalidateTranspose(A, d); }
-  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJCUSPARSE(B, t, r, C); }
-  static const char    *mat_type_name;
-
-  static PetscErrorCode Destroy(Mat A) { return MatSeqAIJCUSPARSE_Destroy(A); }
-  static PetscErrorCode TriFactorsDestroy(void **spptr) { return MatSeqAIJCUSPARSETriFactors_Destroy((Mat_SeqAIJCUSPARSETriFactors **)spptr); }
-  static const char *set_format_c;
-  static const char *set_use_cpu_solve_c;
-  static const char *product_seqdense_device_c;
-  static const char *product_seqdense_c;
-  static const char *product_self_c;
-  static const char *seq_convert_hypre_c;
-
-  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecCUDAGetArrayRead(v, a); }
-  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecCUDARestoreArrayRead(v, a); }
-  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecCUDAGetArrayWrite(v, a); }
-  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecCUDARestoreArrayWrite(v, a); }
-};
-const char *MatSeqAIJCUSPARSE_Policy::mat_type_name            = MATSEQAIJCUSPARSE;
-const char *MatSeqAIJCUSPARSE_Policy::set_format_c             = "MatCUSPARSESetFormat_C";
-const char *MatSeqAIJCUSPARSE_Policy::set_use_cpu_solve_c      = "MatCUSPARSESetUseCPUSolve_C";
-const char *MatSeqAIJCUSPARSE_Policy::product_seqdense_device_c = "MatProductSetFromOptions_seqaijcusparse_seqdensecuda_C";
-const char *MatSeqAIJCUSPARSE_Policy::product_seqdense_c       = "MatProductSetFromOptions_seqaijcusparse_seqdense_C";
-const char *MatSeqAIJCUSPARSE_Policy::product_self_c           = "MatProductSetFromOptions_seqaijcusparse_seqaijcusparse_C";
-const char *MatSeqAIJCUSPARSE_Policy::seq_convert_hypre_c      = "MatConvert_seqaijcusparse_hypre_C";
-
-using MatSeqAIJCUSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::CUDA, MatSeqAIJCUSPARSE_Policy>;
 
 static PetscErrorCode MatGetDiagonal_SeqAIJCUSPARSE(Mat A, Vec diag)
 {

@@ -143,6 +143,7 @@ __global__ static void GetDiagonal_CSR(const int *row, const int *col, const Pet
 
      // Bookkeeping helpers (device-type specific)
      static PetscErrorCode CopyToGPU(Mat);
+     static PetscErrorCode CopyFromGPU(Mat);
      static PetscErrorCode InvalidateTranspose(Mat, PetscBool);
      static PetscErrorCode ConvertFromSeqAIJ(Mat, MatType, MatReuse, Mat *);
      static const char    *mat_type_name;   // "seqaijcusparse" / "seqaijhipsparse"
@@ -634,6 +635,58 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscCheckTypeName(A, Policy::mat_type_name);
     PetscCall(PetscObjectStateIncrease((PetscObject)A));
     *a = NULL;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* SeqAIJGetArray: copy GPU→CPU then return host value array (ops->getarray) */
+  static PetscErrorCode SeqAIJGetArray(Mat A, PetscScalar *array[]) noexcept
+  {
+    PetscFunctionBegin;
+    PetscCall(Policy::CopyFromGPU(A));
+    *array = ((Mat_SeqAIJ *)A->data)->a;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* SeqAIJRestoreArray: mark matrix data CPU-valid (ops->restorearray) */
+  static PetscErrorCode SeqAIJRestoreArray(Mat A, PetscScalar *array[]) noexcept
+  {
+    PetscFunctionBegin;
+    A->offloadmask = PETSC_OFFLOAD_CPU;
+    *array         = NULL;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* SeqAIJGetArrayRead: copy GPU→CPU then return host value array read-only (ops->getarrayread) */
+  static PetscErrorCode SeqAIJGetArrayRead(Mat A, const PetscScalar *array[]) noexcept
+  {
+    PetscFunctionBegin;
+    PetscCall(Policy::CopyFromGPU(A));
+    *array = ((Mat_SeqAIJ *)A->data)->a;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* SeqAIJRestoreArrayRead: release read-only host array (ops->restorearrayread) */
+  static PetscErrorCode SeqAIJRestoreArrayRead(Mat /*A*/, const PetscScalar *array[]) noexcept
+  {
+    PetscFunctionBegin;
+    *array = NULL;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* SeqAIJGetArrayWrite: return host value array for write-only access (ops->getarraywrite) */
+  static PetscErrorCode SeqAIJGetArrayWrite(Mat A, PetscScalar *array[]) noexcept
+  {
+    PetscFunctionBegin;
+    *array = ((Mat_SeqAIJ *)A->data)->a;
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
+
+  /* SeqAIJRestoreArrayWrite: mark matrix data CPU-valid after write (ops->restorearraywrite) */
+  static PetscErrorCode SeqAIJRestoreArrayWrite(Mat A, PetscScalar *array[]) noexcept
+  {
+    PetscFunctionBegin;
+    A->offloadmask = PETSC_OFFLOAD_CPU;
+    *array         = NULL;
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
