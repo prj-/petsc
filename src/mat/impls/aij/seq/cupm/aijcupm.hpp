@@ -233,7 +233,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscCall(GetHandles_(&blashandle));
     PetscCall(PetscBLASIntCast(y->nz, &bnz));
     PetscCall(PetscLogGpuTimeBegin());
-    PetscCallCUPMBLAS(cupmBlasXscal(blashandle, bnz, &a, ay, one));
+    PetscCallCUPMBLAS(cupmBlasXscal(blashandle, bnz, cupmScalarPtrCast(&a), cupmScalarPtrCast(ay), one));
     PetscCall(PetscLogGpuFlops(bnz));
     PetscCall(PetscLogGpuTimeEnd());
     PetscCall(RestoreArray(Y, &ay));
@@ -474,7 +474,7 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
     PetscCall(GetHandles_(&blashandle));
     PetscCall(PetscBLASIntCast(x->nz, &bnz));
     PetscCall(PetscLogGpuTimeBegin());
-    PetscCallCUPMBLAS(cupmBlasXaxpy(blashandle, bnz, &a, ax, one, ay, one));
+    PetscCallCUPMBLAS(cupmBlasXaxpy(blashandle, bnz, cupmScalarPtrCast(&a), cupmScalarPtrCast(ax), one, cupmScalarPtrCast(ay), one));
     PetscCall(PetscLogGpuFlops(2.0 * bnz));
     PetscCall(PetscLogGpuTimeEnd());
     PetscCall(RestoreArrayRead(X, &ax));
