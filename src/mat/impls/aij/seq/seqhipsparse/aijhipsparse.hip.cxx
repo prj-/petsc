@@ -3181,6 +3181,29 @@ static PetscErrorCode MatMultTransposeAdd_SeqAIJHIPSPARSE(Mat A, Vec xx, Vec yy,
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (HIP specialisation) */
+struct MatSeqAIJHIPSPARSE_Policy {
+  typedef Mat_SeqAIJHIPSPARSE          mat_struct_type;
+  typedef Mat_SeqAIJHIPSPARSEMultStruct mult_struct_type;
+
+  static int storage_format_csr() { return (int)MAT_HIPSPARSE_CSR; }
+  static int storage_format_ell() { return (int)MAT_HIPSPARSE_ELL; }
+  static int storage_format_hyb() { return (int)MAT_HIPSPARSE_HYB; }
+
+  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJHIPSPARSECopyToGPU(A); }
+  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJHIPSPARSEInvalidateTranspose(A, d); }
+  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJHIPSPARSE(B, t, r, C); }
+  static const char    *mat_type_name;
+
+  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecHIPGetArrayRead(v, a); }
+  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecHIPRestoreArrayRead(v, a); }
+  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecHIPGetArrayWrite(v, a); }
+  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecHIPRestoreArrayWrite(v, a); }
+};
+const char *MatSeqAIJHIPSPARSE_Policy::mat_type_name = MATSEQAIJHIPSPARSE;
+
+using MatSeqAIJHIPSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::HIP, MatSeqAIJHIPSPARSE_Policy>;
+
 static PetscErrorCode MatAssemblyEnd_SeqAIJHIPSPARSE(Mat A, MatAssemblyType mode)
 {
   PetscFunctionBegin;
@@ -3911,29 +3934,6 @@ PetscErrorCode MatSeqAIJHIPSPARSERestoreArrayWrite(Mat A, PetscScalar *a[])
 {
   return MatSeqAIJHIPSPARSE_CUPM_t::RestoreArrayWrite(A, a);
 }
-
-/* Policy struct for MatSeqAIJCUSPARSE_CUPM shared template (HIP specialisation) */
-struct MatSeqAIJHIPSPARSE_Policy {
-  typedef Mat_SeqAIJHIPSPARSE          mat_struct_type;
-  typedef Mat_SeqAIJHIPSPARSEMultStruct mult_struct_type;
-
-  static int storage_format_csr() { return (int)MAT_HIPSPARSE_CSR; }
-  static int storage_format_ell() { return (int)MAT_HIPSPARSE_ELL; }
-  static int storage_format_hyb() { return (int)MAT_HIPSPARSE_HYB; }
-
-  static PetscErrorCode CopyToGPU(Mat A) { return MatSeqAIJHIPSPARSECopyToGPU(A); }
-  static PetscErrorCode InvalidateTranspose(Mat A, PetscBool d) { return MatSeqAIJHIPSPARSEInvalidateTranspose(A, d); }
-  static PetscErrorCode ConvertFromSeqAIJ(Mat B, MatType t, MatReuse r, Mat *C) { return MatConvert_SeqAIJ_SeqAIJHIPSPARSE(B, t, r, C); }
-  static const char    *mat_type_name;
-
-  static PetscErrorCode VecGetArrayRead(Vec v, const PetscScalar **a) { return VecHIPGetArrayRead(v, a); }
-  static PetscErrorCode VecRestoreArrayRead(Vec v, const PetscScalar **a) { return VecHIPRestoreArrayRead(v, a); }
-  static PetscErrorCode VecGetArrayWrite(Vec v, PetscScalar **a) { return VecHIPGetArrayWrite(v, a); }
-  static PetscErrorCode VecRestoreArrayWrite(Vec v, PetscScalar **a) { return VecHIPRestoreArrayWrite(v, a); }
-};
-const char *MatSeqAIJHIPSPARSE_Policy::mat_type_name = MATSEQAIJHIPSPARSE;
-
-using MatSeqAIJHIPSPARSE_CUPM_t = Petsc::mat::aij::cupm::impl::MatSeqAIJCUSPARSE_CUPM<Petsc::device::cupm::DeviceType::HIP, MatSeqAIJHIPSPARSE_Policy>;
 
 struct IJCompare4 {
   __host__ __device__ inline bool operator()(const thrust::tuple<int, int, PetscScalar, int> &t1, const thrust::tuple<int, int, PetscScalar, int> &t2)
