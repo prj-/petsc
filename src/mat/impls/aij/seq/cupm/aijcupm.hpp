@@ -27,6 +27,9 @@
 #include <thrust/for_each.h>
 #include <thrust/equal.h>
 
+/* Forward declaration of SeqAIJ fallback function used inside template */
+PETSC_INTERN PetscErrorCode MatGetDiagonal_SeqAIJ(Mat, Vec);
+
 namespace Petsc
 {
 
@@ -627,7 +630,3 @@ struct MatSeqAIJCUSPARSE_CUPM : device::cupm::impl::CUPMObject<T> {
 } // namespace mat
 
 } // namespace Petsc
-
-/* External declarations needed by the shared template */
-PETSC_INTERN PetscErrorCode MatGetDiagonal_SeqAIJ(Mat A, Vec xx);
-PETSC_INTERN PetscErrorCode MatSeqAIJSetPreallocation_SeqAIJ(Mat, PetscInt, PetscInt[]);
