@@ -5269,8 +5269,16 @@ PetscErrorCode MatSetSeqMat_SeqAIJ(Mat C, IS rowemb, IS colemb, MatStructure pat
 
   Baij = (Mat_SeqAIJ *)B->data;
   if (pattern == DIFFERENT_NONZERO_PATTERN) {
-    PetscCall(PetscMalloc1(B->rmap->n, &nz));
-    for (i = 0; i < B->rmap->n; i++) nz[i] = Baij->i[i + 1] - Baij->i[i];
+    PetscCall(PetscMalloc1(C->rmap->n, &nz));
+    if (rowemb) {
+      const PetscInt *rows;
+      PetscCall(PetscArrayzero(nz, C->rmap->n));
+      PetscCall(ISGetIndices(rowemb, &rows));
+      for (i = 0; i < B->rmap->n; i++) nz[rows[i]] = Baij->i[i + 1] - Baij->i[i];
+      PetscCall(ISRestoreIndices(rowemb, &rows));
+    } else {
+      for (i = 0; i < B->rmap->n; i++) nz[i] = Baij->i[i + 1] - Baij->i[i];
+    }
     PetscCall(MatSeqAIJSetPreallocation(C, 0, nz));
     PetscCall(PetscFree(nz));
   }
