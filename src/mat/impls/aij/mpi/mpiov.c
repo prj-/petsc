@@ -3087,14 +3087,20 @@ static PetscErrorCode MatCreateSubMatricesMPI_MPIXAIJ(Mat C, PetscInt ismax, con
       PetscCheck(indices[j] != indices[j - 1], PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Repeated indices in row IS %" PetscInt_FMT ": indices at %" PetscInt_FMT " and %" PetscInt_FMT " are both %" PetscInt_FMT, i, j - 1, j, indices[j]);
     }
     PetscCall(ISRestoreIndices(isrow[i], &indices));
-    PetscCall(ISSortPermutation(iscol[i], PETSC_FALSE, iscol_p + i));
-    PetscCall(ISSort(iscol[i]));
-    PetscCall(ISGetLocalSize(iscol[i], &issize));
-    PetscCall(ISGetIndices(iscol[i], &indices));
-    for (PetscInt j = 1; j < issize; ++j) {
-      PetscCheck(indices[j - 1] != indices[j], PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Repeated indices in col IS %" PetscInt_FMT ": indices at %" PetscInt_FMT " and %" PetscInt_FMT " are both %" PetscInt_FMT, i, j - 1, j, indices[j]);
+    if (isrow[i] == iscol[i]) {
+      /* Row and column are the same IS object; isrow[i] is already sorted, so reuse the row permutation */
+      iscol_p[i] = isrow_p[i];
+      PetscCall(PetscObjectReference((PetscObject)iscol_p[i]));
+    } else {
+      PetscCall(ISSortPermutation(iscol[i], PETSC_FALSE, iscol_p + i));
+      PetscCall(ISSort(iscol[i]));
+      PetscCall(ISGetLocalSize(iscol[i], &issize));
+      PetscCall(ISGetIndices(iscol[i], &indices));
+      for (PetscInt j = 1; j < issize; ++j) {
+        PetscCheck(indices[j - 1] != indices[j], PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Repeated indices in col IS %" PetscInt_FMT ": indices at %" PetscInt_FMT " and %" PetscInt_FMT " are both %" PetscInt_FMT, i, j - 1, j, indices[j]);
+      }
+      PetscCall(ISRestoreIndices(iscol[i], &indices));
     }
-    PetscCall(ISRestoreIndices(iscol[i], &indices));
     PetscCallMPI(MPI_Comm_size(((PetscObject)isrow[i])->comm, &size));
     if (size > 1) {
       cisrow[ii] = isrow[i];
