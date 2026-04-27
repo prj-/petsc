@@ -703,6 +703,16 @@ static PetscErrorCode MatCreateSubMatrix_Nest(Mat A, IS isrow, IS iscol, MatReus
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+static PetscErrorCode MatCreateSubMatrices_Nest(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *submat[])
+{
+  PetscInt i;
+
+  PetscFunctionBegin;
+  if (scall == MAT_INITIAL_MATRIX) PetscCall(PetscCalloc1(n + 1, submat));
+  for (i = 0; i < n; i++) PetscCall(MatCreateSubMatrix_Nest(A, irow[i], icol[i], scall, &(*submat)[i]));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 static PetscErrorCode MatGetLocalSubMatrix_Nest(Mat A, IS isrow, IS iscol, Mat *B)
 {
   Mat_Nest *vs = (Mat_Nest *)A->data;
@@ -2283,6 +2293,7 @@ PETSC_EXTERN PetscErrorCode MatCreate_Nest(Mat A)
   A->ops->axpy                      = MatAXPY_Nest;
   A->ops->duplicate                 = MatDuplicate_Nest;
   A->ops->createsubmatrix           = MatCreateSubMatrix_Nest;
+  A->ops->createsubmatrices         = MatCreateSubMatrices_Nest;
   A->ops->destroy                   = MatDestroy_Nest;
   A->ops->view                      = MatView_Nest;
   A->ops->getvecs                   = NULL; /* Use VECNEST by calling MatNestSetVecType(A,VECNEST) */
