@@ -705,11 +705,12 @@ static PetscErrorCode MatCreateSubMatrix_Nest(Mat A, IS isrow, IS iscol, MatReus
 
 static PetscErrorCode MatCreateSubMatrices_Nest(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *submat[])
 {
-  PetscInt i;
+  Mat B;
 
   PetscFunctionBegin;
-  if (scall == MAT_INITIAL_MATRIX) PetscCall(PetscCalloc1(n + 1, submat));
-  for (i = 0; i < n; i++) PetscCall(MatCreateSubMatrix_Nest(A, irow[i], icol[i], scall, &(*submat)[i]));
+  PetscCall(MatConvert(A, MATAIJ, MAT_INITIAL_MATRIX, &B));
+  PetscCall(MatCreateSubMatrices(B, n, irow, icol, scall, submat));
+  PetscCall(MatDestroy(&B));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

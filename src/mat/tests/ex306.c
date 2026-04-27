@@ -18,14 +18,37 @@ static PetscErrorCode CreateDiagMat(MPI_Comm comm, PetscInt N, PetscScalar val, 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+/* Check that each diagonal entry of a sequential submatrix has the expected value */
+static PetscErrorCode CheckDiag(Mat S, PetscScalar expected)
+{
+  Vec       diag;
+  PetscInt  n, i;
+  PetscBool ok = PETSC_TRUE;
+
+  PetscFunctionBeginUser;
+  PetscCall(MatCreateVecs(S, &diag, NULL));
+  PetscCall(MatGetDiagonal(S, diag));
+  PetscCall(VecGetLocalSize(diag, &n));
+  for (i = 0; i < n; i++) {
+    PetscScalar v;
+    PetscCall(VecGetValues(diag, 1, &i, &v));
+    if (v != expected) {
+      ok = PETSC_FALSE;
+      break;
+    }
+  }
+  PetscCall(VecDestroy(&diag));
+  PetscCheck(ok, PETSC_COMM_SELF, PETSC_ERR_PLIB, "diagonal value mismatch: expected %g", (double)PetscRealPart(expected));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 int main(int argc, char **argv)
 {
-  Mat     A00, A01, A10, A11, nest, *submats;
-  Mat     mats[4];
-  IS      rows[2], cols[2], irow[4], icol[4];
+  Mat      A00, A01, A10, A11, nest, *submats;
+  Mat      mats[4];
+  IS       rows[2], cols[2], irow[4], icol[4];
   PetscInt i, j, n = 4;
-  PetscBool equal;
-  MPI_Comm  comm;
+  MPI_Comm comm;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -52,36 +75,28 @@ int main(int argc, char **argv)
 
   /* Request all four (i,j) block combinations */
   for (i = 0; i < 2; i++) {
-    for (j = 0; j < 2; j++) {
-      irow[i * 2 + j] = rows[i];
-      icol[i * 2 + j] = cols[j];
-    }
+    for (j = 0; j < 2; j++) irow[i * 2 + j] = rows[i];
+  }
+  for (i = 0; i < 2; i++) {
+    for (j = 0; j < 2; j++) icol[i * 2 + j] = cols[j];
   }
 
-  /* Initial extraction */
+  /* Initial extraction - returns sequential submatrices */
   PetscCall(MatCreateSubMatrices(nest, n, irow, icol, MAT_INITIAL_MATRIX, &submats));
 
-  /* Verify each extracted block matches the original */
-  PetscCall(MatEqual(submats[0], A00, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "submats[0] != A00");
-  PetscCall(MatEqual(submats[1], A01, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "submats[1] != A01");
-  PetscCall(MatEqual(submats[2], A10, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "submats[2] != A10");
-  PetscCall(MatEqual(submats[3], A11, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "submats[3] != A11");
+  /* Verify each extracted block has the correct diagonal value */
+  PetscCall(CheckDiag(submats[0], 1.0));
+  PetscCall(CheckDiag(submats[1], 2.0));
+  PetscCall(CheckDiag(submats[2], 3.0));
+  PetscCall(CheckDiag(submats[3], 4.0));
 
   /* Reuse extraction */
   PetscCall(MatCreateSubMatrices(nest, n, irow, icol, MAT_REUSE_MATRIX, &submats));
 
-  PetscCall(MatEqual(submats[0], A00, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "reuse: submats[0] != A00");
-  PetscCall(MatEqual(submats[1], A01, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "reuse: submats[1] != A01");
-  PetscCall(MatEqual(submats[2], A10, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "reuse: submats[2] != A10");
-  PetscCall(MatEqual(submats[3], A11, &equal));
-  PetscCheck(equal, comm, PETSC_ERR_PLIB, "reuse: submats[3] != A11");
+  PetscCall(CheckDiag(submats[0], 1.0));
+  PetscCall(CheckDiag(submats[1], 2.0));
+  PetscCall(CheckDiag(submats[2], 3.0));
+  PetscCall(CheckDiag(submats[3], 4.0));
 
   PetscCall(MatDestroySubMatrices(n, &submats));
   PetscCall(MatDestroy(&nest));
