@@ -1,4 +1,4 @@
-static char help[] = "Test MatCreateSubMatrices() for MATNEST.\n\n";
+static char help[] = "Test MatCreateSubMatrices() and MatCreateMPIMatConcatenateSeqMat() for MATNEST.\n\n";
 
 #include <petscmat.h>
 
@@ -13,6 +13,22 @@ static PetscErrorCode CreateDiagMat(MPI_Comm comm, PetscInt N, PetscScalar val, 
   PetscCall(MatSetUp(*A));
   PetscCall(MatGetOwnershipRange(*A, &istart, &iend));
   for (i = istart; i < iend; i++) PetscCall(MatSetValue(*A, i, i, val, INSERT_VALUES));
+  PetscCall(MatAssemblyBegin(*A, MAT_FINAL_ASSEMBLY));
+  PetscCall(MatAssemblyEnd(*A, MAT_FINAL_ASSEMBLY));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* Create a sequential diagonal matrix on PETSC_COMM_SELF */
+static PetscErrorCode CreateSeqDiagMat(PetscInt N, PetscScalar val, Mat *A)
+{
+  PetscInt i;
+
+  PetscFunctionBeginUser;
+  PetscCall(MatCreate(PETSC_COMM_SELF, A));
+  PetscCall(MatSetSizes(*A, PETSC_DECIDE, PETSC_DECIDE, N, N));
+  PetscCall(MatSetType(*A, MATSEQAIJ));
+  PetscCall(MatSetUp(*A));
+  for (i = 0; i < N; i++) PetscCall(MatSetValue(*A, i, i, val, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(*A, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(*A, MAT_FINAL_ASSEMBLY));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -39,6 +55,41 @@ static PetscErrorCode CheckDiag(Mat S, PetscScalar expected)
   }
   PetscCall(VecDestroy(&diag));
   PetscCheck(ok, PETSC_COMM_SELF, PETSC_ERR_PLIB, "diagonal value mismatch: expected %g", (double)PetscRealPart(expected));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode TestConcatenate(MPI_Comm comm)
+{
+  Mat       seqnest, mpinest;
+  Mat       seqA00, seqA11;
+  Mat       mats[2];
+  PetscInt  M, N;
+  PetscBool is_nest;
+
+  PetscFunctionBeginUser;
+  /* Build a 2x1 sequential nest on each process */
+  PetscCall(CreateSeqDiagMat(4, 1.0, &seqA00));
+  PetscCall(CreateSeqDiagMat(4, 4.0, &seqA11));
+  mats[0] = seqA00;
+  mats[1] = seqA11;
+  PetscCall(MatCreateNest(PETSC_COMM_SELF, 2, NULL, 1, NULL, mats, &seqnest));
+
+  /* Concatenate into a parallel MATNEST */
+  PetscCall(MatCreateMPIMatConcatenateSeqMat(comm, seqnest, PETSC_DECIDE, MAT_INITIAL_MATRIX, &mpinest));
+  PetscCall(PetscObjectTypeCompare((PetscObject)mpinest, MATNEST, &is_nest));
+  PetscCheck(is_nest, comm, PETSC_ERR_PLIB, "expected MATNEST output from MatCreateMPIMatConcatenateSeqMat");
+  PetscCall(MatGetSize(mpinest, &M, &N));
+  PetscCheck(M == 8 && N == 4, comm, PETSC_ERR_PLIB, "wrong global size %" PetscInt_FMT " x %" PetscInt_FMT, M, N);
+
+  /* Reuse */
+  PetscCall(MatCreateMPIMatConcatenateSeqMat(comm, seqnest, PETSC_DECIDE, MAT_REUSE_MATRIX, &mpinest));
+  PetscCall(MatGetSize(mpinest, &M, &N));
+  PetscCheck(M == 8 && N == 4, comm, PETSC_ERR_PLIB, "wrong global size %" PetscInt_FMT " x %" PetscInt_FMT, M, N);
+
+  PetscCall(MatDestroy(&mpinest));
+  PetscCall(MatDestroy(&seqnest));
+  PetscCall(MatDestroy(&seqA00));
+  PetscCall(MatDestroy(&seqA11));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -104,6 +155,9 @@ int main(int argc, char **argv)
   PetscCall(MatDestroy(&A01));
   PetscCall(MatDestroy(&A10));
   PetscCall(MatDestroy(&A11));
+
+  PetscCall(TestConcatenate(comm));
+
   PetscCall(PetscFinalize());
   PetscFunctionReturn(PETSC_SUCCESS);
 }

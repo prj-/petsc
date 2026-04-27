@@ -2428,6 +2428,47 @@ static PetscErrorCode MatHasOperation_Nest(Mat mat, MatOperation op, PetscBool *
           `VecCreateNest()`, `DMCreateMatrix()`, `DMCOMPOSITE`, `MatNestSetVecType()`, `MatNestGetLocalISs()`,
           `MatNestGetISs()`, `MatNestSetSubMats()`, `MatNestGetSubMats()`
 M*/
+
+static PetscErrorCode MatCreateMPIMatConcatenateSeqMat_Nest(MPI_Comm comm, Mat seqmat, PetscInt n, MatReuse scall, Mat *mpimat)
+{
+  Mat_Nest *vs = (Mat_Nest *)seqmat->data;
+  PetscInt  nr = vs->nr, nc = vs->nc;
+  PetscInt  bi, bj;
+  Mat      *out_blocks;
+
+  PetscFunctionBegin;
+  PetscCall(PetscMalloc1(nr * nc, &out_blocks));
+  if (scall == MAT_INITIAL_MATRIX) {
+    for (bi = 0; bi < nr; bi++) {
+      for (bj = 0; bj < nc; bj++) {
+        Mat B = vs->m[bi][bj];
+
+        out_blocks[bi * nc + bj] = NULL;
+        if (!B) continue;
+        PetscCall(MatCreateMPIMatConcatenateSeqMat(comm, B, PETSC_DECIDE, MAT_INITIAL_MATRIX, &out_blocks[bi * nc + bj]));
+      }
+    }
+    PetscCall(MatCreateNest(comm, nr, NULL, nc, NULL, out_blocks, mpimat));
+    for (bi = 0; bi < nr; bi++) {
+      for (bj = 0; bj < nc; bj++) PetscCall(MatDestroy(&out_blocks[bi * nc + bj]));
+    }
+  } else {
+    for (bi = 0; bi < nr; bi++) {
+      for (bj = 0; bj < nc; bj++) {
+        Mat B = vs->m[bi][bj];
+
+        out_blocks[bi * nc + bj] = NULL;
+        if (!B) continue;
+        PetscCall(MatNestGetSubMat(*mpimat, bi, bj, &out_blocks[bi * nc + bj]));
+        if (!out_blocks[bi * nc + bj]) continue;
+        PetscCall(MatCreateMPIMatConcatenateSeqMat(comm, B, PETSC_DECIDE, MAT_REUSE_MATRIX, &out_blocks[bi * nc + bj]));
+      }
+    }
+  }
+  PetscCall(PetscFree(out_blocks));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 PETSC_EXTERN PetscErrorCode MatCreate_Nest(Mat A)
 {
   Mat_Nest *s;
@@ -2470,6 +2511,7 @@ PETSC_EXTERN PetscErrorCode MatCreate_Nest(Mat A)
   A->ops->diagonalset               = MatDiagonalSet_Nest;
   A->ops->setrandom                 = MatSetRandom_Nest;
   A->ops->hasoperation              = MatHasOperation_Nest;
+  A->ops->creatempimatconcatenateseqmat = MatCreateMPIMatConcatenateSeqMat_Nest;
 
   A->spptr     = NULL;
   A->assembled = PETSC_FALSE;
