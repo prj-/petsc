@@ -705,12 +705,141 @@ static PetscErrorCode MatCreateSubMatrix_Nest(Mat A, IS isrow, IS iscol, MatReus
 
 static PetscErrorCode MatCreateSubMatrices_Nest(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *submat[])
 {
-  Mat B;
+  Mat_Nest        *vs = (Mat_Nest *)A->data;
+  PetscInt         nr = vs->nr, nc = vs->nc;
+  PetscInt         bi, bj, k, r, c;
+  const PetscInt **row_ranges, **col_ranges;
 
   PetscFunctionBegin;
-  PetscCall(MatConvert(A, MATAIJ, MAT_INITIAL_MATRIX, &B));
-  PetscCall(MatCreateSubMatrices(B, n, irow, icol, scall, submat));
-  PetscCall(MatDestroy(&B));
+  PetscCall(PetscMalloc1(nr, &row_ranges));
+  PetscCall(PetscMalloc1(nc, &col_ranges));
+  for (bi = 0; bi < nr; bi++) {
+    Mat sub;
+
+    PetscCall(MatNestFindNonzeroSubMatRow(A, bi, &sub));
+    PetscCheck(sub, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Row block %" PetscInt_FMT " has no nonzero submatrix", bi);
+    PetscCall(MatGetOwnershipRanges(sub, &row_ranges[bi]));
+  }
+  for (bj = 0; bj < nc; bj++) {
+    Mat sub;
+
+    PetscCall(MatNestFindNonzeroSubMatCol(A, bj, &sub));
+    PetscCheck(sub, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONG, "Column block %" PetscInt_FMT " has no nonzero submatrix", bj);
+    PetscCall(MatGetOwnershipRangesColumn(sub, &col_ranges[bj]));
+  }
+  if (scall == MAT_INITIAL_MATRIX) PetscCall(PetscCalloc1(n, submat));
+  for (k = 0; k < n; k++) {
+    PetscInt        nrow_k, ncol_k;
+    const PetscInt *row_idx, *col_idx;
+    PetscInt       *row_block, *row_bglob, *col_block, *col_bglob;
+
+    PetscCall(ISGetLocalSize(irow[k], &nrow_k));
+    PetscCall(ISGetLocalSize(icol[k], &ncol_k));
+    PetscCall(ISGetIndices(irow[k], &row_idx));
+    PetscCall(ISGetIndices(icol[k], &col_idx));
+    PetscCall(PetscMalloc4(nrow_k, &row_block, nrow_k, &row_bglob, ncol_k, &col_block, ncol_k, &col_bglob));
+    /* Map each nest-global row to (block index, block-global row) */
+    for (r = 0; r < nrow_k; r++) {
+      PetscInt    g = row_idx[r], local, cumoff;
+      PetscMPIInt p;
+
+      PetscCall(PetscLayoutFindOwner(A->rmap, g, &p));
+      local  = g - A->rmap->range[p];
+      cumoff = 0;
+      for (bi = 0; bi < nr; bi++) {
+        PetscInt nb_p = row_ranges[bi][p + 1] - row_ranges[bi][p];
+
+        if (local >= cumoff && local < cumoff + nb_p) {
+          row_block[r] = bi;
+          row_bglob[r] = row_ranges[bi][p] + (local - cumoff);
+          break;
+        }
+        cumoff += nb_p;
+      }
+    }
+    /* Map each nest-global col to (block index, block-global col) */
+    for (c = 0; c < ncol_k; c++) {
+      PetscInt    g = col_idx[c], local, cumoff;
+      PetscMPIInt p;
+
+      PetscCall(PetscLayoutFindOwner(A->cmap, g, &p));
+      local  = g - A->cmap->range[p];
+      cumoff = 0;
+      for (bj = 0; bj < nc; bj++) {
+        PetscInt nb_p = col_ranges[bj][p + 1] - col_ranges[bj][p];
+
+        if (local >= cumoff && local < cumoff + nb_p) {
+          col_block[c] = bj;
+          col_bglob[c] = col_ranges[bj][p] + (local - cumoff);
+          break;
+        }
+        cumoff += nb_p;
+      }
+    }
+    if (scall == MAT_INITIAL_MATRIX) PetscCall(MatCreateSeqAIJ(PETSC_COMM_SELF, nrow_k, ncol_k, 0, NULL, &(*submat)[k]));
+    else PetscCall(MatZeroEntries((*submat)[k]));
+    /* For each non-null block (bi,bj), extract and insert values */
+    for (bi = 0; bi < nr; bi++) {
+      for (bj = 0; bj < nc; bj++) {
+        Mat      B = vs->m[bi][bj];
+        IS       b_row_is, b_col_is;
+        Mat     *block_subs;
+        PetscInt nrows_b, ncols_b, rb;
+        PetscInt *b_row_vals, *b_row_out, *b_col_vals, *b_col_out;
+
+        if (!B) continue;
+        nrows_b = 0;
+        ncols_b = 0;
+        for (r = 0; r < nrow_k; r++) {
+          if (row_block[r] == bi) nrows_b++;
+        }
+        for (c = 0; c < ncol_k; c++) {
+          if (col_block[c] == bj) ncols_b++;
+        }
+        if (!nrows_b || !ncols_b) continue;
+        PetscCall(PetscMalloc4(nrows_b, &b_row_vals, nrows_b, &b_row_out, ncols_b, &b_col_vals, ncols_b, &b_col_out));
+        nrows_b = 0;
+        for (r = 0; r < nrow_k; r++) {
+          if (row_block[r] == bi) {
+            b_row_vals[nrows_b] = row_bglob[r];
+            b_row_out[nrows_b]  = r;
+            nrows_b++;
+          }
+        }
+        ncols_b = 0;
+        for (c = 0; c < ncol_k; c++) {
+          if (col_block[c] == bj) {
+            b_col_vals[ncols_b] = col_bglob[c];
+            b_col_out[ncols_b]  = c;
+            ncols_b++;
+          }
+        }
+        PetscCall(ISCreateGeneral(PETSC_COMM_SELF, nrows_b, b_row_vals, PETSC_USE_POINTER, &b_row_is));
+        PetscCall(ISCreateGeneral(PETSC_COMM_SELF, ncols_b, b_col_vals, PETSC_USE_POINTER, &b_col_is));
+        PetscCall(MatCreateSubMatrices(B, 1, &b_row_is, &b_col_is, MAT_INITIAL_MATRIX, &block_subs));
+        for (rb = 0; rb < nrows_b; rb++) {
+          PetscInt           brncols, qc;
+          const PetscInt    *brcols;
+          const PetscScalar *brvals;
+
+          PetscCall(MatGetRow(block_subs[0], rb, &brncols, &brcols, &brvals));
+          for (qc = 0; qc < brncols; qc++) PetscCall(MatSetValue((*submat)[k], b_row_out[rb], b_col_out[brcols[qc]], brvals[qc], INSERT_VALUES));
+          PetscCall(MatRestoreRow(block_subs[0], rb, &brncols, &brcols, &brvals));
+        }
+        PetscCall(MatDestroySubMatrices(1, &block_subs));
+        PetscCall(ISDestroy(&b_row_is));
+        PetscCall(ISDestroy(&b_col_is));
+        PetscCall(PetscFree4(b_row_vals, b_row_out, b_col_vals, b_col_out));
+      }
+    }
+    PetscCall(MatAssemblyBegin((*submat)[k], MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd((*submat)[k], MAT_FINAL_ASSEMBLY));
+    PetscCall(ISRestoreIndices(irow[k], &row_idx));
+    PetscCall(ISRestoreIndices(icol[k], &col_idx));
+    PetscCall(PetscFree4(row_block, row_bglob, col_block, col_bglob));
+  }
+  PetscCall(PetscFree(row_ranges));
+  PetscCall(PetscFree(col_ranges));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
