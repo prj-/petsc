@@ -105,7 +105,7 @@ int main(int argc, char **argv)
   PetscCall(MatDestroy(&A10));
   PetscCall(MatDestroy(&A11));
   PetscCall(PetscFinalize());
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*TEST
