@@ -307,6 +307,20 @@ Even with the use of `clang-format` there are still many decisions about code fo
 
 18. `size` and `rank` should be used exclusively for the results of `MPI_Comm_size()` and `MPI_Comm_rank()` and other variable names for these values should be avoided unless necessary.
 
+19. Do not introduce a local `MPI_Comm` variable solely to hold `PETSC_COMM_WORLD` or
+    `PETSC_COMM_SELF`. Use the constant directly at each call site. A local variable is
+    appropriate only when the communicator may differ from those constants (for example,
+    it is extracted from an object or passed in as an argument).
+
+    ```c
+    // Correct
+    PetscCall(VecCreate(PETSC_COMM_WORLD, &v));
+
+    // Incorrect
+    MPI_Comm comm = PETSC_COMM_WORLD;
+    PetscCall(VecCreate(comm, &v));
+    ```
+
 ### C Usage
 
 01. Do not use language features that are not in the intersection of C99, C++11, and MSVC
