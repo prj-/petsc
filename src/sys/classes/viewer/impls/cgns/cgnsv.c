@@ -10,7 +10,7 @@
 
 PetscLogEvent PETSC_VIEWER_CGNS_Open, PETSC_VIEWER_CGNS_Close, PETSC_VIEWER_CGNS_ReadMeta, PETSC_VIEWER_CGNS_WriteMeta, PETSC_VIEWER_CGNS_ReadData, PETSC_VIEWER_CGNS_WriteData;
 
-PetscErrorCode PetscViewerCGNSRegisterLogEvents_Internal()
+PetscErrorCode PetscViewerCGNSRegisterLogEvents_Internal(void)
 {
   static PetscBool is_initialized = PETSC_FALSE;
 

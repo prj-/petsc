@@ -26,7 +26,7 @@ static PetscErrorCode VerifyDistribution(const char name[], PetscBool pos, Petsc
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-static PetscErrorCode TestDistributions()
+static PetscErrorCode TestDistributions(void)
 {
   PetscProbFn *pdf[]  = {PetscPDFMaxwellBoltzmann1D, PetscPDFMaxwellBoltzmann2D, PetscPDFMaxwellBoltzmann3D, PetscPDFGaussian1D};
   PetscProbFn *cdf[]  = {PetscCDFMaxwellBoltzmann1D, PetscCDFMaxwellBoltzmann2D, PetscCDFMaxwellBoltzmann3D, PetscCDFGaussian1D};
@@ -38,7 +38,7 @@ static PetscErrorCode TestDistributions()
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-static PetscErrorCode TestSampling()
+static PetscErrorCode TestSampling(void)
 {
   PetscProbFn *cdf[2]     = {PetscCDFMaxwellBoltzmann1D, PetscCDFMaxwellBoltzmann2D};
   PetscProbFn *sampler[2] = {PetscPDFSampleGaussian1D, PetscPDFSampleGaussian2D};

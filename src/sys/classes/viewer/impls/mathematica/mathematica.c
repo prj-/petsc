@@ -47,7 +47,7 @@ PetscErrorCode PetscViewerMathematicaInitializePackage(void)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-static PetscErrorCode PetscViewerInitializeMathematicaWorld_Private()
+static PetscErrorCode PetscViewerInitializeMathematicaWorld_Private(void)
 {
   PetscFunctionBegin;
   if (PETSC_VIEWER_MATHEMATICA_WORLD_PRIVATE) PetscFunctionReturn(PETSC_SUCCESS);

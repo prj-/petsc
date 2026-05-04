@@ -213,7 +213,7 @@ static PetscErrorCode maxwellian(PetscInt dim, const PetscReal x[], PetscReal kt
 }
 
 #define MAX_NUM_THRDS 12
-PetscErrorCode go()
+PetscErrorCode go(void)
 {
   DM            dm_t[MAX_NUM_THRDS], sw_t[MAX_NUM_THRDS];
   PetscFE       fe;

@@ -104,7 +104,7 @@ typedef struct {
   #endif
 #endif
 
-PETSC_SINGLE_LIBRARY_INTERN PetscErrorCode PetscViewerCGNSRegisterLogEvents_Internal();
+PETSC_SINGLE_LIBRARY_INTERN PetscErrorCode PetscViewerCGNSRegisterLogEvents_Internal(void);
 PETSC_SINGLE_LIBRARY_INTERN PetscErrorCode PetscViewerCGNSCheckBatch_Internal(PetscViewer);
 PETSC_SINGLE_LIBRARY_INTERN PetscErrorCode PetscViewerCGNSFileOpen_Internal(PetscViewer, PetscInt);
 PETSC_SINGLE_LIBRARY_INTERN PetscErrorCode PetscViewerCGNSGetSolutionFileIndex_Internal(PetscViewer, int *);

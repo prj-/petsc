@@ -6,30 +6,30 @@ static char help[] = "Tests PetscStack.\n\n";
   #define PETSCSTACKSIZE 64
 #endif
 
-PetscErrorCode correct()
+PetscErrorCode correct(void)
 {
   PetscFunctionBegin;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-PetscErrorCode correctu()
+PetscErrorCode correctu(void)
 {
   PetscFunctionBeginUser;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-PetscErrorCode foo()
+PetscErrorCode foo(void)
 {
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-PetscErrorCode bar()
+PetscErrorCode bar(void)
 {
   PetscFunctionBegin;
   return PETSC_SUCCESS;
 }
 
-PetscErrorCode baru()
+PetscErrorCode baru(void)
 {
   PetscFunctionBeginUser;
   return PETSC_SUCCESS;
