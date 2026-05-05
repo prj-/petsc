@@ -71,9 +71,9 @@ static void f0_zero(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uO
 static void stokes_momentum_kx(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f1[])
 {
   const PetscReal mu = PetscExpReal(2.0 * PetscRealPart(constants[2]) * x[0]);
-  PetscInt        c, d;
+  PetscInt        d;
 
-  for (c = 0; c < dim; ++c) {
+  for (PetscInt c = 0; c < dim; ++c) {
     for (d = 0; d < dim; ++d) f1[c * dim + d] = mu * (u_x[c * dim + d] + u_x[d * dim + c]);
     f1[c * dim + c] -= u[dim];
   }
@@ -82,9 +82,9 @@ static void stokes_momentum_kx(PetscInt dim, PetscInt Nf, PetscInt NfAux, const 
 static void stokes_momentum_cx(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f1[])
 {
   const PetscReal mu = x[0] < PetscRealPart(constants[4]) ? PetscRealPart(constants[2]) : PetscRealPart(constants[3]);
-  PetscInt        c, d;
+  PetscInt        d;
 
-  for (c = 0; c < dim; ++c) {
+  for (PetscInt c = 0; c < dim; ++c) {
     for (d = 0; d < dim; ++d) f1[c * dim + d] = mu * (u_x[c * dim + d] + u_x[d * dim + c]);
     f1[c * dim + c] -= u[dim];
   }
@@ -122,9 +122,9 @@ static void stokes_momentum_pres_J(PetscInt dim, PetscInt Nf, PetscInt NfAux, co
 static void stokes_momentum_vel_J_kx(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g3[])
 {
   const PetscReal mu = PetscExpReal(2.0 * PetscRealPart(constants[2]) * x[0]);
-  PetscInt        cI, d;
+  PetscInt        d;
 
-  for (cI = 0; cI < dim; ++cI) {
+  for (PetscInt cI = 0; cI < dim; ++cI) {
     for (d = 0; d < dim; ++d) {
       g3[((cI * dim + cI) * dim + d) * dim + d] += mu; /*g3[cI, cI, d, d]*/
       g3[((cI * dim + d) * dim + d) * dim + cI] += mu; /*g3[cI, d, d, cI]*/
@@ -134,10 +134,8 @@ static void stokes_momentum_vel_J_kx(PetscInt dim, PetscInt Nf, PetscInt NfAux, 
 static void stokes_momentum_vel_J_cx(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g3[])
 {
   const PetscReal mu = x[0] < PetscRealPart(constants[4]) ? PetscRealPart(constants[2]) : PetscRealPart(constants[3]);
-  PetscInt        cI, d;
-
-  for (cI = 0; cI < dim; ++cI) {
-    for (d = 0; d < dim; ++d) {
+  for (PetscInt cI = 0; cI < dim; ++cI) {
+    for (PetscInt d = 0; d < dim; ++d) {
       g3[((cI * dim + cI) * dim + d) * dim + d] += mu; /*g3[cI, cI, d, d]*/
       g3[((cI * dim + d) * dim + d) * dim + cI] += mu; /*g3[cI, d, d, cI]*/
     }
@@ -3042,10 +3040,9 @@ static PetscErrorCode CreateSplitLabels(DM dm)
   PetscInt    ids[4]   = {1, 2, 3, 4};
   DMLabel     label;
   IS          is;
-  PetscInt    f;
 
   PetscFunctionBeginUser;
-  for (f = 0; f < 4; ++f) {
+  for (PetscInt f = 0; f < 4; ++f) {
     PetscCall(DMCreateLabel(dm, names[f]));
     PetscCall(DMGetStratumIS(dm, "marker", ids[f], &is));
     if (!is) continue;

@@ -106,9 +106,9 @@ void f1_u(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], cons
 {
   const PetscReal nu = PetscRealPart(constants[1]);
   const PetscInt  Nc = dim;
-  PetscInt        c, d;
+  PetscInt        d;
 
-  for (c = 0; c < Nc; ++c) {
+  for (PetscInt c = 0; c < Nc; ++c) {
     for (d = 0; d < dim; ++d) {
       /* f1[c*dim+d] = 0.5*nu*(u_x[c*dim+d] + u_x[d*dim+c]); */
       f1[c * dim + d] = nu * u_x[c * dim + d];
@@ -157,10 +157,8 @@ void g3_uu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], con
 {
   const PetscReal nu = PetscRealPart(constants[1]);
   const PetscInt  Nc = dim;
-  PetscInt        c, d;
-
-  for (c = 0; c < Nc; ++c) {
-    for (d = 0; d < dim; ++d) g3[((c * Nc + c) * dim + d) * dim + d] = nu;
+  for (PetscInt c = 0; c < Nc; ++c) {
+    for (PetscInt d = 0; d < dim; ++d) g3[((c * Nc + c) * dim + d) * dim + d] = nu;
   }
 }
 
