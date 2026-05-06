@@ -132,8 +132,6 @@ static PetscErrorCode TestAdd(PetscWeakForm wf)
   DMLabel        label;
   const PetscInt value = 3, field = 1, part = 2;
   PetscFormKey   key;
-  PetscInt       i, j, k, l;
-
   PetscFunctionBegin;
   PetscCall(DMLabelCreate(PETSC_COMM_SELF, "Test", &label));
   key.label = label;
@@ -141,12 +139,12 @@ static PetscErrorCode TestAdd(PetscWeakForm wf)
   key.field = field;
   key.part  = part;
   /* Check f0 */
-  for (i = 0; i < 4; ++i) {
-    for (j = 0; j < 4; ++j) {
+  for (PetscInt i = 0; i < 4; ++i) {
+    for (PetscInt j = 0; j < 4; ++j) {
       if (j == i) continue;
-      for (k = 0; k < 4; ++k) {
+      for (PetscInt k = 0; k < 4; ++k) {
         if ((k == i) || (k == j)) continue;
-        for (l = 0; l < 4; ++l) {
+        for (PetscInt l = 0; l < 4; ++l) {
           if ((l == i) || (l == j) || (l == k)) continue;
           PetscCall(PetscWeakFormAddResidual(wf, key.label, key.value, key.field, key.part, f[i], NULL));
           PetscCall(PetscWeakFormAddResidual(wf, key.label, key.value, key.field, key.part, f[j], NULL));
@@ -163,12 +161,12 @@ static PetscErrorCode TestAdd(PetscWeakForm wf)
     }
   }
   /* Check f1 */
-  for (i = 0; i < 4; ++i) {
-    for (j = 0; j < 4; ++j) {
+  for (PetscInt i = 0; i < 4; ++i) {
+    for (PetscInt j = 0; j < 4; ++j) {
       if (j == i) continue;
-      for (k = 0; k < 4; ++k) {
+      for (PetscInt k = 0; k < 4; ++k) {
         if ((k == i) || (k == j)) continue;
-        for (l = 0; l < 4; ++l) {
+        for (PetscInt l = 0; l < 4; ++l) {
           if ((l == i) || (l == j) || (l == k)) continue;
           PetscCall(PetscWeakFormAddResidual(wf, key.label, key.value, key.field, key.part, NULL, f[i]));
           PetscCall(PetscWeakFormAddResidual(wf, key.label, key.value, key.field, key.part, NULL, f[j]));
@@ -185,12 +183,12 @@ static PetscErrorCode TestAdd(PetscWeakForm wf)
     }
   }
   /* Check f0 and f1 */
-  for (i = 0; i < 4; ++i) {
-    for (j = 0; j < 4; ++j) {
+  for (PetscInt i = 0; i < 4; ++i) {
+    for (PetscInt j = 0; j < 4; ++j) {
       if (j == i) continue;
-      for (k = 0; k < 4; ++k) {
+      for (PetscInt k = 0; k < 4; ++k) {
         if ((k == i) || (k == j)) continue;
-        for (l = 0; l < 4; ++l) {
+        for (PetscInt l = 0; l < 4; ++l) {
           if ((l == i) || (l == j) || (l == k)) continue;
           PetscCall(PetscWeakFormAddResidual(wf, key.label, key.value, key.field, key.part, f[i], f[i]));
           PetscCall(PetscWeakFormAddResidual(wf, key.label, key.value, key.field, key.part, f[j], f[j]));

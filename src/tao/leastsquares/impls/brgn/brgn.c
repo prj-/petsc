@@ -165,7 +165,7 @@ static PetscErrorCode GNObjectiveGradientEval(Tao tao, Vec X, PetscReal *fcn, Ve
 static PetscErrorCode GNComputeHessian(Tao tao, Vec X, Mat H, Mat Hpre, void *ptr)
 {
   TAO_BRGN    *gn = (TAO_BRGN *)ptr;
-  PetscInt     i, n, cstart, cend;
+  PetscInt n, cstart, cend;
   PetscScalar *cnorms, *diag_ary;
 
   PetscFunctionBegin;
@@ -206,7 +206,7 @@ static PetscErrorCode GNComputeHessian(Tao tao, Vec X, Mat H, Mat Hpre, void *pt
     PetscCall(MatGetColumnNorms(gn->parent->ls_jac, NORM_2, cnorms));
     PetscCall(MatGetOwnershipRangeColumn(gn->parent->ls_jac, &cstart, &cend));
     PetscCall(VecGetArray(gn->diag, &diag_ary));
-    for (i = 0; i < cend - cstart; i++) diag_ary[i] = cnorms[cstart + i] * cnorms[cstart + i];
+    for (PetscInt i = 0; i < cend - cstart; i++) diag_ary[i] = cnorms[cstart + i] * cnorms[cstart + i];
     PetscCall(VecRestoreArray(gn->diag, &diag_ary));
     PetscCall(PetscFree(cnorms));
     PetscCall(ComputeDamping(gn));
@@ -423,10 +423,7 @@ static PetscErrorCode TaoSetUp_BRGN(Tao tao)
   if (!tao->gradient) PetscCall(VecDuplicate(tao->solution, &tao->gradient));
   if (!gn->x_work) PetscCall(VecDuplicate(tao->solution, &gn->x_work));
   if (!gn->r_work) PetscCall(VecDuplicate(tao->ls_res, &gn->r_work));
-  if (!gn->x_old) {
-    PetscCall(VecDuplicate(tao->solution, &gn->x_old));
-    PetscCall(VecSet(gn->x_old, 0.0));
-  }
+  if (!gn->x_old) PetscCall(VecDuplicate(tao->solution, &gn->x_old));
 
   if (TAOBRGN_REGULARIZATION_L1DICT == gn->reg_type) {
     if (!gn->y) {
@@ -436,13 +433,9 @@ static PetscErrorCode TaoSetUp_BRGN(Tao tao)
       } else {
         PetscCall(VecDuplicate(tao->solution, &gn->y)); /* If user does not setup dict matrix, use identity matrix, K=N */
       }
-      PetscCall(VecSet(gn->y, 0.0));
     }
     if (!gn->y_work) PetscCall(VecDuplicate(gn->y, &gn->y_work));
-    if (!gn->diag) {
-      PetscCall(VecDuplicate(gn->y, &gn->diag));
-      PetscCall(VecSet(gn->diag, 0.0));
-    }
+    if (!gn->diag) PetscCall(VecDuplicate(gn->y, &gn->diag));
   }
   if (TAOBRGN_REGULARIZATION_LM == gn->reg_type) {
     if (!gn->diag) PetscCall(MatCreateVecs(tao->ls_jac, &gn->diag, NULL));

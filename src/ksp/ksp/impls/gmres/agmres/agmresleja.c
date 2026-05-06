@@ -23,14 +23,14 @@ static PetscErrorCode KSPAGMRESLejafmaxarray(PetscScalar *re, PetscInt pt, Petsc
 static PetscErrorCode KSPAGMRESLejaCfpdMax(PetscScalar *rm, PetscScalar *im, PetscInt *spos, PetscInt nbre, PetscInt n, PetscInt *rpos)
 {
   PetscScalar rd, id, pd, max;
-  PetscInt    i, j;
+  PetscInt    i;
 
   PetscFunctionBegin;
   pd    = 1.0;
   max   = 0.0;
   *rpos = 0;
   for (i = 0; i < n; i++) {
-    for (j = 0; j < nbre; j++) {
+    for (PetscInt j = 0; j < nbre; j++) {
       rd = rm[i] - rm[spos[j]];
       id = im[i] - im[spos[j]];
       pd = pd * PetscSqrtReal(rd * rd + id * id);
@@ -48,7 +48,7 @@ PetscErrorCode KSPAGMRESLejaOrdering(PetscScalar *re, PetscScalar *im, PetscScal
 {
   PetscInt    *spos;
   PetscScalar *n_cmpl, temp;
-  PetscInt     i, pos, j;
+  PetscInt pos, j;
 
   PetscFunctionBegin;
   PetscCall(PetscMalloc1(m, &n_cmpl));
@@ -66,7 +66,7 @@ PetscErrorCode KSPAGMRESLejaOrdering(PetscScalar *re, PetscScalar *im, PetscScal
     } else j++;
   }
 
-  for (i = 0; i < m; i++) n_cmpl[i] = PetscSqrtReal(re[i] * re[i] + im[i] * im[i]);
+  for (PetscInt i = 0; i < m; i++) n_cmpl[i] = PetscSqrtReal(re[i] * re[i] + im[i] * im[i]);
   PetscCall(KSPAGMRESLejafmaxarray(n_cmpl, 0, m, &pos));
   j = 0;
   if (im[pos] >= 0.0) {

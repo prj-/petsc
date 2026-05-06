@@ -198,7 +198,7 @@ PETSC_EXTERN PetscErrorCode PCCreate_NN(PC pc)
 PetscErrorCode PCNNCreateCoarseMatrix(PC pc)
 {
   MPI_Request  *send_request, *recv_request;
-  PetscInt      i, j, k;
+  PetscInt i, k;
   PetscScalar  *mat;    /* Sub-matrix with this subdomain's contribution to the coarse matrix             */
   PetscScalar **DZ_OUT; /* proc[k].DZ_OUT[i][] = bit of vector to be sent from processor k to processor i */
 
@@ -236,7 +236,7 @@ PetscErrorCode PCNNCreateCoarseMatrix(PC pc)
   /* First, set the auxiliary array pcis->work_N. */
   PetscCall(PCISScatterArrayNToVecB(pc, pcis->work_N, pcis->D, INSERT_VALUES, SCATTER_REVERSE));
   for (i = 1; i < n_neigh; i++) {
-    for (j = 0; j < n_shared[i]; j++) DZ_OUT[i][j] = pcis->work_N[shared[i][j]];
+    for (PetscInt j = 0; j < n_shared[i]; j++) DZ_OUT[i][j] = pcis->work_N[shared[i][j]];
   }
 
   /* Non-blocking send/receive the common-interface chunks of scaled nullspaces */
@@ -256,7 +256,7 @@ PetscErrorCode PCNNCreateCoarseMatrix(PC pc)
   }
 
   /* Set DZ_IN[0][] (recall that neigh[0]==rank, always) */
-  for (j = 0; j < n_shared[0]; j++) DZ_IN[0][j] = pcis->work_N[shared[0][j]];
+  for (PetscInt j = 0; j < n_shared[0]; j++) DZ_IN[0][j] = pcis->work_N[shared[0][j]];
 
   /* Start computing with local D*Z while communication goes on.    */
   /* Apply Schur complement. The result is "stored" in vec (more    */
@@ -277,7 +277,7 @@ PetscErrorCode PCNNCreateCoarseMatrix(PC pc)
   }
 
   /* Compute the remaining of the columns */
-  for (j = 1; j < n_neigh; j++) {
+  for (PetscInt j = 1; j < n_neigh; j++) {
     PetscCall(PCNNApplySchurToChunk(pc, n_shared[j], shared[j], DZ_IN[j], pcis->work_N, pcis->vec1_B, pcis->vec2_B, pcis->vec1_D, pcis->vec2_D));
     for (i = 0; i < n_neigh; i++) {
       mat[i * n_neigh + j] = 0.0;
@@ -398,12 +398,11 @@ PetscErrorCode PCNNCreateCoarseMatrix(PC pc)
 */
 PetscErrorCode PCNNApplySchurToChunk(PC pc, PetscInt n, PetscInt *idx, PetscScalar *chunk, PetscScalar *array_N, Vec vec1_B, Vec vec2_B, Vec vec1_D, Vec vec2_D)
 {
-  PetscInt i;
-  PC_IS   *pcis = (PC_IS *)pc->data;
+  PC_IS *pcis = (PC_IS *)pc->data;
 
   PetscFunctionBegin;
   PetscCall(PetscArrayzero(array_N, pcis->n));
-  for (i = 0; i < n; i++) array_N[idx[i]] = chunk[i];
+  for (PetscInt i = 0; i < n; i++) array_N[idx[i]] = chunk[i];
   PetscCall(PCISScatterArrayNToVecB(pc, array_N, vec2_B, INSERT_VALUES, SCATTER_FORWARD));
   PetscCall(PCISApplySchur(pc, vec2_B, vec1_B, (Vec)0, vec1_D, vec2_D));
   PetscCall(PCISScatterArrayNToVecB(pc, array_N, vec1_B, INSERT_VALUES, SCATTER_REVERSE));

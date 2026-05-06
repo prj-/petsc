@@ -39,7 +39,7 @@ PetscErrorCode SPARSEPACKgenrcm(const PetscInt *neqns, const PetscInt *xadj, con
   PetscInt i__1;
 
   /* Local variables */
-  PetscInt nlvl, root, i, ccsize;
+  PetscInt nlvl, root, ccsize;
   PetscInt num;
 
   PetscFunctionBegin;
@@ -59,10 +59,10 @@ PetscErrorCode SPARSEPACKgenrcm(const PetscInt *neqns, const PetscInt *xadj, con
   --xadj;
 
   i__1 = *neqns;
-  for (i = 1; i <= i__1; ++i) mask[i] = 1;
+  for (PetscInt i = 1; i <= i__1; ++i) mask[i] = 1;
   num  = 1;
   i__1 = *neqns;
-  for (i = 1; i <= i__1; ++i) {
+  for (PetscInt i = 1; i <= i__1; ++i) {
     /*          FOR EACH MASKED CONNECTED COMPONENT ...*/
     if (!mask[i]) goto L200;
     root = i;

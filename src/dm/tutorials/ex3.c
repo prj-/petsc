@@ -59,7 +59,7 @@ PetscErrorCode SetCoordinates2d(DM da)
 
 PetscErrorCode SetCoordinates3d(DM da)
 {
-  PetscInt      i, j, mstart, m, nstart, n, pstart, p, k;
+  PetscInt mstart, m, nstart, n, pstart, p;
   Vec           local, global;
   DMDACoor3d ***coors, ***coorslocal;
   DM            cda;
@@ -72,9 +72,9 @@ PetscErrorCode SetCoordinates3d(DM da)
   PetscCall(DMDAVecGetArray(cda, global, &coors));
   PetscCall(DMDAVecGetArrayRead(cda, local, &coorslocal));
   PetscCall(DMDAGetCorners(cda, &mstart, &nstart, &pstart, &m, &n, &p));
-  for (i = mstart; i < mstart + m; i++) {
-    for (j = nstart; j < nstart + n; j++) {
-      for (k = pstart; k < pstart + p; k++) {
+  for (PetscInt i = mstart; i < mstart + m; i++) {
+    for (PetscInt j = nstart; j < nstart + n; j++) {
+      for (PetscInt k = pstart; k < pstart + p; k++) {
         if (i % 2) coors[k][j][i].x = coorslocal[k][j][i - 1].x + .1 * (coorslocal[k][j][i + 1].x - coorslocal[k][j][i - 1].x);
         if (j % 2) coors[k][j][i].y = coorslocal[k][j - 1][i].y + .3 * (coorslocal[k][j + 1][i].y - coorslocal[k][j - 1][i].y);
         if (k % 2) coors[k][j][i].z = coorslocal[k - 1][j][i].z + .4 * (coorslocal[k + 1][j][i].z - coorslocal[k - 1][j][i].z);

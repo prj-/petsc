@@ -8,7 +8,7 @@ int main(int argc, char **argv)
   PetscSection    section;
   const PetscInt  field = 0;
   char            ifilename[PETSC_MAX_PATH_LEN];
-  PetscInt        sdim, s, pStart, pEnd, p, numVS, numPoints;
+  PetscInt sdim, pStart, pEnd, numVS, numPoints;
   PetscInt        constraints[1];
   IS              setIS, pointIS;
   const PetscInt *setID, *pointID;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
   /* initialize the section storage for a P1 field */
   PetscCall(DMPlexGetDepthStratum(dm, 0, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscCall(PetscSectionSetDof(section, p, sdim));
     PetscCall(PetscSectionSetFieldDof(section, p, 0, sdim));
   }
@@ -52,12 +52,12 @@ int main(int argc, char **argv)
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "# Vertex set: %" PetscInt_FMT "\n", numVS));
   PetscCall(DMGetLabelIdIS(dm, "Vertex Sets", &setIS));
   PetscCall(ISGetIndices(setIS, &setID));
-  for (s = 0; s < numVS; ++s) {
+  for (PetscInt s = 0; s < numVS; ++s) {
     PetscCall(DMGetStratumIS(dm, "Vertex Sets", setID[s], &pointIS));
     PetscCall(DMGetStratumSize(dm, "Vertex Sets", setID[s], &numPoints));
     PetscCall(PetscPrintf(PETSC_COMM_WORLD, "set %" PetscInt_FMT " size: %" PetscInt_FMT "\n", s, numPoints));
     PetscCall(ISGetIndices(pointIS, &pointID));
-    for (p = 0; p < numPoints; ++p) {
+    for (PetscInt p = 0; p < numPoints; ++p) {
       PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\t point %" PetscInt_FMT "\n", pointID[p]));
       PetscCall(PetscSectionSetConstraintDof(section, pointID[p], 1));
       PetscCall(PetscSectionSetFieldConstraintDof(section, pointID[p], field, 1));
@@ -70,11 +70,11 @@ int main(int argc, char **argv)
 
   /* add constraints at all vertices belonging to a vertex set          */
   /* second pass is to assign constraints to a specific component / dof */
-  for (s = 0; s < numVS; ++s) {
+  for (PetscInt s = 0; s < numVS; ++s) {
     PetscCall(DMGetStratumIS(dm, "Vertex Sets", setID[s], &pointIS));
     PetscCall(DMGetStratumSize(dm, "Vertex Sets", setID[s], &numPoints));
     PetscCall(ISGetIndices(pointIS, &pointID));
-    for (p = 0; p < numPoints; ++p) {
+    for (PetscInt p = 0; p < numPoints; ++p) {
       constraints[0] = setID[s] % sdim;
       PetscCall(PetscSectionSetConstraintIndices(section, pointID[p], constraints));
       PetscCall(PetscSectionSetFieldConstraintIndices(section, pointID[p], field, constraints));

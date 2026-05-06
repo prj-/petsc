@@ -21,7 +21,7 @@ int main(int argc, char **argv)
   Mat           A;
   KSP           ksp;
   PC            pc;
-  PetscInt      start, n, e, nExtra;
+  PetscInt start, n, nExtra;
   PetscInt      iu, ip;
   PetscScalar **arrSol, **arrRHS;
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   /* Get the correct entries for each of our variables in local element-wise storage */
   PetscCall(DMStagGetLocationSlot(dmSol, LEFT, 0, &iu));
   PetscCall(DMStagGetLocationSlot(dmSol, ELEMENT, 0, &ip));
-  for (e = start; e < start + n + nExtra; ++e) {
+  for (PetscInt e = start; e < start + n + nExtra; ++e) {
     {
       arrSol[e][iu] = 2 * PRESSURE_CONST;
       arrRHS[e][iu] = 0.0;
@@ -111,7 +111,7 @@ PetscErrorCode ApplyOperator(Mat A, Vec in, Vec out)
   Vec            inLocal, outLocal;
   PetscScalar  **arrIn;
   PetscScalar  **arrOut;
-  PetscInt       start, n, nExtra, ex, idxP, idxU, startGhost, nGhost;
+  PetscInt start, n, nExtra, idxP, idxU, startGhost, nGhost;
   DMBoundaryType boundaryType;
   PetscBool      isFirst, isLast;
 
@@ -137,7 +137,7 @@ PetscErrorCode ApplyOperator(Mat A, Vec in, Vec out)
   if (isLast) arrIn[start + n][idxP] = arrIn[start + n - 1][idxP];
 
   /* Apply operator on physical points */
-  for (ex = start; ex < start + n + nExtra; ++ex) {
+  for (PetscInt ex = start; ex < start + n + nExtra; ++ex) {
     if (ex < start + n) { /* Don't compute pressure outside domain */
       arrOut[ex][idxP] = arrIn[ex][idxP];
     }

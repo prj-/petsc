@@ -482,7 +482,7 @@ PetscErrorCode DMCreateSectionSuperDM(DM dms[], PetscInt len, IS *is[], DM *supe
       PetscCall(PetscSectionGetConstrainedStorageSize(sectionGlobals[i], &subSize));
       PetscCall(PetscMalloc1(subSize, &subIndices));
       for (p = pStart, subOff = 0; p < pEnd; ++p) {
-        PetscInt gdof, gcdof, gtdof, d;
+        PetscInt gdof, gcdof, gtdof;
 
         PetscCall(PetscSectionGetDof(sectionGlobals[i], p, &gdof));
         PetscCall(PetscSectionGetConstraintDof(sections[i], p, &gcdof));
@@ -496,7 +496,7 @@ PetscErrorCode DMCreateSectionSuperDM(DM dms[], PetscInt len, IS *is[], DM *supe
           PetscCall(DMGetGlobalFieldOffset_Private(*superdm, p, startf, &start, &dummy));
           PetscCall(DMGetGlobalFieldOffset_Private(*superdm, p, startf + Nfs[i] - 1, &dummy, &end));
           PetscCheck(end - start == gtdof, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Invalid number of global dofs %" PetscInt_FMT " != %" PetscInt_FMT " for dm %" PetscInt_FMT " on point %" PetscInt_FMT, end - start, gtdof, i, p);
-          for (d = start; d < end; ++d, ++subOff) subIndices[subOff] = d;
+          for (PetscInt d = start; d < end; ++d, ++subOff) subIndices[subOff] = d;
         }
       }
       PetscCall(ISCreateGeneral(comm, subSize, subIndices, PETSC_OWN_POINTER, &(*is)[i]));

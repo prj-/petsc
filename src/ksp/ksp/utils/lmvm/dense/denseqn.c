@@ -460,7 +460,6 @@ static PetscErrorCode MatCopy_LMVMDQN(Mat B, Mat M, MatStructure str)
   Mat_DQN  *blqn  = (Mat_DQN *)bdata->ctx;
   Mat_LMVM *mdata = (Mat_LMVM *)M->data;
   Mat_DQN  *mlqn  = (Mat_DQN *)mdata->ctx;
-  PetscInt  i;
   PetscBool is_dbfgs, is_ddfp, is_dqn;
 
   PetscFunctionBegin;
@@ -495,7 +494,7 @@ static PetscErrorCode MatCopy_LMVMDQN(Mat B, Mat M, MatStructure str)
     PetscCall(VecDestroyThenCopy(blqn->diag_vec_recycle_order, &mlqn->diag_vec_recycle_order));
     PetscCall(VecDestroyThenCopy(blqn->inv_diag_vec, &mlqn->inv_diag_vec));
     if (blqn->use_recursive && (is_dbfgs || is_ddfp)) {
-      for (i = 0; i < bdata->m; i++) {
+      for (PetscInt i = 0; i < bdata->m; i++) {
         PetscCall(VecDestroyThenCopy(blqn->PQ[i], &mlqn->PQ[i]));
         mlqn->yts[i] = blqn->yts[i];
         if (is_dbfgs) {
@@ -1210,7 +1209,7 @@ static PetscErrorCode MatSolve_LMVMDDFP(Mat H, Vec F, Vec dX)
   PetscInt  m    = lmvm->m;
   PetscInt  k    = lmvm->k;
   PetscInt  h    = k - oldest_update(m, k);
-  PetscInt  idx, i, j, local_n;
+  PetscInt idx, local_n;
   PetscInt  m_local;
   Mat       J_local;
   Mat       Sfull = lmvm->basis[LMBASIS_S]->vecs;
@@ -1241,14 +1240,14 @@ static PetscErrorCode MatSolve_LMVMDDFP(Mat H, Vec F, Vec dX)
 
     if (ldfp->needPQ) {
       PetscInt oldest = oldest_update(m, k);
-      for (i = oldest; i < k; ++i) {
+      for (PetscInt i = oldest; i < k; ++i) {
         idx = recycle_index(m, i);
         /* column_work = S[idx] */
         PetscCall(MatGetColumnVector(Yfull, ldfp->column_work, idx));
         PetscCall(MatDQNApplyJ0Inv(H, ldfp->column_work, ldfp->PQ[idx]));
         PetscCall(MatMultHermitianTransposeColumnRange(Sfull, ldfp->column_work, ldfp->rwork3, 0, h));
         PetscCall(VecGetArrayAndMemType(ldfp->rwork3, &workscalar, &memtype));
-        for (j = oldest; j < i; ++j) {
+        for (PetscInt j = oldest; j < i; ++j) {
           PetscInt idx_j = recycle_index(m, j);
           /* Copy sjtyi in device-aware manner */
           if (local_n) {
@@ -1276,7 +1275,7 @@ static PetscErrorCode MatSolve_LMVMDDFP(Mat H, Vec F, Vec dX)
     }
 
     PetscCall(VecGetArrayAndMemType(ldfp->rwork1, &workscalar, &memtype));
-    for (i = oldest; i < k; ++i) {
+    for (PetscInt i = oldest; i < k; ++i) {
       idx = recycle_index(m, i);
       /* Copy stz[i], ytx[i] in device-aware manner */
       if (local_n) {

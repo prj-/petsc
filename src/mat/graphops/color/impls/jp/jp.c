@@ -276,7 +276,7 @@ static PetscErrorCode MCJPMinColor_Private(MatColoring mc, ISColoringValue maxco
   PetscLayout     layout;
   PetscInt        maskrounds, maskbase, maskradix;
   PetscInt        dn, on;
-  PetscInt        i, j, l, k;
+  PetscInt i, j;
   PetscInt       *dmask = jp->dmask, *omask = jp->omask, *cmask = jp->cmask, curmask;
   PetscInt        ncols;
   const PetscInt *cols;
@@ -330,7 +330,7 @@ static PetscErrorCode MCJPMinColor_Private(MatColoring mc, ISColoringValue maxco
     }
   }
   /* the number of colors may be more than the number of bits in a PetscInt; take multiple rounds */
-  for (k = 0; k < maskrounds; k++) {
+  for (PetscInt k = 0; k < maskrounds; k++) {
     for (i = 0; i < dn; i++) {
       cmask[i] = 0;
       if (colors[i] < maskbase + maskradix && colors[i] >= maskbase) cmask[i] = 1 << (colors[i] - maskbase);
@@ -343,7 +343,7 @@ static PetscErrorCode MCJPMinColor_Private(MatColoring mc, ISColoringValue maxco
       PetscCall(PetscLogEventEnd(MATCOLORING_Comm, mc, 0, 0, 0));
     }
     /* fill in the mask out to the distance of the coloring */
-    for (l = 0; l < mc->dist; l++) {
+    for (PetscInt l = 0; l < mc->dist; l++) {
       /* fill in the on-and-off diagonal mask */
       for (i = 0; i < dn; i++) {
         ncols = di[i + 1] - di[i];
@@ -390,7 +390,7 @@ static PetscErrorCode MCJPMinColor_Private(MatColoring mc, ISColoringValue maxco
 static PetscErrorCode MatColoringApply_JP(MatColoring mc, ISColoring *iscoloring)
 {
   MC_JP           *jp = (MC_JP *)mc->data;
-  PetscInt         i, nadded, nadded_total, nadded_total_old, ntotal, n;
+  PetscInt nadded, nadded_total, nadded_total_old, ntotal, n;
   PetscInt         maxcolor_local = 0, maxcolor_global = 0, *lperm;
   PetscMPIInt      rank;
   PetscReal       *weights, *maxweights;
@@ -406,7 +406,7 @@ static PetscErrorCode MatColoringApply_JP(MatColoring mc, ISColoring *iscoloring
   PetscCall(PetscMalloc1(n, &maxweights));
   PetscCall(PetscMalloc1(n, &color));
   PetscCall(PetscMalloc1(n, &mincolor));
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     color[i]    = IS_COLORING_MAX;
     mincolor[i] = 0;
   }
@@ -416,7 +416,7 @@ static PetscErrorCode MatColoringApply_JP(MatColoring mc, ISColoring *iscoloring
   /* compute purely local vertices */
   if (jp->local) {
     PetscCall(MCJPInitialLocalColor_Private(mc, lperm, color));
-    for (i = 0; i < n; i++) {
+    for (PetscInt i = 0; i < n; i++) {
       if (color[i] < IS_COLORING_MAX) {
         nadded++;
         weights[i] = -1;
@@ -429,7 +429,7 @@ static PetscErrorCode MatColoringApply_JP(MatColoring mc, ISColoring *iscoloring
   while (nadded_total < ntotal) {
     PetscCall(MCJPMinColor_Private(mc, (ISColoringValue)maxcolor_global, color, mincolor));
     PetscCall(MCJPGreatestWeight_Private(mc, weights, maxweights));
-    for (i = 0; i < n; i++) {
+    for (PetscInt i = 0; i < n; i++) {
       /* choose locally maximal vertices; weights less than zero are omitted from the graph */
       if (weights[i] >= maxweights[i] && weights[i] >= 0.) {
         /* assign the minimum possible color */

@@ -353,7 +353,7 @@ static PetscErrorCode KSPDestroy_LGMRES(KSP ksp)
 static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest, KSP ksp, PetscInt it)
 {
   PetscScalar tt;
-  PetscInt    ii, k, j;
+  PetscInt k, j;
   KSP_LGMRES *lgmres = (KSP_LGMRES *)ksp->data;
   /* LGMRES_MOD */
   PetscInt it_arnoldi, it_aug;
@@ -396,7 +396,7 @@ static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest
     nrs[it] = 0.0;
   }
 
-  for (ii = 1; ii <= it; ii++) {
+  for (PetscInt ii = 1; ii <= it; ii++) {
     k  = it - ii;
     tt = *GRS(k);
     for (j = k + 1; j <= it; j++) tt = tt - *HH(k, j) * nrs[j];
@@ -413,7 +413,7 @@ static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest
     PetscCall(VecMAXPBY(VEC_TEMP, it_arnoldi, nrs, 0, &VEC_VV(0)));
     /* now add augmented portions - add contribution of aug vectors one at a time*/
 
-    for (ii = 0; ii < it_aug; ii++) {
+    for (PetscInt ii = 0; ii < it_aug; ii++) {
       for (jj = 0; jj < lgmres->aug_dim; jj++) {
         if (lgmres->aug_order[jj] == (ii + 1)) {
           spot = jj;
@@ -439,7 +439,6 @@ static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest
 static PetscErrorCode KSPLGMRESUpdateHessenberg(KSP ksp, PetscInt it, PetscBool hapend, PetscReal *res)
 {
   PetscScalar *hh, *cc, *ss, tt;
-  PetscInt     j;
   KSP_LGMRES  *lgmres = (KSP_LGMRES *)ksp->data;
 
   PetscFunctionBegin;
@@ -451,7 +450,7 @@ static PetscErrorCode KSPLGMRESUpdateHessenberg(KSP ksp, PetscInt it, PetscBool 
      of the Hessenberg matrix */
   /* Note: this uses the rotation [conj(c)  s ; -s   c], c= cos(theta), s= sin(theta) */
 
-  for (j = 1; j <= it; j++) {
+  for (PetscInt j = 1; j <= it; j++) {
     tt  = *hh;
     *hh = PetscConj(*cc) * tt + *ss * *(hh + 1);
     hh++;
@@ -509,7 +508,6 @@ static PetscErrorCode KSPLGMRESGetNewVectors(KSP ksp, PetscInt it)
   KSP_LGMRES *lgmres = (KSP_LGMRES *)ksp->data;
   PetscInt    nwork  = lgmres->nwork_alloc; /* number of work vector chunks allocated */
   PetscInt    nalloc;                       /* number to allocate */
-  PetscInt    k;
 
   PetscFunctionBegin;
   nalloc = lgmres->delta_allocate; /* number of vectors to allocate in a single chunk */
@@ -526,7 +524,7 @@ static PetscErrorCode KSPLGMRESGetNewVectors(KSP ksp, PetscInt it)
   /* specify size of chunk allocated */
   lgmres->mwork_alloc[nwork] = nalloc;
 
-  for (k = 0; k < nalloc; k++) lgmres->vecs[it + VEC_OFFSET + k] = lgmres->user_work[nwork][k];
+  for (PetscInt k = 0; k < nalloc; k++) lgmres->vecs[it + VEC_OFFSET + k] = lgmres->user_work[nwork][k];
 
   /* LGMRES_MOD - for now we are preallocating the augmentation vectors */
 

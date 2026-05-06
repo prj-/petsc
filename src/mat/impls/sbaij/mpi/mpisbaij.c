@@ -119,8 +119,7 @@ static PetscErrorCode MatPreallocateWithMats_Private(Mat B, PetscInt nm, Mat X[]
 
 PETSC_INTERN PetscErrorCode MatConvert_MPISBAIJ_Basic(Mat A, MatType newtype, MatReuse reuse, Mat *newmat)
 {
-  Mat      B;
-  PetscInt r;
+  Mat B;
 
   PetscFunctionBegin;
   if (reuse != MAT_REUSE_MATRIX) {
@@ -148,7 +147,7 @@ PETSC_INTERN PetscErrorCode MatConvert_MPISBAIJ_Basic(Mat A, MatType newtype, Ma
   }
 
   PetscCall(MatGetRowUpperTriangular(A));
-  for (r = A->rmap->rstart; r < A->rmap->rend; r++) {
+  for (PetscInt r = A->rmap->rstart; r < A->rmap->rend; r++) {
     PetscInt           ncols;
     const PetscInt    *row;
     const PetscScalar *vals;
@@ -2164,8 +2163,7 @@ static PetscErrorCode MatMPISBAIJSetPreallocationCSR_MPISBAIJ(Mat B, PetscInt bs
       const PetscScalar *svals = values + (V ? (bs * bs * ii[i]) : 0);
       PetscCall(MatSetValuesBlocked_MPISBAIJ(B, 1, &row, ncols, icols, svals, INSERT_VALUES));
     } else { /* block ordering does not match so we can only insert one block at a time. */
-      PetscInt j;
-      for (j = 0; j < ncols; j++) {
+      for (PetscInt j = 0; j < ncols; j++) {
         const PetscScalar *svals = values + (V ? (bs * bs * (ii[i] + j)) : 0);
         PetscCall(MatSetValuesBlocked_MPISBAIJ(B, 1, &row, 1, &icols[j], svals, INSERT_VALUES));
       }
@@ -2788,7 +2786,7 @@ static PetscErrorCode MatSOR_MPISBAIJ(Mat matin, Vec bb, PetscReal omega, MatSOR
     PetscBool          hasop;
     const PetscScalar *diag;
     PetscScalar       *sl, scale = (omega - 2.0) / omega;
-    PetscInt           i, n;
+    PetscInt           n;
 
     if (!mat->xx1) {
       PetscCall(VecDuplicate(bb, &mat->xx1));
@@ -2821,10 +2819,10 @@ static PetscErrorCode MatSOR_MPISBAIJ(Mat matin, Vec bb, PetscReal omega, MatSOR
       PetscCall(VecGetArray(xx, &x));
       PetscCall(VecGetLocalSize(xx, &n));
       if (omega == 1.0) {
-        for (i = 0; i < n; i++) sl[i] = b[i] - diag[i] * x[i];
+        for (PetscInt i = 0; i < n; i++) sl[i] = b[i] - diag[i] * x[i];
         PetscCall(PetscLogFlops(2.0 * n));
       } else {
-        for (i = 0; i < n; i++) sl[i] = b[i] + scale * diag[i] * x[i];
+        for (PetscInt i = 0; i < n; i++) sl[i] = b[i] + scale * diag[i] * x[i];
         PetscCall(PetscLogFlops(3.0 * n));
       }
       PetscCall(VecRestoreArray(mat->slvec1a, &sl));
@@ -2934,7 +2932,7 @@ PetscErrorCode MatMPISBAIJSetPreallocationCSR(Mat B, PetscInt bs, const PetscInt
 
 PetscErrorCode MatCreateMPIMatConcatenateSeqMat_MPISBAIJ(MPI_Comm comm, Mat inmat, PetscInt n, MatReuse scall, Mat *outmat)
 {
-  PetscInt     m, N, i, rstart, nnz, Ii, bs, cbs;
+  PetscInt m, N, rstart, nnz, Ii, bs, cbs;
   PetscInt    *indx;
   PetscScalar *values;
 
@@ -2964,7 +2962,7 @@ PetscErrorCode MatCreateMPIMatConcatenateSeqMat_MPISBAIJ(MPI_Comm comm, Mat inma
 
     rstart = __rstart; /* block rstart of *outmat; see inline function MatPreallocateBegin */
     PetscCall(MatSetOption(inmat, MAT_GETROW_UPPERTRIANGULAR, PETSC_TRUE));
-    for (i = 0; i < mbs; i++) {
+    for (PetscInt i = 0; i < mbs; i++) {
       PetscCall(MatGetRow_SeqSBAIJ(inmat, i * bs, &nnz, &indx, NULL)); /* non-blocked nnz and indx */
       nnz = nnz / bs;
       for (j = 0; j < nnz; j++) bindx[j] = indx[j * bs] / bs;
@@ -2988,7 +2986,7 @@ PetscErrorCode MatCreateMPIMatConcatenateSeqMat_MPISBAIJ(MPI_Comm comm, Mat inma
   PetscCall(MatGetOwnershipRange(*outmat, &rstart, NULL));
 
   PetscCall(MatSetOption(inmat, MAT_GETROW_UPPERTRIANGULAR, PETSC_TRUE));
-  for (i = 0; i < m; i++) {
+  for (PetscInt i = 0; i < m; i++) {
     PetscCall(MatGetRow_SeqSBAIJ(inmat, i, &nnz, &indx, &values));
     Ii = i + rstart;
     PetscCall(MatSetValues(*outmat, 1, &Ii, nnz, indx, values, INSERT_VALUES));

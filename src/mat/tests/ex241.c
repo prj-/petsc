@@ -20,14 +20,14 @@ static PetscErrorCode GenEntries(PetscInt sdim, PetscInt M, PetscInt N, const Pe
 
 static PetscErrorCode GenEntriesRectangular(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *J, const PetscInt *K, PetscScalar *ptr, PetscCtx ctx)
 {
-  PetscInt  d, j, k;
+  PetscInt j;
   PetscReal diff = 0.0, **coords = (PetscReal **)(ctx);
 
   PetscFunctionBeginUser;
   for (j = 0; j < M; j++) {
-    for (k = 0; k < N; k++) {
+    for (PetscInt k = 0; k < N; k++) {
       diff = 0.0;
-      for (d = 0; d < sdim; d++) diff += (coords[0][J[j] * sdim + d] - coords[1][K[k] * sdim + d]) * (coords[0][J[j] * sdim + d] - coords[1][K[k] * sdim + d]);
+      for (PetscInt d = 0; d < sdim; d++) diff += (coords[0][J[j] * sdim + d] - coords[1][K[k] * sdim + d]) * (coords[0][J[j] * sdim + d] - coords[1][K[k] * sdim + d]);
       ptr[j + M * k] = 1.0 / (1.0e-2 + PetscSqrtReal(diff));
     }
   }

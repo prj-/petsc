@@ -244,7 +244,7 @@ PetscErrorCode FormMatrix(DM da, Mat jac)
  */
 PetscErrorCode NonlinearGS(SNES snes, Vec X)
 {
-  PetscInt      i, j, Mx, My, xs, ys, xm, ym, its, l;
+  PetscInt Mx, My, xs, ys, xm, ym, its;
   PetscReal     hx, hy, hxdhy, hydhx;
   PetscScalar **x, F, J, u, uxx, uyy;
   DM            da;
@@ -263,7 +263,7 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X)
 
   PetscCall(DMGetLocalVector(da, &localX));
 
-  for (l = 0; l < its; l++) {
+  for (PetscInt l = 0; l < its; l++) {
     PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, localX));
     PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, localX));
     /*
@@ -283,8 +283,8 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X)
      */
     PetscCall(DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL));
 
-    for (j = ys; j < ys + ym; j++) {
-      for (i = xs; i < xs + xm; i++) {
+    for (PetscInt j = ys; j < ys + ym; j++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
         if (i == 0 || j == 0 || i == Mx - 1 || j == My - 1) {
           /* boundary conditions are all zero Dirichlet */
           x[j][i] = 0.0;

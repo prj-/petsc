@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   };
   const PetscInt ixrow[5] = {4, 2, 1, 0, 3}, ixcol[7] = {5, 3, 6, 1, 2, 0, 4};
   Mat            A, B;
-  PetscInt       i, rstart, rend, cstart, cend;
+  PetscInt rstart, rend, cstart, cend;
   IS             isrow, iscol;
   PetscViewer    viewer;
   PetscBool      view_sparse;
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   PetscCall(MatGetOwnershipRange(A, &rstart, &rend));
   PetscCall(MatGetOwnershipRangeColumn(A, &cstart, &cend));
 
-  for (i = 0; i < (PetscInt)PETSC_STATIC_ARRAY_LENGTH(entries); i++) PetscCall(MatSetValue(A, entries[i].i, entries[i].j, entries[i].v, INSERT_VALUES));
+  for (PetscInt i = 0; i < (PetscInt)PETSC_STATIC_ARRAY_LENGTH(entries); i++) PetscCall(MatSetValue(A, entries[i].i, entries[i].j, entries[i].v, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY));
 

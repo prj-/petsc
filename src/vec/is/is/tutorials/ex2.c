@@ -10,7 +10,7 @@ static char help[] = "Demonstrates creating a stride index set.\n\n";
 
 int main(int argc, char **argv)
 {
-  PetscInt        i, n, first, step;
+  PetscInt n, first, step;
   IS              set;
   const PetscInt *indices;
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   */
   PetscCall(ISGetIndices(set, &indices));
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing indices directly\n"));
-  for (i = 0; i < n; i++) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%" PetscInt_FMT "\n", indices[i]));
+  for (PetscInt i = 0; i < n; i++) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%" PetscInt_FMT "\n", indices[i]));
 
   PetscCall(ISRestoreIndices(set, &indices));
 

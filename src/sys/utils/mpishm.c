@@ -146,7 +146,7 @@ PetscErrorCode PetscShmCommGet(MPI_Comm globcomm, PetscShmComm *pshmcomm)
 @*/
 PetscErrorCode PetscShmCommGlobalToLocal(PetscShmComm pshmcomm, PetscMPIInt grank, PetscMPIInt *lrank)
 {
-  PetscMPIInt low, high, t, i;
+  PetscMPIInt low, high, t;
   PetscBool   flg = PETSC_FALSE;
 
   PetscFunctionBegin;
@@ -164,7 +164,7 @@ PetscErrorCode PetscShmCommGlobalToLocal(PetscShmComm pshmcomm, PetscMPIInt gran
     if (pshmcomm->globranks[t] > grank) high = t;
     else low = t;
   }
-  for (i = low; i < high; i++) {
+  for (PetscMPIInt i = low; i < high; i++) {
     if (pshmcomm->globranks[i] > grank) PetscFunctionReturn(PETSC_SUCCESS);
     if (pshmcomm->globranks[i] == grank) {
       *lrank = i;

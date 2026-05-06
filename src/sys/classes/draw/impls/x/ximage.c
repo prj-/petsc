@@ -9,7 +9,7 @@ PETSC_INTERN PetscErrorCode PetscDrawGetImage_X(PetscDraw, unsigned char[PETSC_D
 static inline PetscErrorCode PetscArgSortPixVal(const PetscDrawXiPixVal v[PETSC_DRAW_MAXCOLOR], int idx[], int right)
 {
   PetscDrawXiPixVal vl;
-  int               i, last, tmp;
+  int last, tmp;
 #define SWAP(a, b) \
   do { \
     tmp = a; \
@@ -26,7 +26,7 @@ static inline PetscErrorCode PetscArgSortPixVal(const PetscDrawXiPixVal v[PETSC_
   SWAP(idx[0], idx[right / 2]);
   vl   = v[idx[0]];
   last = 0;
-  for (i = 1; i <= right; i++)
+  for (int i = 1; i <= right; i++)
     if (v[idx[i]] < vl) {
       last++;
       SWAP(idx[last], idx[i]);

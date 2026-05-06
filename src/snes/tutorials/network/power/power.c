@@ -69,12 +69,11 @@ int main(int argc, char **argv)
   PFDATA       *pfdata;
   PetscInt      numEdges = 0;
   PetscInt     *edges    = NULL;
-  PetscInt      i;
   DM            networkdm;
   UserCtx_Power User;
   PetscLogStage stage1, stage2;
   PetscMPIInt   rank;
-  PetscInt      eStart, eEnd, vStart, vEnd, j;
+  PetscInt eStart, eEnd, vStart, vEnd;
   PetscInt      genj, loadj;
   Vec           X, F;
   Mat           J;
@@ -133,15 +132,15 @@ int main(int argc, char **argv)
       genj  = 0;
       loadj = 0;
       PetscCall(DMNetworkGetEdgeRange(networkdm, &eStart, &eEnd));
-      for (i = eStart; i < eEnd; i++) PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_branch, &pfdata->branch[i - eStart], 0));
+      for (PetscInt i = eStart; i < eEnd; i++) PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_branch, &pfdata->branch[i - eStart], 0));
       PetscCall(DMNetworkGetVertexRange(networkdm, &vStart, &vEnd));
-      for (i = vStart; i < vEnd; i++) {
+      for (PetscInt i = vStart; i < vEnd; i++) {
         PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_bus, &pfdata->bus[i - vStart], 2));
         if (pfdata->bus[i - vStart].ngen) {
-          for (j = 0; j < pfdata->bus[i - vStart].ngen; j++) PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_gen, &pfdata->gen[genj++], 0));
+          for (PetscInt j = 0; j < pfdata->bus[i - vStart].ngen; j++) PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_gen, &pfdata->gen[genj++], 0));
         }
         if (pfdata->bus[i - vStart].nload) {
-          for (j = 0; j < pfdata->bus[i - vStart].nload; j++) PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_load, &pfdata->load[loadj++], 0));
+          for (PetscInt j = 0; j < pfdata->bus[i - vStart].nload; j++) PetscCall(DMNetworkAddComponent(networkdm, i, User.compkey_load, &pfdata->load[loadj++], 0));
         }
       }
     }
@@ -166,20 +165,20 @@ int main(int argc, char **argv)
 
 #if 0
     EDGE_Power     edge;
-    PetscInt       key,kk,numComponents;
+    PetscInt key, numComponents;
     VERTEX_Power   bus;
     GEN            gen;
     LOAD           load;
 
-    for (i = eStart; i < eEnd; i++) {
+    for (PetscInt i = eStart; i < eEnd; i++) {
       PetscCall(DMNetworkGetComponent(networkdm,i,0,&key,(void**)&edge));
       PetscCall(DMNetworkGetNumComponents(networkdm,i,&numComponents));
       PetscCall(PetscPrintf(PETSC_COMM_SELF,"Rank %d ncomps = %d Line %d ---- %d\n",crank,numComponents,edge->internal_i,edge->internal_j));
     }
 
-    for (i = vStart; i < vEnd; i++) {
+    for (PetscInt i = vStart; i < vEnd; i++) {
       PetscCall(DMNetworkGetNumComponents(networkdm,i,&numComponents));
-      for (kk=0; kk < numComponents; kk++) {
+      for (PetscInt kk=0; kk < numComponents; kk++) {
         PetscCall(DMNetworkGetComponent(networkdm,i,kk,&key,&component));
         if (key == 1) {
           bus = (VERTEX_Power)component;

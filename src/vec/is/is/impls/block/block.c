@@ -448,7 +448,7 @@ PetscErrorCode ISBlockSetIndices(IS is, PetscInt bs, PetscInt n, const PetscInt 
 
 static PetscErrorCode ISBlockSetIndices_Block(IS is, PetscInt bs, PetscInt n, const PetscInt idx[], PetscCopyMode mode)
 {
-  PetscInt    i, min, max;
+  PetscInt min, max;
   IS_Block   *sub = (IS_Block *)is->data;
   PetscLayout map;
 
@@ -476,7 +476,7 @@ static PetscErrorCode ISBlockSetIndices_Block(IS is, PetscInt bs, PetscInt n, co
 
   if (n) {
     min = max = idx[0];
-    for (i = 1; i < n; i++) {
+    for (PetscInt i = 1; i < n; i++) {
       if (idx[i] < min) min = idx[i];
       if (idx[i] > max) max = idx[i];
     }

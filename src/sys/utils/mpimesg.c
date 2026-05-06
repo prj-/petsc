@@ -315,23 +315,22 @@ PetscErrorCode PetscPostIrecvInt(MPI_Comm comm, PetscMPIInt tag, PetscMPIInt nre
 
 PetscErrorCode PetscPostIrecvScalar(MPI_Comm comm, PetscMPIInt tag, PetscMPIInt nrecvs, const PetscMPIInt onodes[], const PetscMPIInt olengths[], PetscScalar ***rbuf, MPI_Request **r_waits)
 {
-  PetscMPIInt   i;
   PetscScalar **rbuf_t;
   MPI_Request  *r_waits_t;
   PetscInt      len = 0;
 
   PetscFunctionBegin;
   /* compute memory required for recv buffers */
-  for (i = 0; i < nrecvs; i++) len += olengths[i]; /* each message length */
+  for (PetscMPIInt i = 0; i < nrecvs; i++) len += olengths[i]; /* each message length */
 
   /* allocate memory for recv buffers */
   PetscCall(PetscMalloc1(nrecvs + 1, &rbuf_t));
   PetscCall(PetscMalloc1(len, &rbuf_t[0]));
-  for (i = 1; i < nrecvs; ++i) rbuf_t[i] = rbuf_t[i - 1] + olengths[i - 1];
+  for (PetscMPIInt i = 1; i < nrecvs; ++i) rbuf_t[i] = rbuf_t[i - 1] + olengths[i - 1];
 
   /* Post the receives */
   PetscCall(PetscMalloc1(nrecvs, &r_waits_t));
-  for (i = 0; i < nrecvs; ++i) PetscCallMPI(MPIU_Irecv(rbuf_t[i], olengths[i], MPIU_SCALAR, onodes[i], tag, comm, r_waits_t + i));
+  for (PetscMPIInt i = 0; i < nrecvs; ++i) PetscCallMPI(MPIU_Irecv(rbuf_t[i], olengths[i], MPIU_SCALAR, onodes[i], tag, comm, r_waits_t + i));
 
   *rbuf    = rbuf_t;
   *r_waits = r_waits_t;

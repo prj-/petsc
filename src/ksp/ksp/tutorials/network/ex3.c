@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 {
   PetscMPIInt     size, rank;
   DM              dmnetwork;
-  PetscInt        i, j, net, Nsubnet, nsubnet, ne, nv, nvar, v, ncomp, compkey0, compkey1, compkey, goffset, row;
+  PetscInt i, net, Nsubnet, nsubnet, ne, nv, nvar, v, ncomp, compkey0, compkey1, compkey, goffset, row;
   PetscInt        numEdges[10], *edgelist[10], asvtx, bsvtx;
   const PetscInt *vtx, *edges;
   PetscBool       sharedv, ghost, distribute = PETSC_TRUE, test = PETSC_FALSE;
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     } else if (i > 1 && (size == 1 || (rank == i && size > 1))) {
       numEdges[i] = 3;
       PetscCall(PetscMalloc1(2 * numEdges[i], &edgelist[i]));
-      for (j = 0; j < numEdges[i]; j++) {
+      for (PetscInt j = 0; j < numEdges[i]; j++) {
         edgelist[i][2 * j]     = j;
         edgelist[i][2 * j + 1] = j + 1;
       }
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
   /* Add shared vertices -- all processes hold this info at current implementation */
   asvtx = bsvtx = 0;
-  for (j = 1; j < Nsubnet; j++) {
+  for (PetscInt j = 1; j < Nsubnet; j++) {
     /* vertex subnet[0].0 shares with vertex subnet[j].0 */
     PetscCall(DMNetworkAddSharedVertices(dmnetwork, 0, j, 1, &asvtx, &bsvtx));
   }
@@ -139,7 +139,6 @@ int main(int argc, char **argv)
 
   /* Create a global vector */
   PetscCall(DMCreateGlobalVector(dmnetwork, &X));
-  PetscCall(VecSet(X, 0.0));
 
   /* Set X values at shared vertex */
   PetscCall(DMNetworkGetSharedVertices(dmnetwork, &nv, &vtx));
@@ -151,7 +150,7 @@ int main(int argc, char **argv)
     PetscCall(DMNetworkGetComponent(dmnetwork, vtx[v], ALL_COMPONENTS, NULL, NULL, &nvar));
     PetscCall(DMNetworkGetNumComponents(dmnetwork, vtx[v], &ncomp));
     /* PetscCall(PetscPrintf(PETSC_COMM_SELF,"[%d] shared v %" PetscInt_FMT ": nvar %" PetscInt_FMT ", ncomp %" PetscInt_FMT "\n",rank,vtx[v],nvar,ncomp)); */
-    for (j = 0; j < ncomp; j++) {
+    for (PetscInt j = 0; j < ncomp; j++) {
       PetscCall(DMNetworkGetComponent(dmnetwork, vtx[v], j, &compkey, NULL, &nvar));
       PetscCall(DMNetworkGetGlobalVecOffset(dmnetwork, vtx[v], j, &goffset));
       for (i = 0; i < nvar; i++) {
@@ -182,7 +181,7 @@ int main(int argc, char **argv)
       PetscCall(DMNetworkGetNumComponents(dmnetwork, vtx[i], &ncomp));
       if (sharedv || ghost) PetscCall(PetscPrintf(PETSC_COMM_SELF, "  [%d] v %" PetscInt_FMT " is shared %d, is ghost %d, ncomp %" PetscInt_FMT "\n", rank, vtx[i], sharedv, ghost, ncomp));
 
-      for (j = 0; j < ncomp; j++) {
+      for (PetscInt j = 0; j < ncomp; j++) {
         void *component;
         PetscCall(DMNetworkGetComponent(dmnetwork, vtx[i], j, &compkey, (void **)&component, NULL));
         if (compkey == 0) {

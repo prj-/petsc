@@ -127,14 +127,12 @@ static void MPIAPI MPIU_MinIndex_Local(void *in, void *out, PetscMPIInt *cnt, MP
   };
   struct PetscRealInt *xin  = (struct PetscRealInt *)in;
   struct PetscRealInt *xout = (struct PetscRealInt *)out;
-  int                  c;
-
   PetscFunctionBegin;
   if (*datatype != MPIU_REAL_INT) {
     PetscCallAbort(MPI_COMM_SELF, (*PetscErrorPrintf)("Can only handle MPIU_REAL_INT data types"));
     PETSCABORT(MPI_COMM_SELF, PETSC_ERR_ARG_WRONG);
   }
-  for (c = 0; c < *cnt; c++) {
+  for (int c = 0; c < *cnt; c++) {
     if (xin[c].v < xout[c].v) {
       xout[c].v = xin[c].v;
       xout[c].i = xin[c].i;
@@ -168,7 +166,6 @@ PetscErrorCode VecInitializePackage(void)
 {
   char      logList[256];
   PetscBool opt, pkg;
-  PetscInt  i;
 
   PetscFunctionBegin;
   if (VecPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
@@ -267,7 +264,7 @@ PetscErrorCode VecInitializePackage(void)
   PetscCallMPI(MPI_Op_create(MPIU_MinIndex_Local, 1, &MPIU_MINLOC));
 
   /* Register the different norm types for cached norms */
-  for (i = 0; i < 4; i++) PetscCall(PetscObjectComposedDataRegister(NormIds + i));
+  for (PetscInt i = 0; i < 4; i++) PetscCall(PetscObjectComposedDataRegister(NormIds + i));
 
   /* Register package finalizer */
   PetscCall(PetscRegisterFinalize(VecFinalizePackage));

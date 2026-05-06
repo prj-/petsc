@@ -71,7 +71,7 @@ static PetscErrorCode PetscPartitionerPartition_Chaco(PetscPartitioner part, Pet
   #endif
   int       fd_stdout, fd_pipe[2];
   PetscInt *points;
-  int       i, v, p;
+  int i, p;
   int       err;
 
   PetscFunctionBegin;
@@ -134,10 +134,10 @@ static PetscErrorCode PetscPartitionerPartition_Chaco(PetscPartitioner part, Pet
   PetscCheck(!err, PETSC_COMM_SELF, PETSC_ERR_LIB, "Error in Chaco library: %s", "error in stdout");
   #endif
   /* Convert to PetscSection+IS */
-  for (v = 0; v < nvtxs; ++v) PetscCall(PetscSectionAddDof(partSection, assignment[v], 1));
+  for (int v = 0; v < nvtxs; ++v) PetscCall(PetscSectionAddDof(partSection, assignment[v], 1));
   PetscCall(PetscMalloc1(nvtxs, &points));
   for (p = 0, i = 0; p < nparts; ++p) {
-    for (v = 0; v < nvtxs; ++v) {
+    for (int v = 0; v < nvtxs; ++v) {
       if (assignment[v] == p) points[i++] = v;
     }
   }

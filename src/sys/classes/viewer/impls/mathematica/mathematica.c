@@ -182,7 +182,6 @@ PetscErrorCode PetscViewerMathematicaSetFromOptions(PetscViewer v)
   PetscInt                 numPorts;
   PetscInt                *ports;
   PetscInt                 numHosts;
-  int                      h;
   char                   **hosts;
   PetscMPIInt              size, rank;
   PetscBool                opt;
@@ -216,7 +215,7 @@ PetscErrorCode PetscViewerMathematicaSetFromOptions(PetscViewer v)
     }
     PetscCall(PetscViewerMathematicaSetLinkHost(v, hostname));
   }
-  for (h = 0; h < numHosts; h++) PetscCall(PetscFree(hosts[h]));
+  for (int h = 0; h < numHosts; h++) PetscCall(PetscFree(hosts[h]));
   PetscCall(PetscFree(hosts));
   /* Get link mode */
   PetscCall(PetscOptionsGetString("viewer_", "-math_linkmode", modename, sizeof(modename), &opt));

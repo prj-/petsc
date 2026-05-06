@@ -72,7 +72,7 @@ static PetscErrorCode PetscFESetUp_Composite(PetscFE fem)
       PetscReal       *Bf;
       PetscQuadrature  f;
       const PetscReal *points, *weights;
-      PetscInt         Nc, Nq, q, k;
+      PetscInt Nc, Nq, k;
 
       PetscCall(PetscDualSpaceGetFunctional(fem->dualSpace, cmp->embedding[s * spdim + j], &f));
       PetscCall(PetscQuadratureGetData(f, NULL, &Nc, &Nq, &points, &weights));
@@ -81,7 +81,7 @@ static PetscErrorCode PetscFESetUp_Composite(PetscFE fem)
       for (k = 0; k < spdim; ++k) {
         /* n_j \cdot \phi_k */
         invVscalar[(s * spdim + j) * spdim + k] = 0.0;
-        for (q = 0; q < Nq; ++q) invVscalar[(s * spdim + j) * spdim + k] += Bf[q * spdim + k] * weights[q];
+        for (PetscInt q = 0; q < Nq; ++q) invVscalar[(s * spdim + j) * spdim + k] += Bf[q * spdim + k] * weights[q];
       }
       PetscCall(PetscFree(Bf));
     }
@@ -111,7 +111,7 @@ static PetscErrorCode PetscFEComputeTabulation_Composite(PetscFE fem, PetscInt n
   PetscReal         *D    = K >= 1 ? T->T[1] : NULL;
   PetscReal         *H    = K >= 2 ? T->T[2] : NULL;
   PetscReal         *tmpB = NULL, *tmpD = NULL, *tmpH = NULL, *subpoint;
-  PetscInt           p, s, d, e, j, k;
+  PetscInt s;
 
   PetscFunctionBegin;
   PetscCall(PetscDualSpaceGetDM(fem->dualSpace, &dm));
@@ -123,14 +123,14 @@ static PetscErrorCode PetscFEComputeTabulation_Composite(PetscFE fem, PetscInt n
   /* Divide points into subelements */
   PetscCall(DMGetWorkArray(dm, npoints, MPIU_INT, &subpoints));
   PetscCall(DMGetWorkArray(dm, dim, MPIU_REAL, &subpoint));
-  for (p = 0; p < npoints; ++p) {
+  for (PetscInt p = 0; p < npoints; ++p) {
     for (s = 0; s < cmp->numSubelements; ++s) {
       PetscBool inside;
 
       /* Apply transform, and check that point is inside cell */
-      for (d = 0; d < dim; ++d) {
+      for (PetscInt d = 0; d < dim; ++d) {
         subpoint[d] = -1.0;
-        for (e = 0; e < dim; ++e) subpoint[d] += cmp->invjac[(s * dim + d) * dim + e] * (points[p * dim + e] - cmp->v0[s * dim + e]);
+        for (PetscInt e = 0; e < dim; ++e) subpoint[d] += cmp->invjac[(s * dim + d) * dim + e] * (points[p * dim + e] - cmp->v0[s * dim + e]);
       }
       PetscCall(DMPolytopeInCellTest(ct, subpoint, &inside));
       if (inside) {
@@ -150,37 +150,37 @@ static PetscErrorCode PetscFEComputeTabulation_Composite(PetscFE fem, PetscInt n
   if (K >= 0) PetscCall(PetscArrayzero(B, npoints * pdim * comp));
   if (K >= 1) PetscCall(PetscArrayzero(D, npoints * pdim * comp * dim));
   if (K >= 2) PetscCall(PetscArrayzero(H, npoints * pdim * comp * dim * dim));
-  for (p = 0; p < npoints; ++p) {
+  for (PetscInt p = 0; p < npoints; ++p) {
     const PetscInt s = subpoints[p];
 
     if (B) {
       /* Multiply by V^{-1} (spdim x spdim) */
-      for (j = 0; j < spdim; ++j) {
+      for (PetscInt j = 0; j < spdim; ++j) {
         const PetscInt i = (p * pdim + cmp->embedding[s * spdim + j]) * comp;
 
         B[i] = 0.0;
-        for (k = 0; k < spdim; ++k) B[i] += fem->invV[(s * spdim + k) * spdim + j] * tmpB[p * spdim + k];
+        for (PetscInt k = 0; k < spdim; ++k) B[i] += fem->invV[(s * spdim + k) * spdim + j] * tmpB[p * spdim + k];
       }
     }
     if (D) {
       /* Multiply by V^{-1} (spdim x spdim) */
-      for (j = 0; j < spdim; ++j) {
-        for (d = 0; d < dim; ++d) {
+      for (PetscInt j = 0; j < spdim; ++j) {
+        for (PetscInt d = 0; d < dim; ++d) {
           const PetscInt i = ((p * pdim + cmp->embedding[s * spdim + j]) * comp + 0) * dim + d;
 
           D[i] = 0.0;
-          for (k = 0; k < spdim; ++k) D[i] += fem->invV[(s * spdim + k) * spdim + j] * tmpD[(p * spdim + k) * dim + d];
+          for (PetscInt k = 0; k < spdim; ++k) D[i] += fem->invV[(s * spdim + k) * spdim + j] * tmpD[(p * spdim + k) * dim + d];
         }
       }
     }
     if (H) {
       /* Multiply by V^{-1} (pdim x pdim) */
-      for (j = 0; j < spdim; ++j) {
-        for (d = 0; d < dim * dim; ++d) {
+      for (PetscInt j = 0; j < spdim; ++j) {
+        for (PetscInt d = 0; d < dim * dim; ++d) {
           const PetscInt i = ((p * pdim + cmp->embedding[s * spdim + j]) * comp + 0) * dim * dim + d;
 
           H[i] = 0.0;
-          for (k = 0; k < spdim; ++k) H[i] += fem->invV[(s * spdim + k) * spdim + j] * tmpH[(p * spdim + k) * dim * dim + d];
+          for (PetscInt k = 0; k < spdim; ++k) H[i] += fem->invV[(s * spdim + k) * spdim + j] * tmpH[(p * spdim + k) * dim * dim + d];
         }
       }
     }

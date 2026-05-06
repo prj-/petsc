@@ -10,7 +10,7 @@ PETSC_EXTERN PetscErrorCode MatColoringTest(MatColoring mc, ISColoring coloring)
   PetscInt        s, e;
   PetscInt        ncolors, nrows, ncols;
   IS             *colors;
-  PetscInt        i, j, k, l;
+  PetscInt i, j;
   PetscInt       *staterow, *statecol, *statespread;
   PetscInt        nindices;
   const PetscInt *indices;
@@ -32,15 +32,15 @@ PETSC_EXTERN PetscErrorCode MatColoringTest(MatColoring mc, ISColoring coloring)
   PetscCall(PetscMalloc1(nleafcols, &stateleafcol));
   PetscCall(PetscMalloc1(nleafrows, &stateleafrow));
 
-  for (l = 0; l < ncolors; l++) {
+  for (PetscInt l = 0; l < ncolors; l++) {
     if (l > maxcolors) break;
-    for (k = 0; k < ncols; k++) statecol[k] = -1;
+    for (PetscInt k = 0; k < ncols; k++) statecol[k] = -1;
     PetscCall(ISGetLocalSize(colors[l], &nindices));
     PetscCall(ISGetIndices(colors[l], &indices));
-    for (k = 0; k < nindices; k++) statecol[indices[k] - s] = indices[k];
+    for (PetscInt k = 0; k < nindices; k++) statecol[indices[k] - s] = indices[k];
     PetscCall(ISRestoreIndices(colors[l], &indices));
     statespread = statecol;
-    for (k = 0; k < dist; k++) {
+    for (PetscInt k = 0; k < dist; k++) {
       if (k % 2 == 1) {
         PetscCall(PetscSFComputeDegreeBegin(etor, &degrees));
         PetscCall(PetscSFComputeDegreeEnd(etor, &degrees));
@@ -81,7 +81,7 @@ PETSC_EXTERN PetscErrorCode MatColoringTest(MatColoring mc, ISColoring coloring)
         statespread = staterow;
       }
     }
-    for (k = 0; k < nindices; k++) {
+    for (PetscInt k = 0; k < nindices; k++) {
       if (statespread[indices[k] - s] != indices[k]) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)mc), "%" PetscInt_FMT " of color %" PetscInt_FMT " conflicts with %" PetscInt_FMT "\n", indices[k], l, statespread[indices[k] - s]));
     }
     PetscCall(ISRestoreIndices(colors[l], &indices));
@@ -97,7 +97,7 @@ PETSC_EXTERN PetscErrorCode MatColoringTest(MatColoring mc, ISColoring coloring)
 
 PETSC_EXTERN PetscErrorCode MatISColoringTest(Mat A, ISColoring iscoloring)
 {
-  PetscInt        nn, c, i, j, M, N, nc, nnz, col, row;
+  PetscInt nn, M, N, nc, nnz, col, row;
   const PetscInt *cia, *cja, *cols;
   IS             *isis;
   MPI_Comm        comm;
@@ -117,16 +117,16 @@ PETSC_EXTERN PetscErrorCode MatISColoringTest(Mat A, ISColoring iscoloring)
 
   PetscCall(MatGetSize(A, &M, NULL));
   PetscCall(PetscBTCreate(M, &table));
-  for (c = 0; c < nn; c++) { /* for each color */
+  for (PetscInt c = 0; c < nn; c++) { /* for each color */
     PetscCall(ISGetSize(isis[c], &nc));
     if (nc <= 1) continue;
 
     PetscCall(PetscBTMemzero(M, table));
     PetscCall(ISGetIndices(isis[c], &cols));
-    for (j = 0; j < nc; j++) { /* for each column */
+    for (PetscInt j = 0; j < nc; j++) { /* for each column */
       col = cols[j];
       nnz = cia[col + 1] - cia[col];
-      for (i = 0; i < nnz; i++) {
+      for (PetscInt i = 0; i < nnz; i++) {
         row = cja[cia[col] + i];
         PetscCheck(!PetscBTLookupSet(table, row), PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "color %" PetscInt_FMT ", col %" PetscInt_FMT ": row %" PetscInt_FMT " already in this color", c, col, row);
       }

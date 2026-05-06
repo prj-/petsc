@@ -686,11 +686,11 @@ static PetscErrorCode PCTFS_rvec_exists(PetscScalar *arg1, PetscScalar *arg2, Pe
 /***********************************ivec.c*************************************/
 static PetscErrorCode PCTFS_rvec_non_uniform(PetscScalar *arg1, PetscScalar *arg2, PetscInt n, PetscInt *arg3)
 {
-  PetscInt i, j, type;
+  PetscInt j, type;
 
   PetscFunctionBegin;
   /* LATER: if we're really motivated we can sort and then unsort */
-  for (i = 0; i < n;) {
+  for (PetscInt i = 0; i < n;) {
     /* clump 'em for now */
     j    = i + 1;
     type = arg3[i];

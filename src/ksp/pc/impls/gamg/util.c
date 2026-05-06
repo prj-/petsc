@@ -24,7 +24,7 @@ PetscErrorCode PCGAMGGetDataWithGhosts(Mat Gmat, PetscInt data_sz, PetscReal dat
 {
   Vec          tmp_crds;
   Mat_MPIAIJ  *mpimat;
-  PetscInt     nnodes, num_ghosts, dir, kk, jj, my0, Iend, nloc;
+  PetscInt nnodes, num_ghosts, kk, jj, my0, Iend, nloc;
   PetscScalar *data_arr;
   PetscReal   *datas;
   PetscBool    isMPIAIJ;
@@ -41,7 +41,7 @@ PetscErrorCode PCGAMGGetDataWithGhosts(Mat Gmat, PetscInt data_sz, PetscReal dat
   PetscCall(MatCreateVecs(Gmat, &tmp_crds, NULL));
 
   PetscCall(PetscMalloc1(data_sz * nnodes, &datas));
-  for (dir = 0; dir < data_sz; dir++) {
+  for (PetscInt dir = 0; dir < data_sz; dir++) {
     /* set local, and global */
     for (kk = 0; kk < nloc; kk++) {
       PetscInt    gid          = my0 + kk;

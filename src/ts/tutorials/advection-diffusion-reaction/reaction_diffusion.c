@@ -303,7 +303,7 @@ PetscErrorCode IJacobian(TS ts, PetscReal t, Vec U, Vec Udot, PetscReal a, Mat A
 {
   AppCtx     *appctx = (AppCtx *)ctx; /* user-defined application context */
   DM          da;
-  PetscInt    i, j, Mx, My, xs, ys, xm, ym;
+  PetscInt Mx, My, xs, ys, xm, ym;
   PetscReal   hx, hy, sx, sy;
   PetscScalar uc, vc;
   Field     **u;
@@ -350,7 +350,7 @@ PetscErrorCode IJacobian(TS ts, PetscReal t, Vec U, Vec Udot, PetscReal a, Mat A
   /*
      Compute function over the locally owned part of the grid
   */
-  for (j = ys; j < ys + ym; j++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
     stencil[0].j = j - 1;
     stencil[1].j = j + 1;
     stencil[2].j = j;
@@ -359,7 +359,7 @@ PetscErrorCode IJacobian(TS ts, PetscReal t, Vec U, Vec Udot, PetscReal a, Mat A
     stencil[5].j = j;
     rowstencil.k = 0;
     rowstencil.j = j;
-    for (i = xs; i < xs + xm; i++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       uc = u[j][i].u;
       vc = u[j][i].v;
 

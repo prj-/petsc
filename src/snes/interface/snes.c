@@ -3166,10 +3166,10 @@ PetscErrorCode SNESComputeJacobian(SNES snes, Vec X, Mat A, Mat B)
       if (flag_contour) PetscCall(PetscViewerPopFormat(vdraw));
 
       if (flag_threshold) {
-        PetscInt bs, rstart, rend, i;
+        PetscInt bs, rstart, rend;
         PetscCall(MatGetBlockSize(B, &bs));
         PetscCall(MatGetOwnershipRange(B, &rstart, &rend));
-        for (i = rstart; i < rend; i++) {
+        for (PetscInt i = rstart; i < rend; i++) {
           const PetscScalar *ba, *ca;
           const PetscInt    *bj, *cj;
           PetscInt           bn, cn, j, maxentrycol = -1, maxdiffcol = -1, maxrdiffcol = -1;
@@ -3515,11 +3515,9 @@ PetscErrorCode SNESReset(SNES snes)
 @*/
 PetscErrorCode SNESConvergedReasonViewCancel(SNES snes)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscValidHeaderSpecific(snes, SNES_CLASSID, 1);
-  for (i = 0; i < snes->numberreasonviews; i++) {
+  for (PetscInt i = 0; i < snes->numberreasonviews; i++) {
     if (snes->reasonviewdestroy[i]) PetscCall((*snes->reasonviewdestroy[i])(&snes->reasonviewcontext[i]));
   }
   snes->numberreasonviews = 0;
@@ -4306,11 +4304,9 @@ PetscErrorCode SNESMonitorSet(SNES snes, PetscErrorCode (*f)(SNES snes, PetscInt
 @*/
 PetscErrorCode SNESMonitorCancel(SNES snes)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscValidHeaderSpecific(snes, SNES_CLASSID, 1);
-  for (i = 0; i < snes->numbermonitors; i++) {
+  for (PetscInt i = 0; i < snes->numbermonitors; i++) {
     if (snes->monitordestroy[i]) PetscCall((*snes->monitordestroy[i])(&snes->monitorcontext[i]));
   }
   snes->numbermonitors = 0;
@@ -4487,12 +4483,11 @@ PetscErrorCode SNESSetConvergenceHistory(SNES snes, PetscReal a[], PetscInt its[
 PETSC_EXTERN mxArray *SNESGetConvergenceHistoryMatlab(SNES snes)
 {
   mxArray   *mat;
-  PetscInt   i;
   PetscReal *ar;
 
   mat = mxCreateDoubleMatrix(snes->conv_hist_len, 1, mxREAL);
   ar  = (PetscReal *)mxGetData(mat);
-  for (i = 0; i < snes->conv_hist_len; i++) ar[i] = snes->conv_hist[i];
+  for (PetscInt i = 0; i < snes->conv_hist_len; i++) ar[i] = snes->conv_hist[i];
   return mat;
 }
 #endif
@@ -4630,7 +4625,7 @@ PetscErrorCode SNESConvergedReasonView(SNES snes, PetscViewer viewer)
       DM       dm;
       Vec      u;
       PetscDS  prob;
-      PetscInt Nf, f;
+      PetscInt Nf;
       PetscErrorCode (**exactSol)(PetscInt, PetscReal, const PetscReal[], PetscInt, PetscScalar[], void *);
       void    **exactCtx;
       PetscReal error;
@@ -4640,7 +4635,7 @@ PetscErrorCode SNESConvergedReasonView(SNES snes, PetscViewer viewer)
       PetscCall(DMGetDS(dm, &prob));
       PetscCall(PetscDSGetNumFields(prob, &Nf));
       PetscCall(PetscMalloc2(Nf, &exactSol, Nf, &exactCtx));
-      for (f = 0; f < Nf; ++f) PetscCall(PetscDSGetExactSolution(prob, f, &exactSol[f], &exactCtx[f]));
+      for (PetscInt f = 0; f < Nf; ++f) PetscCall(PetscDSGetExactSolution(prob, f, &exactSol[f], &exactCtx[f]));
       PetscCall(DMComputeL2Diff(dm, 0.0, exactSol, exactCtx, u, &error));
       PetscCall(PetscFree2(exactSol, exactCtx));
       if (error < 1.0e-11) PetscCall(PetscViewerASCIIPrintf(viewer, "L_2 Error: < 1.0e-11\n"));
@@ -4773,7 +4768,6 @@ PetscErrorCode SNESConvergedReasonViewFromOptions(SNES snes)
 PetscErrorCode SNESSolve(SNES snes, Vec b, Vec x)
 {
   PetscBool flg;
-  PetscInt  grid;
   Vec       xcreated = NULL;
   DM        dm;
 
@@ -4864,8 +4858,8 @@ PetscErrorCode SNESSolve(SNES snes, Vec b, Vec x)
   }
   PetscCall(SNESViewFromOptions(snes, NULL, "-snes_view_pre"));
 
-  for (grid = 0; grid < snes->gridsequence; grid++) PetscCall(PetscViewerASCIIPushTab(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)snes))));
-  for (grid = 0; grid < snes->gridsequence + 1; grid++) {
+  for (PetscInt grid = 0; grid < snes->gridsequence; grid++) PetscCall(PetscViewerASCIIPushTab(PETSC_VIEWER_STDOUT_(PetscObjectComm((PetscObject)snes))));
+  for (PetscInt grid = 0; grid < snes->gridsequence + 1; grid++) {
     /* set solution vector */
     if (!grid) PetscCall(PetscObjectReference((PetscObject)x));
     PetscCall(VecDestroy(&snes->vec_sol));
@@ -5319,7 +5313,7 @@ PetscErrorCode SNESRegister(const char sname[], PetscErrorCode (*function)(SNES)
 
 PetscErrorCode SNESTestLocalMin(SNES snes)
 {
-  PetscInt    N, i, j;
+  PetscInt N;
   Vec         u, uh, fh;
   PetscScalar value;
   PetscReal   norm;
@@ -5332,10 +5326,10 @@ PetscErrorCode SNESTestLocalMin(SNES snes)
   /* currently only works for sequential */
   PetscCall(PetscPrintf(PetscObjectComm((PetscObject)snes), "Testing FormFunction() for local min\n"));
   PetscCall(VecGetSize(u, &N));
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     PetscCall(VecCopy(u, uh));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)snes), "i = %" PetscInt_FMT "\n", i));
-    for (j = -10; j < 11; j++) {
+    for (PetscInt j = -10; j < 11; j++) {
       value = PetscSign(j) * PetscExpReal(PetscAbs(j) - 10.0);
       PetscCall(VecSetValue(uh, i, value, ADD_VALUES));
       PetscCall(SNESComputeFunction(snes, uh, fh));

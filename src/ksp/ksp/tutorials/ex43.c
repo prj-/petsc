@@ -356,7 +356,7 @@ static PetscErrorCode DMDAViewGnuplot2d(DM da, Vec fields, const char comment[],
   char         fname[PETSC_MAX_PATH_LEN];
   PetscMPIInt  rank;
   PetscInt     si, sj, nx, ny, i, j;
-  PetscInt     n_dofs, d;
+  PetscInt     n_dofs;
   PetscScalar *_fields;
 
   PetscFunctionBeginUser;
@@ -368,7 +368,7 @@ static PetscErrorCode DMDAViewGnuplot2d(DM da, Vec fields, const char comment[],
   PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "### %s (processor %1.4d) ### \n", comment, rank));
   PetscCall(DMDAGetInfo(da, 0, 0, 0, 0, 0, 0, 0, &n_dofs, 0, 0, 0, 0, 0));
   PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "### x y "));
-  for (d = 0; d < n_dofs; d++) {
+  for (PetscInt d = 0; d < n_dofs; d++) {
     const char *field_name;
     PetscCall(DMDAGetFieldName(da, d, &field_name));
     PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "%s ", field_name));
@@ -394,7 +394,7 @@ static PetscErrorCode DMDAViewGnuplot2d(DM da, Vec fields, const char comment[],
       coord_y = _coords[j][i].y;
 
       PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "%1.6e %1.6e ", (double)PetscRealPart(coord_x), (double)PetscRealPart(coord_y)));
-      for (d = 0; d < n_dofs; d++) {
+      for (PetscInt d = 0; d < n_dofs; d++) {
         field_d = _fields[n_dofs * ((i - si) + (j - sj) * (nx)) + d];
         PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "%1.6e ", (double)PetscRealPart(field_d)));
       }
@@ -418,7 +418,7 @@ static PetscErrorCode DMDAViewCoefficientsGnuplot2d(DM da, Vec fields, const cha
   char                     fname[PETSC_MAX_PATH_LEN];
   PetscMPIInt              rank;
   PetscInt                 si, sj, nx, ny, i, j, p;
-  PetscInt                 n_dofs, d;
+  PetscInt                 n_dofs;
   GaussPointCoefficients **_coefficients;
 
   PetscFunctionBeginUser;
@@ -430,7 +430,7 @@ static PetscErrorCode DMDAViewCoefficientsGnuplot2d(DM da, Vec fields, const cha
   PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "### %s (processor %1.4d) ### \n", comment, rank));
   PetscCall(DMDAGetInfo(da, 0, 0, 0, 0, 0, 0, 0, &n_dofs, 0, 0, 0, 0, 0));
   PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "### x y "));
-  for (d = 0; d < n_dofs; d++) {
+  for (PetscInt d = 0; d < n_dofs; d++) {
     const char *field_name;
     PetscCall(DMDAGetFieldName(da, d, &field_name));
     PetscCall(PetscFPrintf(PETSC_COMM_SELF, fp, "%s ", field_name));
@@ -493,7 +493,7 @@ static void FormStressOperatorQ1(PetscScalar Ke[], PetscScalar coords[], PetscSc
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][2];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, k;
+  PetscInt p, i, j;
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, tildeD[3];
   PetscScalar B[3][U_DOFS * NODES_PER_EL];
@@ -530,7 +530,7 @@ static void FormStressOperatorQ1(PetscScalar Ke[], PetscScalar coords[], PetscSc
     */
     for (i = 0; i < 8; i++) {
       for (j = 0; j < 8; j++) {
-        for (k = 0; k < 3; k++) { /* Note D is diagonal for stokes */
+        for (PetscInt k = 0; k < 3; k++) { /* Note D is diagonal for stokes */
           Ke[i + 8 * j] = Ke[i + 8 * j] + B[k][i] * tildeD[k] * B[k][j];
         }
       }
@@ -543,7 +543,7 @@ static void FormGradientOperatorQ1(PetscScalar Ke[], PetscScalar coords[])
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][2];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, di;
+  PetscInt p, i, j;
   PetscScalar Ni_p[NODES_PER_EL];
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
@@ -559,7 +559,7 @@ static void FormGradientOperatorQ1(PetscScalar Ke[], PetscScalar coords[])
     fac = gp_weight[p] * J_p;
 
     for (i = 0; i < NODES_PER_EL; i++) { /* u nodes */
-      for (di = 0; di < NSD; di++) {     /* u dofs */
+      for (PetscInt di = 0; di < NSD; di++) {     /* u dofs */
         for (j = 0; j < 4; j++) {        /* p nodes, p dofs = 1 (ie no loop) */
           PetscInt IJ;
           IJ = ASS_MAP_wIwDI_uJuDJ(i, di, NODES_PER_EL, 2, j, 0, NODES_PER_EL, 1);
@@ -840,10 +840,8 @@ static PetscErrorCode AssembleA_PCStokes(Mat A, DM stokes_da, DM properties_da, 
 
 static PetscErrorCode DMDASetValuesLocalStencil_ADD_VALUES(StokesDOF **fields_F, MatStencil u_eqn[], MatStencil p_eqn[], PetscScalar Fe_u[], PetscScalar Fe_p[])
 {
-  PetscInt n;
-
   PetscFunctionBeginUser;
-  for (n = 0; n < 4; n++) {
+  for (PetscInt n = 0; n < 4; n++) {
     fields_F[u_eqn[2 * n].j][u_eqn[2 * n].i].u_dof         = fields_F[u_eqn[2 * n].j][u_eqn[2 * n].i].u_dof + Fe_u[2 * n];
     fields_F[u_eqn[2 * n + 1].j][u_eqn[2 * n + 1].i].v_dof = fields_F[u_eqn[2 * n + 1].j][u_eqn[2 * n + 1].i].v_dof + Fe_u[2 * n + 1];
     fields_F[p_eqn[n].j][p_eqn[n].i].p_dof                 = fields_F[p_eqn[n].j][p_eqn[n].i].p_dof + Fe_p[n];
@@ -859,7 +857,7 @@ static PetscErrorCode AssembleF_Stokes(Vec F, DM stokes_da, DM properties_da, Ve
   MatStencil               u_eqn[NODES_PER_EL * U_DOFS]; /* 2 degrees of freedom */
   MatStencil               p_eqn[NODES_PER_EL * P_DOFS]; /* 1 degrees of freedom */
   PetscInt                 sex, sey, mx, my;
-  PetscInt                 ei, ej;
+  PetscInt                 ej;
   PetscScalar              Fe[NODES_PER_EL * U_DOFS];
   PetscScalar              He[NODES_PER_EL * P_DOFS];
   PetscScalar              el_coords[NODES_PER_EL * NSD];
@@ -889,7 +887,7 @@ static PetscErrorCode AssembleF_Stokes(Vec F, DM stokes_da, DM properties_da, Ve
   PetscCall(DMDAGetElementsCorners(stokes_da, &sex, &sey, NULL));
   PetscCall(DMDAGetElementsSizes(stokes_da, &mx, &my, NULL));
   for (ej = sey; ej < sey + my; ej++) {
-    for (ei = sex; ei < sex + mx; ei++) {
+    for (PetscInt ei = sex; ei < sex + mx; ei++) {
       /* get coords for the element */
       PetscCall(GetElementCoords(_coords, ei, ej, el_coords));
 
@@ -997,7 +995,6 @@ static PetscErrorCode DMDAIntegrateErrors(DM stokes_da, Vec X, Vec X_analytic)
   Vec          coords, X_analytic_local, X_local;
   DMDACoor2d **_coords;
   PetscInt     sex, sey, mx, my;
-  PetscInt     ei, ej;
   PetscScalar  el_coords[NODES_PER_EL * NSD];
   StokesDOF  **stokes_analytic, **stokes;
   StokesDOF    stokes_analytic_e[4], stokes_e[4];
@@ -1043,8 +1040,8 @@ static PetscErrorCode DMDAIntegrateErrors(DM stokes_da, Vec X, Vec X_analytic)
 
   PetscCall(DMDAGetElementsCorners(stokes_da, &sex, &sey, NULL));
   PetscCall(DMDAGetElementsSizes(stokes_da, &mx, &my, NULL));
-  for (ej = sey; ej < sey + my; ej++) {
-    for (ei = sex; ei < sex + mx; ei++) {
+  for (PetscInt ej = sey; ej < sey + my; ej++) {
+    for (PetscInt ei = sex; ei < sex + mx; ei++) {
       /* get coords for the element */
       PetscCall(GetElementCoords(_coords, ei, ej, el_coords));
       PetscCall(StokesDAGetNodalFields(stokes, ei, ej, stokes_e));
@@ -1197,7 +1194,6 @@ static PetscErrorCode solve_stokes_2d_coupled(PetscInt mx, PetscInt my)
 
       for (p = 0; p < GAUSS_POINTS; p++) {
         PetscScalar gp_x, gp_y;
-        PetscInt    n;
         PetscScalar xi_p[2], Ni_p[4];
 
         xi_p[0] = gp_xi[p][0];
@@ -1206,7 +1202,7 @@ static PetscErrorCode solve_stokes_2d_coupled(PetscInt mx, PetscInt my)
 
         gp_x = 0.0;
         gp_y = 0.0;
-        for (n = 0; n < NODES_PER_EL; n++) {
+        for (PetscInt n = 0; n < NODES_PER_EL; n++) {
           gp_x = gp_x + Ni_p[n] * el_coords[2 * n];
           gp_y = gp_y + Ni_p[n] * el_coords[2 * n + 1];
         }
@@ -1437,7 +1433,6 @@ static PetscErrorCode solve_stokes_2d_coupled(PetscInt mx, PetscInt my)
   /* assemble A11 */
   PetscCall(MatZeroEntries(A));
   PetscCall(MatZeroEntries(B));
-  PetscCall(VecZeroEntries(f));
 
   PetscCall(AssembleA_Stokes(A, da_Stokes, da_prop, properties));
   PetscCall(AssembleA_PCStokes(B, da_Stokes, da_prop, properties));
@@ -1476,7 +1471,7 @@ static PetscErrorCode solve_stokes_2d_coupled(PetscInt mx, PetscInt my)
       PetscCall(PetscOptionsGetBool(NULL, NULL, "-stokes_pc_bddc_use_divergence", &usedivmat, NULL));
       if (usedivmat) {
         IS      *fields, vel;
-        PetscInt i, nf;
+        PetscInt nf;
 
         PetscCall(DMCreateFieldDecomposition(da_Stokes, &nf, NULL, &fields, NULL));
         PetscCall(ISConcatenate(PETSC_COMM_WORLD, 2, fields, &vel));
@@ -1485,7 +1480,7 @@ static PetscErrorCode solve_stokes_2d_coupled(PetscInt mx, PetscInt my)
         PetscCall(MatZeroRowsIS(B, vel, 0.0, NULL, NULL));
         PetscCall(ISDestroy(&vel));
         PetscCall(PCBDDCSetDivergenceMat(pc, B, PETSC_FALSE, NULL));
-        for (i = 0; i < nf; i++) PetscCall(ISDestroy(&fields[i]));
+        for (PetscInt i = 0; i < nf; i++) PetscCall(ISDestroy(&fields[i]));
         PetscCall(PetscFree(fields));
       }
     }

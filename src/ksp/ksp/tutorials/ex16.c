@@ -23,7 +23,7 @@ int main(int argc, char **args)
   Mat         A;       /* linear system matrix */
   KSP         ksp;     /* linear solver context */
   PetscReal   norm;    /* norm of solution error */
-  PetscInt    ntimes, i, j, k, Ii, J, Istart, Iend;
+  PetscInt ntimes, i, j, J, Istart, Iend;
   PetscInt    m = 8, n = 7, its;
   PetscBool   flg = PETSC_FALSE;
   PetscScalar v, one = 1.0, rhs;
@@ -62,7 +62,7 @@ int main(int argc, char **args)
         appropriate processor during matrix assembly).
       - Always specify global rows and columns of matrix entries.
    */
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = -1.0;
     i = Ii / n;
     j = Ii - i * n;
@@ -149,7 +149,7 @@ int main(int argc, char **args)
 
   ntimes = 2;
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-ntimes", &ntimes, NULL));
-  for (k = 1; k < ntimes + 1; k++) {
+  for (PetscInt k = 1; k < ntimes + 1; k++) {
     /*
        Set exact solution; then compute right-hand-side vector.  We use
        an exact solution of a vector with all elements equal to 1.0*k.

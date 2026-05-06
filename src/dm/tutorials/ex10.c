@@ -19,7 +19,7 @@ static char help[] = "Test to write HDF5 file from PETSc DMDA Vec.\n\n";
 int main(int argc, char **argv)
 {
   DM            da2D;
-  PetscInt      i, j, ixs, ixm, iys, iym;
+  PetscInt ixs, ixm, iys, iym;
   PetscViewer   H5viewer;
   PetscScalar   xm = -1.0, xp = 1.0;
   PetscScalar   ym = -1.0, yp = 1.0;
@@ -55,8 +55,8 @@ int main(int argc, char **argv)
 
   /* Build the gaussian profile (exp(-x^2-y^2)) */
   PetscCall(DMDAVecGetArray(da2D, gauss, &gauss_ptr));
-  for (j = iys; j < iys + iym; j++) {
-    for (i = ixs; i < ixs + ixm; i++) gauss_ptr[j][i] = PetscExpScalar(-(xm + i * dx) * (xm + i * dx) - (ym + j * dy) * (ym + j * dy));
+  for (PetscInt j = iys; j < iys + iym; j++) {
+    for (PetscInt i = ixs; i < ixs + ixm; i++) gauss_ptr[j][i] = PetscExpScalar(-(xm + i * dx) * (xm + i * dx) - (ym + j * dy) * (ym + j * dy));
   }
   PetscCall(DMDAVecRestoreArray(da2D, gauss, &gauss_ptr));
 

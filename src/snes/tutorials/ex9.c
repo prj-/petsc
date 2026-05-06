@@ -85,7 +85,6 @@ int main(int argc, char **argv)
   PetscCall(DMDASetUniformCoordinates(da, -2.0, 2.0, -2.0, 2.0, 0.0, 1.0));
 
   PetscCall(DMCreateGlobalVector(da, &u));
-  PetscCall(VecSet(u, 0.0));
 
   PetscCall(SNESCreate(PETSC_COMM_WORLD, &snes));
   PetscCall(SNESSetDM(snes, da));
@@ -191,7 +190,7 @@ PetscErrorCode FormFunctionLocal(DMDALocalInfo *info, PetscScalar **au, PetscSca
 
 PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, PetscScalar **au, Mat A, Mat jac, void *user)
 {
-  PetscInt   i, j, n;
+  PetscInt n;
   MatStencil col[5], row;
   PetscReal  v[5], dx, dy, oxx, oyy;
 
@@ -200,8 +199,8 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, PetscScalar **au, Mat A, M
   dy  = 4.0 / (PetscReal)(info->my - 1);
   oxx = dy / dx;
   oyy = dx / dy;
-  for (j = info->ys; j < info->ys + info->ym; j++) {
-    for (i = info->xs; i < info->xs + info->xm; i++) {
+  for (PetscInt j = info->ys; j < info->ys + info->ym; j++) {
+    for (PetscInt i = info->xs; i < info->xs + info->xm; i++) {
       row.j = j;
       row.i = i;
       if (i == 0 || j == 0 || i == info->mx - 1 || j == info->my - 1) { /* boundary */

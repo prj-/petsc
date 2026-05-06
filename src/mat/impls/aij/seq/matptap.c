@@ -193,7 +193,7 @@ PetscErrorCode MatPtAPNumeric_SeqAIJ_SeqAIJ_SparseAxpy(Mat A, Mat P, Mat C)
   PetscInt   *ai = a->i, *aj = a->j, *apj, *apjdense, *pi = p->i, *pj = p->j, *pJ = p->j, *pjj;
   PetscInt   *ci = c->i, *cj = c->j, *cjj;
   PetscInt    am = A->rmap->N, cn = C->cmap->N, cm = C->rmap->N;
-  PetscInt    i, j, k, anzi, pnzi, apnzj, nextap, pnzj, prow, crow;
+  PetscInt j, anzi, pnzi, apnzj, nextap, pnzj, prow, crow;
   MatScalar  *aa, *apa, *pa, *pA, *paj, *ca, *caj;
 
   PetscFunctionBegin;
@@ -219,7 +219,7 @@ PetscErrorCode MatPtAPNumeric_SeqAIJ_SeqAIJ_SparseAxpy(Mat A, Mat P, Mat C)
   /* Clear old values in C */
   PetscCall(PetscArrayzero(ca, ci[cm]));
 
-  for (i = 0; i < am; i++) {
+  for (PetscInt i = 0; i < am; i++) {
     /* Form sparse row of A*P */
     anzi  = ai[i + 1] - ai[i];
     apnzj = 0;
@@ -228,7 +228,7 @@ PetscErrorCode MatPtAPNumeric_SeqAIJ_SeqAIJ_SparseAxpy(Mat A, Mat P, Mat C)
       pnzj = pi[prow + 1] - pi[prow];
       pjj  = pj + pi[prow];
       paj  = pa + pi[prow];
-      for (k = 0; k < pnzj; k++) {
+      for (PetscInt k = 0; k < pnzj; k++) {
         if (!apjdense[pjj[k]]) {
           apjdense[pjj[k]] = -1;
           apj[apnzj++]     = pjj[k];
@@ -251,7 +251,7 @@ PetscErrorCode MatPtAPNumeric_SeqAIJ_SeqAIJ_SparseAxpy(Mat A, Mat P, Mat C)
       cjj    = cj + ci[crow];
       caj    = ca + ci[crow];
       /* Perform sparse axpy operation.  Note cjj includes apj. */
-      for (k = 0; nextap < apnzj; k++) {
+      for (PetscInt k = 0; nextap < apnzj; k++) {
         PetscAssert(k < ci[crow + 1] - ci[crow], PETSC_COMM_SELF, PETSC_ERR_PLIB, "k too large k %" PetscInt_FMT ", crow %" PetscInt_FMT, k, crow);
         if (cjj[k] == apj[nextap]) caj[k] += (*pA) * apa[apj[nextap++]];
       }

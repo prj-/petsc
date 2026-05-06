@@ -2282,7 +2282,6 @@ PetscErrorCode VecGetArrays(const Vec x[], PetscInt n, PetscScalar **a[])
 @*/
 PetscErrorCode VecRestoreArrays(const Vec x[], PetscInt n, PetscScalar **a[])
 {
-  PetscInt      i;
   PetscScalar **q = *a;
 
   PetscFunctionBegin;
@@ -2290,7 +2289,7 @@ PetscErrorCode VecRestoreArrays(const Vec x[], PetscInt n, PetscScalar **a[])
   PetscValidHeaderSpecific(*x, VEC_CLASSID, 1);
   PetscAssertPointer(a, 3);
 
-  for (i = 0; i < n; ++i) PetscCall(VecRestoreArray(x[i], &q[i]));
+  for (PetscInt i = 0; i < n; ++i) PetscCall(VecRestoreArray(x[i], &q[i]));
   PetscCall(PetscFree(q));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -3658,7 +3657,7 @@ PetscErrorCode VecRestoreArray3dRead(Vec x, PetscInt m, PetscInt n, PetscInt p, 
 @*/
 PetscErrorCode VecGetArray4dRead(Vec x, PetscInt m, PetscInt n, PetscInt p, PetscInt q, PetscInt mstart, PetscInt nstart, PetscInt pstart, PetscInt qstart, PetscScalar ****a[])
 {
-  PetscInt           i, N, j, k;
+  PetscInt i, N, j;
   const PetscScalar *aa;
   PetscScalar     ***b, **c;
 
@@ -3678,7 +3677,7 @@ PetscErrorCode VecGetArray4dRead(Vec x, PetscInt m, PetscInt n, PetscInt p, Pets
     for (j = 0; j < n; j++) b[i * n + j] = c + i * n * p + j * p - pstart;
   for (i = 0; i < m; i++)
     for (j = 0; j < n; j++)
-      for (k = 0; k < p; k++) c[i * n * p + j * p + k] = (PetscScalar *)aa + i * n * p * q + j * p * q + k * q - qstart;
+      for (PetscInt k = 0; k < p; k++) c[i * n * p + j * p + k] = (PetscScalar *)aa + i * n * p * q + j * p * q + k * q - qstart;
   *a -= mstart;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

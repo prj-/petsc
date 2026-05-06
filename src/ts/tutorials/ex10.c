@@ -717,7 +717,7 @@ static PetscErrorCode RDIJacobian_FE(TS ts, PetscReal t, Vec X, Vec Xdot, PetscR
   Vec           X0loc, Xloc, Xloc_t;
   PetscReal     hx, Theta, dt, weight[5], interp[5][2], deriv[5][2];
   DMDALocalInfo info;
-  PetscInt      i, j, k, q, nq;
+  PetscInt i, k, nq;
   PetscScalar   K[4][4];
 
   PetscFunctionBeginUser;
@@ -732,7 +732,7 @@ static PetscErrorCode RDIJacobian_FE(TS ts, PetscReal t, Vec X, Vec Xdot, PetscR
     rc[0] = i;
     rc[1] = i + 1;
     PetscCall(PetscMemzero(K, sizeof(K)));
-    for (q = 0; q < nq; q++) {
+    for (PetscInt q = 0; q < nq; q++) {
       PetscScalar              D_R;
       PETSC_UNUSED PetscScalar rad;
       RDNode                   n, nx, nt, ntx, drad, dD_R, dxD_R, dEm;
@@ -741,7 +741,7 @@ static PetscErrorCode RDIJacobian_FE(TS ts, PetscReal t, Vec X, Vec Xdot, PetscR
       rad = RDRadiation(rd, &n, &drad);
       RDDiffusionCoefficient(rd, PETSC_TRUE, &n, &nx, &D_R, &dD_R, &dxD_R);
       RDMaterialEnergy(rd, &n, NULL, &dEm);
-      for (j = 0; j < 2; j++) {
+      for (PetscInt j = 0; j < 2; j++) {
         for (k = 0; k < 2; k++) {
           K[j * 2 + 0][k * 2 + 0] += (+interp[q][j] * weight[q] * (a - drad.E) * interp[q][k] + deriv[q][j] * weight[q] * ((D_R + dxD_R.E * nx.E) * deriv[q][k] + dD_R.E * nx.E * interp[q][k]));
           K[j * 2 + 0][k * 2 + 1] += (+interp[q][j] * weight[q] * (-drad.T * interp[q][k]) + deriv[q][j] * weight[q] * (dxD_R.T * deriv[q][k] + dD_R.T * interp[q][k]) * nx.E);
@@ -928,7 +928,6 @@ static PetscErrorCode RDTestDifferentiation(RD rd)
                           (double)PetscRealPart(dxD.T - fdxD.T)));
   }
   {
-    PetscInt    i;
     PetscReal   hx = 1.;
     PetscScalar a0;
     RDNode      n0[3], n1[3], d[3], fd[3];
@@ -940,7 +939,7 @@ static PetscErrorCode RDTestDifferentiation(RD rd)
     n0[2].E = 4.;
     n0[2].T = 2.;
     a0      = RDDiffusion(rd, hx, n0, 1, d);
-    for (i = 0; i < 3; i++) {
+    for (PetscInt i = 0; i < 3; i++) {
       PetscCall(PetscMemcpy(n1, n0, sizeof(n0)));
       n1[i].E += epsilon;
       fd[i].E = (RDDiffusion(rd, hx, n1, 1, 0) - a0) / epsilon;

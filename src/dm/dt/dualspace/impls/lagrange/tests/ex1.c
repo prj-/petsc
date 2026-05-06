@@ -160,7 +160,6 @@ static PetscErrorCode ExpectedNumDofs_Interior(PetscInt dim, PetscInt order, Pet
 PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt order, PetscInt formDegree, PetscBool trimmed, PetscInt tensorCell, PetscBool continuous, PetscInt nCopies)
 {
   PetscDualSpace  sp;
-  MPI_Comm        comm = PETSC_COMM_SELF;
   PetscInt        Nk;
   PetscHashLagKey key;
   PetscHashIter   iter;
@@ -169,7 +168,7 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
 
   PetscFunctionBegin;
   PetscCall(PetscDTBinomialInt(dim, PetscAbsInt(formDegree), &Nk));
-  PetscCall(PetscDualSpaceCreate(comm, &sp));
+  PetscCall(PetscDualSpaceCreate(PETSC_COMM_SELF, &sp));
   PetscCall(PetscDualSpaceSetType(sp, PETSCDUALSPACELAGRANGE));
   PetscCall(PetscDualSpaceSetDM(sp, K));
   PetscCall(PetscDualSpaceSetOrder(sp, order));
@@ -215,7 +214,7 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
       PetscQuadrature  intNodes, allNodes;
       Mat              intMat, allMat;
       MatInfo          info;
-      PetscInt         i, j, nodeIdxDim, nodeVecDim, nNodes;
+      PetscInt nodeIdxDim, nodeVecDim, nNodes;
       const PetscInt  *nodeIdx;
       const PetscReal *nodeVec;
 
@@ -232,11 +231,11 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
       PetscCall(PetscQuadratureView(allNodes, PETSC_VIEWER_STDOUT_SELF));
       PetscCall(PetscViewerASCIIPopTab(PETSC_VIEWER_STDOUT_SELF));
       PetscCall(PetscViewerASCIIPrintf(PETSC_VIEWER_STDOUT_SELF, "All node indices:\n"));
-      for (i = 0; i < spdim; i++) {
+      for (PetscInt i = 0; i < spdim; i++) {
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "("));
-        for (j = 0; j < nodeIdxDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %" PetscInt_FMT ",", nodeIdx[i * nodeIdxDim + j]));
+        for (PetscInt j = 0; j < nodeIdxDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %" PetscInt_FMT ",", nodeIdx[i * nodeIdxDim + j]));
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "): ["));
-        for (j = 0; j < nodeVecDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %g,", (double)nodeVec[i * nodeVecDim + j]));
+        for (PetscInt j = 0; j < nodeVecDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %g,", (double)nodeVec[i * nodeVecDim + j]));
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "]\n"));
       }
 
@@ -271,7 +270,7 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
       }
     }
     if (dim <= 2 && spintdim) {
-      PetscInt numFaces, o;
+      PetscInt numFaces;
 
       {
         DMPolytopeType ct;
@@ -279,7 +278,7 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
         PetscCall(DMPlexGetCellType(K, 0, &ct));
         numFaces = DMPolytopeTypeGetNumArrangements(ct) / 2;
       }
-      for (o = -numFaces; o < numFaces; ++o) {
+      for (PetscInt o = -numFaces; o < numFaces; ++o) {
         Mat symMat;
 
         PetscCall(PetscDualSpaceCreateInteriorSymmetryMatrix_Lagrange(sp, o, &symMat));
@@ -301,7 +300,7 @@ int main(int argc, char **argv)
   PetscInt     dim;
   PetscHashLag lagTable;
   PetscInt     tensorCell;
-  PetscInt     order, ordermin, ordermax;
+  PetscInt ordermin, ordermax;
   PetscBool    continuous;
   PetscBool    trimmed;
   DM           dm;
@@ -327,13 +326,11 @@ int main(int argc, char **argv)
   }
   ordermin = trimmed ? 1 : 0;
   ordermax = tensorCell == 2 ? 4 : tensorCell == 1 ? 3 : dim + 2;
-  for (order = ordermin; order <= ordermax; order++) {
+  for (PetscInt order = ordermin; order <= ordermax; order++) {
     PetscInt formDegree;
 
     for (formDegree = PetscMin(0, -dim + 1); formDegree <= dim; formDegree++) {
-      PetscInt nCopies;
-
-      for (nCopies = 1; nCopies <= 3; nCopies++) PetscCall(testLagrange(lagTable, dm, dim, order, formDegree, trimmed, tensorCell, continuous, nCopies));
+      for (PetscInt nCopies = 1; nCopies <= 3; nCopies++) PetscCall(testLagrange(lagTable, dm, dim, order, formDegree, trimmed, tensorCell, continuous, nCopies));
     }
   }
   PetscCall(DMDestroy(&dm));

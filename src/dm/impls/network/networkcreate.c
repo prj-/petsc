@@ -79,7 +79,7 @@ static PetscErrorCode VecView_Network_Seq(DM networkdm, Vec X, PetscViewer viewe
 
 static PetscErrorCode VecView_Network_MPI(DM networkdm, Vec X, PetscViewer viewer)
 {
-  PetscInt           i, e, v, eStart, eEnd, vStart, vEnd, offset, nvar, len_loc, k;
+  PetscInt i, v, eStart, eEnd, vStart, vEnd, offset, nvar, len_loc, k;
   const PetscScalar *xv;
   MPI_Comm           comm;
   PetscMPIInt        size, rank, tag = ((PetscObject)viewer)->tag, len;
@@ -114,7 +114,7 @@ static PetscErrorCode VecView_Network_MPI(DM networkdm, Vec X, PetscViewer viewe
 
   /* iterate over edges */
   k = 2;
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     PetscCall(DMNetworkGetComponent(networkdm, e, ALL_COMPONENTS, NULL, NULL, &nvar));
     if (!nvar) continue;
 
@@ -350,12 +350,12 @@ static PetscErrorCode DMInitialize_Network(DM dm)
 static PetscErrorCode DMNetworkCopyHeaderTopological(DM dm, DM newdm)
 {
   DM_Network *network = (DM_Network *)dm->data, *newnetwork = (DM_Network *)newdm->data;
-  PetscInt    p, i, np, index, subnetid;
+  PetscInt p, np, index, subnetid;
 
   PetscFunctionBegin;
   np = network->cloneshared->pEnd - network->cloneshared->pStart;
   PetscCall(PetscCalloc2(np, &newnetwork->header, np, &newnetwork->cvalue));
-  for (i = 0; i < np; i++) {
+  for (PetscInt i = 0; i < np; i++) {
     p = i + network->cloneshared->pStart;
     PetscCall(DMNetworkGetSubnetID(dm, p, &subnetid));
     PetscCall(DMNetworkGetIndex(dm, p, &index));

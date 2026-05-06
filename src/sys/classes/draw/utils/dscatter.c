@@ -241,7 +241,7 @@ PetscErrorCode PetscDrawSPAddPoint(PetscDrawSP sp, PetscReal *x, PetscReal *y)
 @*/
 PetscErrorCode PetscDrawSPAddPoints(PetscDrawSP sp, int n, PetscReal *xx[], PetscReal *yy[])
 {
-  PetscInt   i, j, k;
+  PetscInt i, k;
   PetscReal *x, *y;
 
   PetscFunctionBegin;
@@ -262,7 +262,7 @@ PetscErrorCode PetscDrawSPAddPoints(PetscDrawSP sp, int n, PetscReal *xx[], Pets
     sp->z = tmpz;
     sp->len += sp->dim * PETSC_DRAW_SP_CHUNK_SIZE;
   }
-  for (j = 0; j < sp->dim; ++j) {
+  for (PetscInt j = 0; j < sp->dim; ++j) {
     x = xx[j];
     y = yy[j];
     k = sp->loc + j;
@@ -303,8 +303,6 @@ PetscErrorCode PetscDrawSPAddPoints(PetscDrawSP sp, int n, PetscReal *xx[], Pets
 @*/
 PetscErrorCode PetscDrawSPAddPointColorized(PetscDrawSP sp, PetscReal *x, PetscReal *y, PetscReal *z)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscValidHeaderSpecific(sp, PETSC_DRAWSP_CLASSID, 1);
   sp->colorized = PETSC_TRUE;
@@ -320,7 +318,7 @@ PetscErrorCode PetscDrawSPAddPointColorized(PetscDrawSP sp, PetscReal *x, PetscR
     sp->z = tmpz;
     sp->len += sp->dim * PETSC_DRAW_SP_CHUNK_SIZE;
   }
-  for (i = 0; i < sp->dim; ++i) {
+  for (PetscInt i = 0; i < sp->dim; ++i) {
     if (x[i] > sp->xmax) sp->xmax = x[i];
     if (x[i] < sp->xmin) sp->xmin = x[i];
     if (y[i] > sp->ymax) sp->ymax = y[i];

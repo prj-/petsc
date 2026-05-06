@@ -258,7 +258,7 @@ PetscErrorCode FormFunction(TS ts, PetscReal ftime, Vec X, Vec Xdot, Vec F, void
 /* ------------------------------------------------------------------- */
 PetscErrorCode FormInitialSolution(DM da, Vec X, PetscReal kappa)
 {
-  PetscInt  i, xs, xm, Mx, xgs, xgm;
+  PetscInt xs, xm, Mx, xgs, xgm;
   Field    *x;
   PetscReal hx, xx, r, sx;
   Vec       Xg;
@@ -284,7 +284,7 @@ PetscErrorCode FormInitialSolution(DM da, Vec X, PetscReal kappa)
   /*
      Compute u function over the locally owned part of the grid including ghost points
   */
-  for (i = xgs; i < xgs + xgm; i++) {
+  for (PetscInt i = xgs; i < xgs + xgm; i++) {
     xx = i * hx;
     r  = PetscSqrtReal((xx - .5) * (xx - .5));
     if (r < .125) x[i].u = 1.0;
@@ -292,7 +292,7 @@ PetscErrorCode FormInitialSolution(DM da, Vec X, PetscReal kappa)
     /* fill in x[i].w so that valgrind doesn't detect use of uninitialized memory */
     x[i].w = 0;
   }
-  for (i = xs; i < xs + xm; i++) x[i].w = -kappa * (x[i - 1].u + x[i + 1].u - 2.0 * x[i].u) * sx;
+  for (PetscInt i = xs; i < xs + xm; i++) x[i].w = -kappa * (x[i - 1].u + x[i + 1].u - 2.0 * x[i].u) * sx;
 
   /*
      Restore vectors

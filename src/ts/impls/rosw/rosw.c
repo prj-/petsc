@@ -831,7 +831,7 @@ PetscErrorCode TSRosWRegister(TSRosWType name, PetscInt order, PetscInt s, const
 {
   RosWTableauLink link;
   RosWTableau     t;
-  PetscInt        i, j, k;
+  PetscInt i, j;
   PetscScalar    *GammaInv;
 
   PetscFunctionBegin;
@@ -908,7 +908,7 @@ PetscErrorCode TSRosWRegister(TSRosWType name, PetscInt order, PetscInt s, const
   PetscCall(PetscFree(GammaInv));
 
   for (i = 0; i < s; i++) {
-    for (k = 0; k < i + 1; k++) {
+    for (PetscInt k = 0; k < i + 1; k++) {
       t->GammaExplicitCorr[i * s + k] = (t->GammaExplicitCorr[i * s + k]) * (t->GammaInv[k * s + k]);
       for (j = k + 1; j < i + 1; j++) t->GammaExplicitCorr[i * s + k] += (t->GammaExplicitCorr[i * s + j]) * (t->GammaInv[j * s + k]);
     }
@@ -917,7 +917,7 @@ PetscErrorCode TSRosWRegister(TSRosWType name, PetscInt order, PetscInt s, const
   for (i = 0; i < s; i++) {
     for (j = 0; j < s; j++) {
       t->At[i * s + j] = 0;
-      for (k = 0; k < s; k++) t->At[i * s + j] += t->A[i * s + k] * t->GammaInv[k * s + j];
+      for (PetscInt k = 0; k < s; k++) t->At[i * s + j] += t->A[i * s + k] * t->GammaInv[k * s + j];
     }
     t->bt[i] = 0;
     for (j = 0; j < s; j++) t->bt[i] += t->b[j] * t->GammaInv[j * s + i];
@@ -1551,13 +1551,12 @@ static PetscErrorCode TSView_RosW(TS ts, PetscViewer viewer)
     RosWTableau tab = ros->tableau;
     TSRosWType  rostype;
     char        buf[512];
-    PetscInt    i;
     PetscReal   abscissa[512];
     PetscCall(TSRosWGetType(ts, &rostype));
     PetscCall(PetscViewerASCIIPrintf(viewer, "  Rosenbrock-W %s\n", rostype));
     PetscCall(PetscFormatRealArray(buf, sizeof(buf), "% 8.6f", tab->s, tab->ASum));
     PetscCall(PetscViewerASCIIPrintf(viewer, "  Abscissa of A       = %s\n", buf));
-    for (i = 0; i < tab->s; i++) abscissa[i] = tab->ASum[i] + tab->GammaSum[i];
+    for (PetscInt i = 0; i < tab->s; i++) abscissa[i] = tab->ASum[i] + tab->GammaSum[i];
     PetscCall(PetscFormatRealArray(buf, sizeof(buf), "% 8.6f", tab->s, abscissa));
     PetscCall(PetscViewerASCIIPrintf(viewer, "  Abscissa of A+Gamma = %s\n", buf));
   }

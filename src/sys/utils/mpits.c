@@ -488,12 +488,12 @@ PetscErrorCode PetscCommBuildTwoSidedFReq(MPI_Comm comm, PetscMPIInt count, MPI_
 {
   PetscErrorCode (*f)(MPI_Comm, PetscMPIInt, MPI_Datatype, PetscMPIInt, const PetscMPIInt[], const void *, PetscMPIInt *, PetscMPIInt **, void *, PetscMPIInt, MPI_Request **, MPI_Request **, PetscErrorCode (*send)(MPI_Comm, const PetscMPIInt[], PetscMPIInt, PetscMPIInt, void *, MPI_Request[], void *), PetscErrorCode (*recv)(MPI_Comm, const PetscMPIInt[], PetscMPIInt, void *, MPI_Request[], void *), PetscCtx ctx);
   PetscBuildTwoSidedType buildtype = PETSC_BUILDTWOSIDED_NOTSET;
-  PetscMPIInt            i, size;
+  PetscMPIInt size;
 
   PetscFunctionBegin;
   PetscCall(PetscSysInitializePackage());
   PetscCallMPI(MPI_Comm_size(comm, &size));
-  for (i = 0; i < nto; i++) PetscCheck(toranks[i] >= 0 && size > toranks[i], comm, PETSC_ERR_ARG_OUTOFRANGE, "toranks[%d] %d not in comm size %d", i, toranks[i], size);
+  for (PetscMPIInt i = 0; i < nto; i++) PetscCheck(toranks[i] >= 0 && size > toranks[i], comm, PETSC_ERR_ARG_OUTOFRANGE, "toranks[%d] %d not in comm size %d", i, toranks[i], size);
   PetscCall(PetscLogEventSync(PETSC_BuildTwoSidedF, comm));
   PetscCall(PetscLogEventBegin(PETSC_BuildTwoSidedF, 0, 0, 0, 0));
   PetscCall(PetscCommBuildTwoSidedGetType(comm, &buildtype));

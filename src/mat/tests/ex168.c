@@ -8,7 +8,7 @@ int main(int argc, char **args)
   Mat           A, F;
   Vec           u, x, b;
   PetscMPIInt   rank, size;
-  PetscInt      m, n, nfact;
+  PetscInt m, n;
   PetscReal     norm, tol = 1.e-12, Anorm;
   IS            perm, iperm;
   MatFactorInfo info;
@@ -49,7 +49,7 @@ int main(int argc, char **args)
   info.fill = 5.0;
   PetscCall(MatCholeskyFactorSymbolic(F, A, perm, &info));
 
-  for (nfact = 0; nfact < 1; nfact++) {
+  for (PetscInt nfact = 0; nfact < 1; nfact++) {
     if (rank == 0) printf(" %d-the Cholesky numfactorization \n", nfact);
     PetscCall(MatCholeskyFactorNumeric(F, A, &info));
 

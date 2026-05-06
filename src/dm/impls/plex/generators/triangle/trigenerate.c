@@ -133,12 +133,12 @@ PETSC_EXTERN PetscErrorCode DMPlexGenerate_Triangle(DM boundary, PetscBool inter
   }
 #if 0 /* Do not currently support holes */
   PetscReal *holeCoords;
-  PetscInt   h, d;
+  PetscInt d;
 
   PetscCall(DMPlexGetHoles(boundary, &in.numberofholes, &holeCords));
   if (in.numberofholes > 0) {
     PetscCall(PetscMalloc1(in.numberofholes*dim, &in.holelist));
-    for (h = 0; h < in.numberofholes; ++h) {
+    for (PetscInt h = 0; h < in.numberofholes; ++h) {
       for (d = 0; d < dim; ++d) in.holelist[h*dim+d] = holeCoords[h*dim+d];
     }
   }
@@ -182,10 +182,8 @@ PETSC_EXTERN PetscErrorCode DMPlexGenerate_Triangle(DM boundary, PetscBool inter
     if (sizeof(PetscInt) == sizeof(out.trianglelist[0])) {
       cells = (PetscInt *)out.trianglelist;
     } else {
-      PetscInt i;
-
       PetscCall(PetscMalloc1(numCells * numCorners, &cells));
-      for (i = 0; i < numCells * numCorners; i++) cells[i] = (PetscInt)out.trianglelist[i];
+      for (PetscInt i = 0; i < numCells * numCorners; i++) cells[i] = (PetscInt)out.trianglelist[i];
     }
     PetscCall(DMPlexCreateFromCellListPetsc(comm, dim, numCells, numVertices, numCorners, interpolate, cells, dim, meshCoords, dm));
     if (sizeof(PetscReal) != sizeof(out.pointlist[0])) PetscCall(PetscFree(meshCoords));
@@ -234,7 +232,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
   struct triangulateio in;
   struct triangulateio out;
   DMLabel              label;
-  PetscInt             vStart, vEnd, v, gcStart, cStart, cEnd, c, depth, depthGlobal;
+  PetscInt vStart, vEnd, gcStart, cStart, cEnd, depth, depthGlobal;
   PetscMPIInt          rank;
   double              *maxVolumes;
 
@@ -259,12 +257,12 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
     PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
     PetscCall(DMGetCoordinateSection(dm, &coordSection));
     PetscCall(VecGetArray(coordinates, &array));
-    for (v = vStart; v < vEnd; ++v) {
+    for (PetscInt v = vStart; v < vEnd; ++v) {
       const PetscInt idx = v - vStart;
-      PetscInt       off, d, val;
+      PetscInt off, val;
 
       PetscCall(PetscSectionGetOffset(coordSection, v, &off));
-      for (d = 0; d < dim; ++d) in.pointlist[idx * dim + d] = PetscRealPart(array[off + d]);
+      for (PetscInt d = 0; d < dim; ++d) in.pointlist[idx * dim + d] = PetscRealPart(array[off + d]);
       if (label) {
         PetscCall(DMLabelGetValue(label, v, &val));
         PetscCall(PetscCIntCast(val, &in.pointmarkerlist[idx]));
@@ -281,7 +279,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
 
 #if !defined(PETSC_USE_REAL_DOUBLE)
   PetscCall(PetscMalloc1(cEnd - cStart, &maxVolumes));
-  for (c = 0; c < cEnd - cStart; ++c) maxVolumes[c] = (double)inmaxVolumes[c];
+  for (PetscInt c = 0; c < cEnd - cStart; ++c) maxVolumes[c] = (double)inmaxVolumes[c];
 #else
   maxVolumes = inmaxVolumes;
 #endif
@@ -289,30 +287,18 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
   in.trianglearealist = (double *)maxVolumes;
   if (in.numberoftriangles > 0) {
     PetscCall(PetscMalloc1(in.numberoftriangles * in.numberofcorners, &in.trianglelist));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       const PetscInt idx     = c - cStart;
       PetscInt      *closure = NULL;
       PetscInt       closureSize;
 
       PetscCall(DMPlexGetTransitiveClosure(dm, c, PETSC_TRUE, &closureSize, &closure));
       PetscCheck(!(closureSize != 4) || !(closureSize != 7), comm, PETSC_ERR_ARG_WRONG, "Mesh has cell which is not a triangle, %" PetscInt_FMT " vertices in closure", closureSize);
-      for (v = 0; v < 3; ++v) PetscCall(PetscCIntCast(closure[(v + closureSize - 3) * 2] - vStart, &in.trianglelist[idx * in.numberofcorners + v]));
+      for (PetscInt v = 0; v < 3; ++v) PetscCall(PetscCIntCast(closure[(v + closureSize - 3) * 2] - vStart, &in.trianglelist[idx * in.numberofcorners + v]));
       PetscCall(DMPlexRestoreTransitiveClosure(dm, c, PETSC_TRUE, &closureSize, &closure));
     }
   }
   /* TODO: Segment markers are missing on input */
-#if 0 /* Do not currently support holes */
-  PetscReal *holeCoords;
-  PetscInt   h, d;
-
-  PetscCall(DMPlexGetHoles(boundary, &in.numberofholes, &holeCords));
-  if (in.numberofholes > 0) {
-    PetscCall(PetscMalloc1(in.numberofholes*dim, &in.holelist));
-    for (h = 0; h < in.numberofholes; ++h) {
-      for (d = 0; d < dim; ++d) in.holelist[h*dim+d] = holeCoords[h*dim+d];
-    }
-  }
-#endif
   if (rank == 0) {
     char args[32];
 
@@ -338,18 +324,14 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
     if (sizeof(PetscReal) == sizeof(out.pointlist[0])) {
       meshCoords = (PetscReal *)out.pointlist;
     } else {
-      PetscInt i;
-
       PetscCall(PetscMalloc1(dim * numVertices, &meshCoords));
-      for (i = 0; i < dim * numVertices; i++) meshCoords[i] = (PetscReal)out.pointlist[i];
+      for (PetscInt i = 0; i < dim * numVertices; i++) meshCoords[i] = (PetscReal)out.pointlist[i];
     }
     if (sizeof(PetscInt) == sizeof(out.trianglelist[0])) {
       cells = (PetscInt *)out.trianglelist;
     } else {
-      PetscInt i;
-
       PetscCall(PetscMalloc1(numCells * numCorners, &cells));
-      for (i = 0; i < numCells * numCorners; i++) cells[i] = (PetscInt)out.trianglelist[i];
+      for (PetscInt i = 0; i < numCells * numCorners; i++) cells[i] = (PetscInt)out.trianglelist[i];
     }
 
     PetscCall(DMPlexCreateFromCellListPetsc(comm, dim, numCells, numVertices, numCorners, interpolate, cells, dim, meshCoords, dmRefined));
@@ -360,13 +342,11 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
     if (sizeof(PetscReal) != sizeof(out.pointlist[0])) PetscCall(PetscFree(meshCoords));
     if (sizeof(PetscInt) != sizeof(out.trianglelist[0])) PetscCall(PetscFree(cells));
     /* Set labels */
-    for (v = 0; v < numVertices; ++v) {
+    for (PetscInt v = 0; v < numVertices; ++v) {
       if (out.pointmarkerlist[v] && rlabel) PetscCall(DMLabelSetValue(rlabel, v + numCells, out.pointmarkerlist[v]));
     }
     if (interpolate) {
-      PetscInt e;
-
-      for (e = 0; e < out.numberofedges; e++) {
+      for (PetscInt e = 0; e < out.numberofedges; e++) {
         if (out.edgemarkerlist[e]) {
           const PetscInt  vertices[2] = {out.edgelist[e * 2 + 0] + numCells, out.edgelist[e * 2 + 1] + numCells};
           const PetscInt *edges;

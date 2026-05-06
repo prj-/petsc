@@ -16,7 +16,7 @@
 
 PETSC_EXTERN void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  int            i, fd, cnt, dt;
+  int fd, cnt, dt;
   PetscErrorCode ierr;
 
   /* check output parameters */
@@ -31,7 +31,7 @@ PETSC_EXTERN void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray
   } else if (dt == PETSC_INT) {
     int    *tmp = (int *)mxMalloc((cnt + 5) * sizeof(int));
     double *t   = mxGetPr(prhs[1]);
-    for (i = 0; i < cnt; i++) tmp[i] = (int)t[i];
+    for (int i = 0; i < cnt; i++) tmp[i] = (int)t[i];
     ierr = PetscBinaryWrite(fd, tmp, cnt, (PetscDataType)dt);
     if (ierr) PETSC_MEX_ERROR("Unable to send int items.");
     mxFree(tmp);

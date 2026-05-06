@@ -30,7 +30,7 @@ PetscErrorCode SPARSEPACKdegree(const PetscInt *root, const PetscInt *inxadj, co
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt ideg, node, i, j, jstop, jstrt, lbegin, lvlend, lvsize, nbr;
+  PetscInt ideg, node, jstop, jstrt, lbegin, lvlend, lvsize, nbr;
   /*       INITIALIZATION ...*/
   /*       THE ARRAY XADJ IS USED AS A TEMPORARY MARKER TO*/
   /*       INDICATE WHICH NODES HAVE BEEN CONSIDERED SO FAR.*/
@@ -55,7 +55,7 @@ L100:
   /*       FIND THE DEGREES OF NODES IN THE CURRENT LEVEL,*/
   /*       AND AT THE SAME TIME, GENERATE THE NEXT LEVEL.*/
   i__1 = lvlend;
-  for (i = lbegin; i <= i__1; ++i) {
+  for (PetscInt i = lbegin; i <= i__1; ++i) {
     node  = ls[i];
     jstrt = -xadj[node];
     i__2  = xadj[node + 1];
@@ -63,7 +63,7 @@ L100:
     ideg  = 0;
     if (jstop < jstrt) goto L300;
     i__2 = jstop;
-    for (j = jstrt; j <= i__2; ++j) {
+    for (PetscInt j = jstrt; j <= i__2; ++j) {
       nbr = adjncy[j];
       if (!mask[nbr]) goto L200;
       ++ideg;
@@ -82,7 +82,7 @@ L100:
   if (lvsize > 0) goto L100;
   /*       RESET XADJ TO ITS CORRECT SIGN AND RETURN. */
   i__1 = *ccsize;
-  for (i = 1; i <= i__1; ++i) {
+  for (PetscInt i = 1; i <= i__1; ++i) {
     node       = ls[i];
     xadj[node] = -xadj[node];
   }

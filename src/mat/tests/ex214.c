@@ -8,7 +8,7 @@ int main(int argc, char **args)
   PetscMPIInt size, rank;
 #if defined(PETSC_HAVE_MUMPS)
   Mat         A, RHS, C, F, X, AX, spRHST;
-  PetscInt    m, n, nrhs, M, N, i, Istart, Iend, Ii, j, J, test;
+  PetscInt m, n, nrhs, M, N, i, Istart, Iend, j, J, test;
   PetscScalar v;
   PetscReal   norm, tol = PETSC_SQRT_MACHINE_EPSILON;
   PetscRandom rand;
@@ -42,7 +42,7 @@ int main(int argc, char **args)
   PetscCall(MatSeqAIJSetPreallocation(A, 5, NULL));
 
   PetscCall(MatGetOwnershipRange(A, &Istart, &Iend));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = -1.0;
     i = Ii / n;
     j = Ii - i * n;

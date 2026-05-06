@@ -48,7 +48,7 @@ static PetscErrorCode CreateRHS(UserCtx ctx)
 
 static PetscErrorCode CreateMatrix(UserCtx ctx)
 {
-  PetscInt      Istart, Iend, i, j, Ii, gridN, I_n, I_s, I_e, I_w;
+  PetscInt Istart, Iend, i, j, gridN, I_n, I_s, I_e, I_w;
   PetscLogStage stage;
 
   PetscFunctionBegin;
@@ -68,7 +68,7 @@ static PetscErrorCode CreateMatrix(UserCtx ctx)
     PetscCheck(ctx->m == ctx->n, PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, "Stencil matrix must be square");
     gridN = (PetscInt)PetscSqrtReal((PetscReal)ctx->m);
     PetscCheck(gridN * gridN == ctx->m, PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, "Number of rows must be square");
-    for (Ii = Istart; Ii < Iend; Ii++) {
+    for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
       i   = Ii / gridN;
       j   = Ii % gridN;
       I_n = i * gridN + j + 1;
@@ -100,12 +100,10 @@ static PetscErrorCode CreateMatrix(UserCtx ctx)
 
 static PetscErrorCode SetupWorkspace(UserCtx ctx)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscCall(MatCreateVecs(ctx->F, &ctx->workLeft[0], &ctx->workRight[0]));
-  for (i = 1; i < NWORKLEFT; i++) PetscCall(VecDuplicate(ctx->workLeft[0], &ctx->workLeft[i]));
-  for (i = 1; i < NWORKRIGHT; i++) PetscCall(VecDuplicate(ctx->workRight[0], &ctx->workRight[i]));
+  for (PetscInt i = 1; i < NWORKLEFT; i++) PetscCall(VecDuplicate(ctx->workLeft[0], &ctx->workLeft[i]));
+  for (PetscInt i = 1; i < NWORKRIGHT; i++) PetscCall(VecDuplicate(ctx->workRight[0], &ctx->workRight[i]));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -157,16 +155,14 @@ static PetscErrorCode ConfigureContext(UserCtx ctx)
 
 static PetscErrorCode DestroyContext(UserCtx *ctx)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscCall(MatDestroy(&(*ctx)->F));
   PetscCall(MatDestroy(&(*ctx)->W));
   PetscCall(MatDestroy(&(*ctx)->Hm));
   PetscCall(MatDestroy(&(*ctx)->Hr));
   PetscCall(VecDestroy(&(*ctx)->d));
-  for (i = 0; i < NWORKLEFT; i++) PetscCall(VecDestroy(&(*ctx)->workLeft[i]));
-  for (i = 0; i < NWORKRIGHT; i++) PetscCall(VecDestroy(&(*ctx)->workRight[i]));
+  for (PetscInt i = 0; i < NWORKLEFT; i++) PetscCall(VecDestroy(&(*ctx)->workLeft[i]));
+  for (PetscInt i = 0; i < NWORKRIGHT; i++) PetscCall(VecDestroy(&(*ctx)->workRight[i]));
   PetscCall(PetscRandomDestroy(&(*ctx)->rctx));
   PetscCall(PetscFree(*ctx));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -544,7 +540,7 @@ static PetscErrorCode TaoSolveADMM(UserCtx ctx, Vec x)
 static PetscErrorCode TaylorTest(UserCtx ctx, Tao tao, Vec x, PetscReal *C)
 {
   PetscReal  h, J, temp;
-  PetscInt   i, j;
+  PetscInt   i;
   PetscInt   numValues;
   PetscReal  Jx, Jxhat_comp, Jxhat_pred;
   PetscReal *Js, *hs;
@@ -578,7 +574,7 @@ static PetscErrorCode TaylorTest(UserCtx ctx, Tao tao, Vec x, PetscReal *C)
     Js[i] = J;
     hs[i] = h;
   }
-  for (j = 1; j < numValues; j++) {
+  for (PetscInt j = 1; j < numValues; j++) {
     temp = PetscLogReal(Js[j] / Js[j - 1]) / PetscLogReal(hs[j] / hs[j - 1]);
     PetscCall(PetscPrintf(comm, "Convergence rate step %" PetscInt_FMT ": %g\n", j - 1, (double)temp));
     minrate = PetscMin(minrate, temp);
@@ -617,7 +613,6 @@ int main(int argc, char **argv)
   PetscCall(MatDuplicate(ctx->W, MAT_SHARE_NONZERO_PATTERN, &H));
   PetscCall(TaoSetHessian(tao, H, H, HessianComplete, (void *)ctx));
   PetscCall(MatCreateVecs(ctx->F, NULL, &x));
-  PetscCall(VecSet(x, 0.));
   PetscCall(TaoSetSolution(tao, x));
   PetscCall(TaoSetFromOptions(tao));
   if (ctx->use_admm) PetscCall(TaoSolveADMM(ctx, x));

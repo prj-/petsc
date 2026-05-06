@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
   const double bytes[4]   = {2 * sizeof(double) * N, 2 * sizeof(double) * N, 3 * sizeof(double) * N, 3 * sizeof(double) * N};
   double       rmstime[4] = {0}, maxtime[4] = {0}, mintime[4] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
   int          quantum;
-  int          BytesPerWord, j, k, size;
+  int BytesPerWord, size;
   PetscInt     node = -1;
   double       scalar, t, times[4][NTIMES];
 #if !STATIC_ALLOC
@@ -115,15 +115,15 @@ int main(int argc, char *argv[])
   }
 #endif
 #if FAULT_TOGETHER
-  for (j = 0; j < N; j++) {
+  for (int j = 0; j < N; j++) {
     a[j] = 1.0;
     b[j] = 2.0;
     c[j] = 0.0;
   }
 #else
-  for (j = 0; j < N; j++) a[j] = 1.0;
-  for (j = 0; j < N; j++) b[j] = 2.0;
-  for (j = 0; j < N; j++) c[j] = 0.0;
+  for (int j = 0; j < N; j++) a[j] = 1.0;
+  for (int j = 0; j < N; j++) b[j] = 2.0;
+  for (int j = 0; j < N; j++) c[j] = 0.0;
 #endif
 
   PetscPrintf(PETSC_COMM_WORLD, HLINE);
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
   else PetscPrintf(PETSC_COMM_WORLD, "Your clock granularity appears to be less than one microsecond.\n");
 
   t = Second();
-  for (j = 0; j < N; j++) a[j] = 2.0E0 * a[j];
+  for (int j = 0; j < N; j++) a[j] = 2.0E0 * a[j];
   t = 1.0E6 * (Second() - t);
 
   PetscPrintf(PETSC_COMM_WORLD, "Each test below will take on the order of %d microseconds.\n", (int)t);
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
   /* --- MAIN LOOP --- repeat test cases NTIMES times --- */
 
   scalar = 3.0;
-  for (k = 0; k < NTIMES; k++) {
+  for (int k = 0; k < NTIMES; k++) {
     MPI_Barrier(PETSC_COMM_WORLD);
     /* ### COPY: c <- a ### */
     times[0][k] = Second();
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 #if USE_MEMCPY
     memcpy(c, a, N * sizeof(double));
 #elif SSE2
-    for (j = 0; j < N; j += 8) {
+    for (int j = 0; j < N; j += 8) {
       _mm_stream_pd(c + j + 0, _mm_load_pd(a + j + 0));
       _mm_stream_pd(c + j + 2, _mm_load_pd(a + j + 2));
       _mm_stream_pd(c + j + 4, _mm_load_pd(a + j + 4));
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
   #endif
     }
 #else
-    for (j = 0; j < N; j++) c[j] = a[j];
+    for (int j = 0; j < N; j++) c[j] = a[j];
 #endif
     MPI_Barrier(PETSC_COMM_WORLD);
     times[0][k] = Second() - times[0][k];
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 #if SSE2
     {
       __m128d scalar2 = _mm_set1_pd(scalar);
-      for (j = 0; j < N; j += 8) {
+      for (int j = 0; j < N; j += 8) {
         _mm_stream_pd(b + j + 0, _mm_mul_pd(scalar2, _mm_load_pd(c + j + 0)));
         _mm_stream_pd(b + j + 2, _mm_mul_pd(scalar2, _mm_load_pd(c + j + 2)));
         _mm_stream_pd(b + j + 4, _mm_mul_pd(scalar2, _mm_load_pd(c + j + 4)));
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
       }
     }
 #else
-    for (j = 0; j < N; j++) b[j] = scalar * c[j];
+    for (int j = 0; j < N; j++) b[j] = scalar * c[j];
 #endif
     MPI_Barrier(PETSC_COMM_WORLD);
     times[1][k] = Second() - times[1][k];
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(PETSC_COMM_WORLD);
 #if SSE2
     {
-      for (j = 0; j < N; j += 8) {
+      for (int j = 0; j < N; j += 8) {
         _mm_stream_pd(c + j + 0, _mm_add_pd(_mm_load_pd(a + j + 0), _mm_load_pd(b + j + 0)));
         _mm_stream_pd(c + j + 2, _mm_add_pd(_mm_load_pd(a + j + 2), _mm_load_pd(b + j + 2)));
         _mm_stream_pd(c + j + 4, _mm_add_pd(_mm_load_pd(a + j + 4), _mm_load_pd(b + j + 4)));
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
       }
     }
 #else
-    for (j = 0; j < N; j++) c[j] = a[j] + b[j];
+    for (int j = 0; j < N; j++) c[j] = a[j] + b[j];
 #endif
     MPI_Barrier(PETSC_COMM_WORLD);
     times[2][k] = Second() - times[2][k];
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 #if SSE2
     {
       __m128d scalar2 = _mm_set1_pd(scalar);
-      for (j = 0; j < N; j += 8) {
+      for (int j = 0; j < N; j += 8) {
         _mm_stream_pd(a + j + 0, _mm_add_pd(_mm_load_pd(b + j + 0), _mm_mul_pd(scalar2, _mm_load_pd(c + j + 0))));
         _mm_stream_pd(a + j + 2, _mm_add_pd(_mm_load_pd(b + j + 2), _mm_mul_pd(scalar2, _mm_load_pd(c + j + 2))));
         _mm_stream_pd(a + j + 4, _mm_add_pd(_mm_load_pd(b + j + 4), _mm_mul_pd(scalar2, _mm_load_pd(c + j + 4))));
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
       }
     }
 #else
-    for (j = 0; j < N; j++) a[j] = b[j] + scalar * c[j];
+    for (int j = 0; j < N; j++) a[j] = b[j] + scalar * c[j];
 #endif
     MPI_Barrier(PETSC_COMM_WORLD);
     times[3][k] = Second() - times[3][k];
@@ -243,15 +243,15 @@ int main(int argc, char *argv[])
 
   /* --- SUMMARY --- */
 
-  for (k = 0; k < NTIMES; k++)
-    for (j = 0; j < 4; j++) {
+  for (int k = 0; k < NTIMES; k++)
+    for (int j = 0; j < 4; j++) {
       rmstime[j] = rmstime[j] + (times[j][k] * times[j][k]);
       mintime[j] = MIN(mintime[j], times[j][k]);
       maxtime[j] = MAX(maxtime[j], times[j][k]);
     }
 
   PetscPrintf(PETSC_COMM_WORLD, "%8s:  %11s  %11s  %11s  %11s  %11s\n", "Function", "Rate (MB/s)", "Total (MB/s)", "RMS time", "Min time", "Max time");
-  for (j = 0; j < 4; j++) {
+  for (int j = 0; j < 4; j++) {
     rmstime[j] = sqrt(rmstime[j] / (double)NTIMES);
     PetscPrintf(PETSC_COMM_WORLD, "%8s: %11.4f  %11.4f  %11.4f  %11.4f  %11.4f\n", label[j], 1.0e-06 * bytes[j] / mintime[j], size * 1.0e-06 * bytes[j] / mintime[j], rmstime[j], mintime[j], maxtime[j]);
   }
@@ -269,12 +269,12 @@ static double Second()
 #define M 20
 static int checktick(void)
 {
-  int    i, minDelta, Delta;
+  int minDelta, Delta;
   double t1, t2, timesfound[M];
 
   /*  Collect a sequence of M unique time values from the system. */
 
-  for (i = 0; i < M; i++) {
+  for (int i = 0; i < M; i++) {
     t1 = Second();
     while ((t2 = Second()) - t1 < 1.0E-6) { }
     timesfound[i] = t1 = t2;
@@ -287,7 +287,7 @@ static int checktick(void)
    */
 
   minDelta = 1000000;
-  for (i = 1; i < M; i++) {
+  for (int i = 1; i < M; i++) {
     Delta    = (int)(1.0E6 * (timesfound[i] - timesfound[i - 1]));
     minDelta = MIN(minDelta, MAX(Delta, 0));
   }

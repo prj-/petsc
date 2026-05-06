@@ -47,7 +47,7 @@ PetscErrorCode SPARSEPACKgenqmd(const PetscInt *neqns, const PetscInt *xadj, con
   PetscInt i__1;
 
   /* Local variables */
-  PetscInt ndeg, irch, node, nump1, j, inode;
+  PetscInt ndeg, node, nump1, j, inode;
   PetscInt ip, np, mindeg, search;
   PetscInt nhdsze, nxnode, rchsze, thresh, num;
 
@@ -131,7 +131,7 @@ L600:
   /*             ALSO CALL QMDQT TO FORM NEW QUOTIENT GRAPH.          */
   marker[node] = 0;
   i__1         = rchsze;
-  for (irch = 1; irch <= i__1; ++irch) {
+  for (PetscInt irch = 1; irch <= i__1; ++irch) {
     inode = rchset[irch];
     if (marker[inode] < 0) goto L700;
 

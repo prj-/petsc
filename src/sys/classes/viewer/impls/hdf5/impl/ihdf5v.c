@@ -26,7 +26,6 @@ static PetscErrorCode PetscViewerHDF5Traverse_Internal(PetscViewer viewer, const
   const char rootGroupName[] = "/";
   hid_t      h5;
   PetscBool  exists = PETSC_FALSE;
-  PetscInt   i;
   int        n;
   char     **hierarchy;
   char       buf[PETSC_MAX_PATH_LEN] = "";
@@ -60,7 +59,7 @@ static PetscErrorCode PetscViewerHDF5Traverse_Internal(PetscViewer viewer, const
     PetscCall(PetscStrToArrayDestroy(n, hierarchy));
     PetscFunctionReturn(PETSC_SUCCESS);
   }
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     PetscCall(PetscStrlcat(buf, "/", sizeof(buf)));
     PetscCall(PetscStrlcat(buf, hierarchy[i], sizeof(buf)));
     PetscCall(PetscViewerHDF5Traverse_Inner_Internal(h5, buf, createGroup, &exists));
@@ -449,7 +448,7 @@ static PetscErrorCode PetscViewerHDF5PushGroup_HDF5(PetscViewer viewer, const ch
 {
   PetscViewer_HDF5         *hdf5 = (PetscViewer_HDF5 *)viewer->data;
   PetscViewerHDF5GroupList *groupNode;
-  size_t                    i, len;
+  size_t len;
   char                      buf[PETSC_MAX_PATH_LEN];
   const char               *gname;
 
@@ -462,7 +461,7 @@ static PetscErrorCode PetscViewerHDF5PushGroup_HDF5(PetscViewer viewer, const ch
       gname = (hdf5->groups && hdf5->groups->name) ? hdf5->groups->name : NULL;
     } else if (name[0] == '/') {
       /* absolute */
-      for (i = 1; i < len; i++) {
+      for (size_t i = 1; i < len; i++) {
         if (name[i] != '/') {
           gname = name;
           break;

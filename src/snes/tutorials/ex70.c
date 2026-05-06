@@ -282,7 +282,7 @@ PetscErrorCode StokesSetupMatBlock00(Stokes *s)
 
 PetscErrorCode StokesSetupMatBlock01(Stokes *s)
 {
-  PetscInt    row, start, end, sz, i, j;
+  PetscInt start, end, sz, i, j;
   PetscInt    cols[5];
   PetscScalar vals[5];
 
@@ -297,7 +297,7 @@ PetscErrorCode StokesSetupMatBlock01(Stokes *s)
 
   PetscCall(MatSetOption(s->subA[1], MAT_IGNORE_ZERO_ENTRIES, PETSC_TRUE));
 
-  for (row = start; row < end; row++) {
+  for (PetscInt row = start; row < end; row++) {
     PetscCall(StokesGetPosition(s, row, &i, &j));
     /* first part: rows 0 to (nx*ny-1) */
     if (row < s->nx * s->ny) {

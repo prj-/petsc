@@ -5,7 +5,7 @@ static char help[] = "Create a Plex sphere from quads and create a P1 section\n\
 static PetscErrorCode SetupSection(DM dm)
 {
   PetscSection s;
-  PetscInt     vStart, vEnd, v;
+  PetscInt vStart, vEnd;
 
   PetscFunctionBeginUser;
   PetscCall(DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd));
@@ -13,7 +13,7 @@ static PetscErrorCode SetupSection(DM dm)
   PetscCall(PetscSectionSetNumFields(s, 1));
   PetscCall(PetscSectionSetFieldComponents(s, 0, 1));
   PetscCall(PetscSectionSetChart(s, vStart, vEnd));
-  for (v = vStart; v < vEnd; ++v) {
+  for (PetscInt v = vStart; v < vEnd; ++v) {
     PetscCall(PetscSectionSetDof(s, v, 1));
     PetscCall(PetscSectionSetFieldDof(s, v, 0, 1));
   }

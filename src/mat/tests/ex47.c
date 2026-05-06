@@ -9,7 +9,7 @@ int main(int argc, char **args)
   Mat                A, B, C;
   PetscViewer        va, vb, vc;
   Vec                x, y;
-  PetscInt           i, j, row, m, n, ncols1, ncols2, ct, m2, n2;
+  PetscInt i, j, row, m, n, ncols1, ncols2, m2, n2;
   const PetscInt    *cols1, *cols2;
   char               file[PETSC_MAX_PATH_LEN];
   PetscBool          tflg;
@@ -78,7 +78,7 @@ int main(int argc, char **args)
   PetscCheck(rnorm >= -0.1 && rnorm <= 0.01, PETSC_COMM_SELF, PETSC_ERR_PLIB, "MatDiagonalScale() failed Norm1 %g Norm2 %g", (double)norm1, (double)norm2);
 
   /* Test MatGetRow()/ MatRestoreRow() */
-  for (ct = 0; ct < 100; ct++) {
+  for (PetscInt ct = 0; ct < 100; ct++) {
     PetscCall(PetscRandomGetValue(r, &rval));
     row = (int)(rval * m);
     PetscCall(MatGetRow(A, row, &ncols1, &cols1, &vals1));

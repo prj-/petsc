@@ -45,7 +45,7 @@ int main(int argc, char **args)
   PetscInt        overlap; /* width of subdomain overlap */
   PetscInt        m, n;    /* mesh dimensions in x- and y- directions */
   PetscInt        M, N;    /* number of subdomains in x- and y- directions */
-  PetscInt        i, j, Ii, J, Istart, Iend;
+  PetscInt i, j, J, Istart, Iend;
   PetscMPIInt     size;
   PetscBool       flg;
   PetscBool       user_set_subdomains;
@@ -88,7 +88,7 @@ int main(int argc, char **args)
   PetscCall(MatSetFromOptions(A));
   PetscCall(MatSetUp(A));
   PetscCall(MatGetOwnershipRange(A, &Istart, &Iend));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = -1.0;
     i = Ii / n;
     j = Ii - i * n;

@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
   PetscMPIInt     size, rank;
   DM              dmnetwork;
-  PetscInt        i, j, net, Nsubnet, ne, nv, nvar, v, goffset, row, compkey0, compkey1, compkey;
+  PetscInt i, j, net, Nsubnet, ne, nv, nvar, goffset, row, compkey0, compkey1, compkey;
   PetscInt       *numEdges, **edgelist, asvtx[2], bsvtx[2];
   const PetscInt *vtx, *edges;
   PetscBool       ghost, distribute = PETSC_TRUE, sharedv;
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   /* Get Subnetwork(); Add nvar=1 to subnet[0] and nvar=2 to other subnets */
   for (net = 0; net < Nsubnet; net++) {
     PetscCall(DMNetworkGetSubnetwork(dmnetwork, net, &nv, &ne, &vtx, &edges));
-    for (v = 0; v < nv; v++) {
+    for (PetscInt v = 0; v < nv; v++) {
       PetscCall(DMNetworkIsSharedVertex(dmnetwork, vtx[v], &sharedv));
       if (sharedv) continue;
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
   /* Add nvar to shared vertex -- owning and all ghost ranks must call DMNetworkAddComponent() */
   PetscCall(DMNetworkGetSharedVertices(dmnetwork, &nv, &vtx));
-  for (v = 0; v < nv; v++) {
+  for (PetscInt v = 0; v < nv; v++) {
     PetscCall(DMNetworkAddComponent(dmnetwork, vtx[v], compkey0, NULL, 2));
     PetscCall(DMNetworkAddComponent(dmnetwork, vtx[v], compkey1, NULL, 1));
   }
@@ -126,11 +126,10 @@ int main(int argc, char **argv)
 
   /* Create a global vector */
   PetscCall(DMCreateGlobalVector(dmnetwork, &X));
-  PetscCall(VecSet(X, 0.0));
 
   /* Set X values at shared vertex */
   PetscCall(DMNetworkGetSharedVertices(dmnetwork, &nv, &vtx));
-  for (v = 0; v < nv; v++) {
+  for (PetscInt v = 0; v < nv; v++) {
     PetscCall(DMNetworkIsGhostVertex(dmnetwork, vtx[v], &ghost));
     if (ghost) continue;
 

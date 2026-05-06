@@ -1246,14 +1246,14 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal2d_Internal(DM dm)
   DM_Stag *const stag = (DM_Stag *)dm->data;
   PetscInt      *idxRemap;
   PetscBool      dummyEnd[2];
-  PetscInt       i, j, d, count, leftGhostElements, downGhostElements, entriesPerRowGhost, iOffset, jOffset;
+  PetscInt i, j, count, leftGhostElements, downGhostElements, entriesPerRowGhost, iOffset, jOffset;
   PetscInt       dOffset[4] = {0};
 
   PetscFunctionBegin;
   PetscCall(VecScatterCopy(stag->gtol, &stag->ltol));
   PetscCall(PetscMalloc1(stag->entries, &idxRemap));
 
-  for (d = 0; d < 2; ++d) dummyEnd[d] = (PetscBool)(stag->lastRank[d] && stag->boundaryType[d] != DM_BOUNDARY_PERIODIC);
+  for (PetscInt d = 0; d < 2; ++d) dummyEnd[d] = (PetscBool)(stag->lastRank[d] && stag->boundaryType[d] != DM_BOUNDARY_PERIODIC);
   leftGhostElements  = stag->start[0] - stag->startGhost[0];
   downGhostElements  = stag->start[1] - stag->startGhost[1];
   entriesPerRowGhost = stag->nGhost[0] * stag->entriesPerElement;
@@ -1267,13 +1267,13 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal2d_Internal(DM dm)
     for (i = 0; i < stag->n[0]; ++i) {
       iOffset = stag->entriesPerElement * (leftGhostElements + i);
       // all
-      for (d = 0; d < stag->entriesPerElement; ++d) idxRemap[count++] = jOffset + iOffset + d;
+      for (PetscInt d = 0; d < stag->entriesPerElement; ++d) idxRemap[count++] = jOffset + iOffset + d;
     }
     if (dummyEnd[0]) {
       iOffset = stag->entriesPerElement * (leftGhostElements + stag->n[0]);
       // down left, left
-      for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[0] + d;
-      for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[2] + d;
+      for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[0] + d;
+      for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[2] + d;
     }
   }
   if (dummyEnd[1]) {
@@ -1281,13 +1281,13 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal2d_Internal(DM dm)
     for (i = 0; i < stag->n[0]; ++i) {
       iOffset = stag->entriesPerElement * (leftGhostElements + i);
       // down left, down
-      for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[0] + d;
-      for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[1] + d;
+      for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[0] + d;
+      for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[1] + d;
     }
     if (dummyEnd[0]) {
       iOffset = stag->entriesPerElement * (leftGhostElements + stag->n[0]);
       // down left
-      for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[0] + d;
+      for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = jOffset + iOffset + dOffset[0] + d;
     }
   }
 

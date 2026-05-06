@@ -46,7 +46,7 @@ int main(int argc, char **argv)
   PetscSection     s = NULL, gsection = NULL;
   PetscMPIInt      size;
   PetscSF          sf;
-  PetscInt         pStart, pEnd, p, minBefore, maxBefore, minAfter, maxAfter, gSizeBefore, gSizeAfter;
+  PetscInt pStart, pEnd, minBefore, maxBefore, minAfter, maxAfter, gSizeBefore, gSizeAfter;
   PetscBool        success;
 
   PetscFunctionBeginUser;
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     PetscCall(PetscSectionSetFieldComponents(s, 0, 1));
     PetscCall(DMPlexGetDepthStratum(dm, user.entityDepth, &pStart, &pEnd));
     PetscCall(PetscSectionSetChart(s, pStart, pEnd));
-    for (p = pStart; p < pEnd; ++p) {
+    for (PetscInt p = pStart; p < pEnd; ++p) {
       PetscCall(PetscSectionSetDof(s, p, 1));
       PetscCall(PetscSectionSetFieldDof(s, p, 0, 1));
     }

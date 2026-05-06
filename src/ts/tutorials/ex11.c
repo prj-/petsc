@@ -199,8 +199,7 @@ static void PhysicsRiemann_Advect(PetscInt dim, PetscInt Nf, const PetscReal *qp
     }
   } break;
   default: {
-    PetscInt i;
-    for (i = 0; i < DIM; ++i) wind[i] = 0.0;
+    for (PetscInt i = 0; i < DIM; ++i) wind[i] = 0.0;
   }
     /* default: SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,"No support for solution type %s",AdvectSolBumpTypes[advect->soltype]); */
   }
@@ -704,11 +703,10 @@ static PetscErrorCode PhysicsCreate_Euler(Model mod, Physics phys, PetscOptionIt
 static PetscErrorCode ErrorIndicator_Simple(PetscInt dim, PetscReal volume, PetscInt numComps, const PetscScalar u[], const PetscScalar grad[], PetscReal *error, PetscCtx ctx)
 {
   PetscReal err = 0.;
-  PetscInt  i, j;
 
   PetscFunctionBeginUser;
-  for (i = 0; i < numComps; i++) {
-    for (j = 0; j < dim; j++) err += PetscSqr(PetscRealPart(grad[i * dim + j]));
+  for (PetscInt i = 0; i < numComps; i++) {
+    for (PetscInt j = 0; j < dim; j++) err += PetscSqr(PetscRealPart(grad[i * dim + j]));
   }
   *error = volume * err;
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -858,7 +856,7 @@ static PetscErrorCode ModelFunctionalRegister(Model mod, const char *name, Petsc
 
 static PetscErrorCode ModelFunctionalSetFromOptions(Model mod, PetscOptionItems PetscOptionsObject)
 {
-  PetscInt       i, j;
+  PetscInt       i;
   FunctionalLink link;
   char          *names[256];
 
@@ -878,7 +876,7 @@ static PetscErrorCode ModelFunctionalSetFromOptions(Model mod, PetscOptionItems 
     }
     PetscCheck(link, mod->comm, PETSC_ERR_USER, "No known functional '%s'", names[i]);
     mod->functionalMonitored[i] = link;
-    for (j = 0; j < i; j++) {
+    for (PetscInt j = 0; j < i; j++) {
       if (mod->functionalCall[j]->func == link->func && mod->functionalCall[j]->ctx == link->ctx) goto next_name;
     }
     mod->functionalCall[mod->numCall++] = link; /* Just points to the first link using the result. There may be more results. */
@@ -1111,7 +1109,7 @@ static PetscErrorCode adaptToleranceFVMSetUp(TS ts, PetscInt nstep, PetscReal ti
   Vec                cellGeom, faceGeom;
   PetscBool          computeGradient;
   Vec                grad, locGrad, locX, errVec;
-  PetscInt           cStart, cEnd, c, dim, nRefine, nCoarsen;
+  PetscInt cStart, cEnd, dim, nRefine, nCoarsen;
   PetscReal          minMaxInd[2] = {PETSC_MAX_REAL, PETSC_MIN_REAL}, minMaxIndGlobal[2];
   PetscScalar       *errArray;
   const PetscScalar *pointVals;
@@ -1148,7 +1146,7 @@ static PetscErrorCode adaptToleranceFVMSetUp(TS ts, PetscInt nstep, PetscReal ti
   PetscCall(VecCreateFromOptions(PetscObjectComm((PetscObject)plex), NULL, 1, cEnd - cStart, PETSC_DETERMINE, &errVec));
   PetscCall(VecSetUp(errVec));
   PetscCall(VecGetArray(errVec, &errArray));
-  for (c = cStart; c < cEnd; c++) {
+  for (PetscInt c = cStart; c < cEnd; c++) {
     PetscReal        errInd = 0.;
     PetscScalar     *pointGrad;
     PetscScalar     *pointVal;
@@ -1349,7 +1347,7 @@ int main(int argc, char **argv)
       PetscOptionsEnd();
       /* TODO Rewrite this with Mark, and remove grid_bounds at that time */
       if (flg2) {
-        PetscInt     dimEmbed, i;
+        PetscInt     dimEmbed;
         PetscInt     nCoords;
         PetscScalar *coords;
         Vec          coordinates;
@@ -1359,11 +1357,9 @@ int main(int argc, char **argv)
         PetscCall(VecGetLocalSize(coordinates, &nCoords));
         PetscCheck(!(nCoords % dimEmbed), PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Coordinate vector the wrong size");
         PetscCall(VecGetArray(coordinates, &coords));
-        for (i = 0; i < nCoords; i += dimEmbed) {
-          PetscInt j;
-
+        for (PetscInt i = 0; i < nCoords; i += dimEmbed) {
           PetscScalar *coord = &coords[i];
-          for (j = 0; j < dimEmbed; j++) {
+          for (PetscInt j = 0; j < dimEmbed; j++) {
             coord[j] = mod->bounds[2 * j] + coord[j] * (mod->bounds[2 * j + 1] - mod->bounds[2 * j]);
             if (dim == 2 && cells[1] == 1 && j == 0 && skew) {
               if (cells[0] == 2 && i == 8) {
@@ -1409,9 +1405,7 @@ int main(int argc, char **argv)
 
       if (newDof == 1) PetscCall(PetscFVSetComponentName(fvm, dof, phys->field_desc[f].name));
       else {
-        PetscInt j;
-
-        for (j = 0; j < newDof; j++) {
+        for (PetscInt j = 0; j < newDof; j++) {
           char compName[256] = "Unknown";
 
           PetscCall(PetscSNPrintf(compName, sizeof(compName), "%s_%" PetscInt_FMT, phys->field_desc[f].name, j));
@@ -1462,8 +1456,6 @@ int main(int argc, char **argv)
   PetscCall(PetscObjectSetName((PetscObject)X, "solution"));
   PetscCall(SetInitialCondition(dm, X, user));
   if (useAMR) {
-    PetscInt adaptIter;
-
     /* use no limiting when reconstructing gradients for adaptivity */
     PetscCall(PetscFVGetLimiter(fvm, &limiter));
     PetscCall(PetscObjectReference((PetscObject)limiter));
@@ -1481,7 +1473,7 @@ int main(int argc, char **argv)
     tctx.cfl         = cfl;
 
     /* Do some initial refinement steps */
-    for (adaptIter = 0;; ++adaptIter) {
+    for (PetscInt adaptIter = 0;; ++adaptIter) {
       PetscLogDouble bytes;
       PetscBool      resize;
 
@@ -1590,12 +1582,11 @@ int projecttoprim(PetscReal v[], const PetscReal wc[], PetscReal rv[][3])
 /* ---------------------------------------------------------------------- */
 int eigenvectors(PetscReal rv[][3], PetscReal lv[][3], const PetscReal ueq[], PetscReal gamma)
 {
-  int       j, k;
   PetscReal rho, csnd, p0;
   /* PetscScalar u; */
 
-  for (k = 0; k < 3; ++k)
-    for (j = 0; j < 3; ++j) {
+  for (int k = 0; k < 3; ++k)
+    for (int j = 0; j < 3; ++j) {
       lv[k][j] = 0.;
       rv[k][j] = 0.;
     }

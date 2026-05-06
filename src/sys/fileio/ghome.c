@@ -52,13 +52,13 @@ PetscErrorCode PetscGetHomeDirectory(char dir[], size_t maxlen)
 @*/
 PetscErrorCode PetscFixFilename(const char filein[], char fileout[])
 {
-  size_t i, n;
+  size_t n;
 
   PetscFunctionBegin;
   if (!filein || !fileout) PetscFunctionReturn(PETSC_SUCCESS);
 
   PetscCall(PetscStrlen(filein, &n));
-  for (i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     if (filein[i] == PETSC_REPLACE_DIR_SEPARATOR) fileout[i] = PETSC_DIR_SEPARATOR;
     else fileout[i] = filein[i];
   }

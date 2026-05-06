@@ -4,7 +4,7 @@ static char help[] = "Tests the different MatColoring implementations and ISColo
 
 PetscErrorCode FormJacobian(Mat A)
 {
-  PetscInt    M, ownbegin, ownend, i, j;
+  PetscInt M, ownbegin, ownend, i;
   PetscScalar dummy = 0.0;
 
   PetscFunctionBeginUser;
@@ -12,7 +12,7 @@ PetscErrorCode FormJacobian(Mat A)
   PetscCall(MatGetOwnershipRange(A, &ownbegin, &ownend));
 
   for (i = ownbegin; i < ownend; i++) {
-    for (j = i - 3; j < i + 3; j++) {
+    for (PetscInt j = i - 3; j < i + 3; j++) {
       if (j >= 0 && j < M) PetscCall(MatSetValues(A, 1, &i, 1, &j, &dummy, INSERT_VALUES));
     }
   }

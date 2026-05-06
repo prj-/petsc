@@ -478,7 +478,7 @@ PetscErrorCode SNESMonitorRange_Private(SNES snes, PetscInt it, PetscReal *per)
 {
   Vec          resid;
   PetscReal    rmax, pwork;
-  PetscInt     i, n, N;
+  PetscInt n, N;
   PetscScalar *r;
 
   PetscFunctionBegin;
@@ -488,7 +488,7 @@ PetscErrorCode SNESMonitorRange_Private(SNES snes, PetscInt it, PetscReal *per)
   PetscCall(VecGetSize(resid, &N));
   PetscCall(VecGetArray(resid, &r));
   pwork = 0.0;
-  for (i = 0; i < n; i++) pwork += (PetscAbsScalar(r[i]) > .20 * rmax);
+  for (PetscInt i = 0; i < n; i++) pwork += (PetscAbsScalar(r[i]) > .20 * rmax);
   PetscCallMPI(MPIU_Allreduce(&pwork, per, 1, MPIU_REAL, MPIU_SUM, PetscObjectComm((PetscObject)snes)));
   PetscCall(VecRestoreArray(resid, &r));
   *per = *per / N;
@@ -675,7 +675,7 @@ PetscErrorCode SNESMonitorDefaultField(SNES snes, PetscInt its, PetscReal fgnorm
   if (!dm) PetscCall(SNESMonitorDefault(snes, its, fgnorm, vf));
   else {
     PetscSection s, gs;
-    PetscInt     Nf, f;
+    PetscInt     Nf;
 
     PetscCall(DMGetLocalSection(dm, &s));
     PetscCall(DMGetGlobalSection(dm, &gs));
@@ -687,7 +687,7 @@ PetscErrorCode SNESMonitorDefaultField(SNES snes, PetscInt its, PetscReal fgnorm
     PetscCall(PetscViewerPushFormat(viewer, vf->format));
     PetscCall(PetscViewerASCIIAddTab(viewer, tablevel));
     PetscCall(PetscViewerASCIIPrintf(viewer, "%3" PetscInt_FMT " SNES Function norm %14.12e [", its, (double)fgnorm));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       if (f) PetscCall(PetscViewerASCIIPrintf(viewer, ", "));
       PetscCall(PetscViewerASCIIPrintf(viewer, "%14.12e", (double)res[f]));
     }

@@ -4,12 +4,12 @@ static char help[] = "Tests assembly of a matrix from another matrix's hash tabl
 
 PetscErrorCode SetValues(Mat A, PetscBool zero, PetscBool insertvals)
 {
-  PetscInt    m, n, i, j;
+  PetscInt m, n, j;
   PetscScalar v;
 
   PetscFunctionBeginUser;
   PetscCall(MatGetSize(A, &m, &n));
-  for (i = 0; i < m; i++) {
+  for (PetscInt i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
       v = zero ? 0.0 : 10.0 * i + j + 1;
       PetscCall(MatSetValues(A, 1, &i, 1, &j, &v, insertvals ? INSERT_VALUES : ADD_VALUES));

@@ -337,7 +337,7 @@ PetscErrorCode CharacteristicSolve(Characteristic c, PetscReal dt, Vec solution)
   PetscMPIInt             neighbors[9];
   PetscInt                dof;
   PetscInt                gx, gy;
-  PetscInt                n, is, ie, js, je, comp;
+  PetscInt n, is, ie, js, je;
 
   PetscFunctionBegin;
   c->queueSize = 0;
@@ -495,7 +495,7 @@ PetscErrorCode CharacteristicSolve(Characteristic c, PetscReal dt, Vec solution)
       interpIndices[1] = c->queue[n].y;
       if (c->fieldInterpLocal) PetscCall(c->fieldInterpLocal(fieldArray, interpIndices, c->numFieldComp, c->fieldComp, fieldValues, c->fieldCtx));
       else PetscCall(c->fieldInterp(c->field, interpIndices, c->numFieldComp, c->fieldComp, fieldValues, c->fieldCtx));
-      for (comp = 0; comp < c->numFieldComp; comp++) c->queue[n].field[comp] = fieldValues[comp];
+      for (PetscInt comp = 0; comp < c->numFieldComp; comp++) c->queue[n].field[comp] = fieldValues[comp];
     }
   }
   PetscCall(PetscLogEventEnd(CHARACTERISTIC_FullTimeLocal, NULL, NULL, NULL, NULL));
@@ -521,7 +521,7 @@ PetscErrorCode CharacteristicSolve(Characteristic c, PetscReal dt, Vec solution)
 
     if (c->fieldInterpLocal) PetscCall(c->fieldInterpLocal(fieldArray, interpIndices, c->numFieldComp, c->fieldComp, fieldValues, c->fieldCtx));
     else PetscCall(c->fieldInterp(c->field, interpIndices, c->numFieldComp, c->fieldComp, fieldValues, c->fieldCtx));
-    for (comp = 0; comp < c->numFieldComp; comp++) c->queueRemote[n].field[comp] = fieldValues[comp];
+    for (PetscInt comp = 0; comp < c->numFieldComp; comp++) c->queueRemote[n].field[comp] = fieldValues[comp];
   }
   PetscCall(PetscLogEventEnd(CHARACTERISTIC_FullTimeRemote, NULL, NULL, NULL, NULL));
 
@@ -540,7 +540,7 @@ PetscErrorCode CharacteristicSolve(Characteristic c, PetscReal dt, Vec solution)
   PetscCall(DMDAVecGetArray(c->fieldDA, solution, &solArray));
   for (n = 0; n < c->queueSize; n++) {
     Qi = c->queue[n];
-    for (comp = 0; comp < c->numFieldComp; comp++) solArray[Qi.j][Qi.i * dof + c->fieldComp[comp]] = Qi.field[comp];
+    for (PetscInt comp = 0; comp < c->numFieldComp; comp++) solArray[Qi.j][Qi.i * dof + c->fieldComp[comp]] = Qi.field[comp];
   }
   PetscCall(DMDAVecRestoreArray(c->fieldDA, solution, &solArray));
   PetscCall(PetscLogEventEnd(CHARACTERISTIC_DAUpdate, NULL, NULL, NULL, NULL));
@@ -575,13 +575,13 @@ PetscErrorCode CharacteristicAddPoint(Characteristic c, CharacteristicPointDA2D 
 PetscErrorCode CharacteristicSendCoordinatesBegin(Characteristic c)
 {
   PetscMPIInt rank, tag = 121;
-  PetscInt    i, n;
+  PetscInt    n;
 
   PetscFunctionBegin;
   PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)c), &rank));
   PetscCall(CharacteristicHeapSort(c, c->queue, c->queueSize));
   PetscCall(PetscArrayzero(c->needCount, c->numNeighbors));
-  for (i = 0; i < c->queueSize; i++) c->needCount[c->queue[i].proc]++;
+  for (PetscInt i = 0; i < c->queueSize; i++) c->needCount[c->queue[i].proc]++;
   c->fillCount[0] = 0;
   for (n = 1; n < c->numNeighbors; n++) PetscCallMPI(MPIU_Irecv(&c->fillCount[n], 1, MPIU_INT, c->neighbors[n], tag, PetscObjectComm((PetscObject)c), &c->request[n - 1]));
   for (n = 1; n < c->numNeighbors; n++) PetscCallMPI(MPIU_Send(&c->needCount[n], 1, MPIU_INT, c->neighbors[n], tag, PetscObjectComm((PetscObject)c)));

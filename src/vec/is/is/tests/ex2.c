@@ -9,7 +9,7 @@ static char help[] = "Tests IS stride routines.\n\n";
 
 int main(int argc, char **argv)
 {
-  PetscInt        i, n, start, stride;
+  PetscInt n, start, stride;
   const PetscInt *ii;
   IS              is;
   PetscBool       flg;
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   PetscCall(ISCreateStride(PETSC_COMM_SELF, 10000, -8, 3, &is));
   PetscCall(ISGetLocalSize(is, &n));
   PetscCall(ISGetIndices(is, &ii));
-  for (i = 0; i < 10000; i++) PetscCheck(ii[i] == -8 + 3 * i, PETSC_COMM_SELF, PETSC_ERR_PLIB, "ISGetIndices");
+  for (PetscInt i = 0; i < 10000; i++) PetscCheck(ii[i] == -8 + 3 * i, PETSC_COMM_SELF, PETSC_ERR_PLIB, "ISGetIndices");
   PetscCall(ISRestoreIndices(is, &ii));
   PetscCall(ISDestroy(&is));
 

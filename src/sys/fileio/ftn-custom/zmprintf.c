@@ -27,12 +27,12 @@ PETSC_EXTERN void petscsynchronizedflush_(MPI_Fint *comm, FILE **file, int *ierr
 
 static PetscErrorCode PetscFixSlashN(const char *in, char *out[])
 {
-  size_t i, len;
+  size_t len;
 
   PetscFunctionBegin;
   PetscCall(PetscStrallocpy(in, out));
   PetscCall(PetscStrlen(*out, &len));
-  for (i = 0; i < len - 1; i++) {
+  for (size_t i = 0; i < len - 1; i++) {
     if ((*out)[i] == '\\' && (*out)[i + 1] == 'n') {
       (*out)[i]     = ' ';
       (*out)[i + 1] = '\n';

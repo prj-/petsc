@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   Vec         v;
   PetscInt    i, j, k, *ln, n, rstart;
   PetscBool   saveCommunicationPattern = PETSC_FALSE;
-  PetscMPIInt size, rank, p;
+  PetscMPIInt size, rank;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
   PetscCall(PetscMalloc1(size, &ln));
   /* This bug is triggered when one of the local lengths is small. Sometimes in IBAMR this value is actually zero. */
-  for (p = 0; p < size; ++p) ln[p] = 10;
+  for (PetscMPIInt p = 0; p < size; ++p) ln[p] = 10;
   ln[0] = 2;
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "local lengths are:\n"));
   PetscCall(PetscIntView(1, &ln[rank], PETSC_VIEWER_STDOUT_WORLD));
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         const PetscInt    nn       = ln[neighbor];
         PetscInt          nrstart  = 0;
 
-        for (p = 0; p < neighbor; ++p) nrstart += ln[p];
+        for (PetscMPIInt p = 0; p < neighbor; ++p) nrstart += ln[p];
         for (j = 0; j < nn / 4; j += 3) {
           PetscScalar val = 0.01;
           PetscInt    nr  = nrstart + j;

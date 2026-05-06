@@ -117,9 +117,6 @@ int main(int argc, char **args)
   PetscCall(VecDuplicate(u, &q));
   PetscCall(PetscObjectSetName((PetscObject)q, "Right hand side 2"));
   PetscCall(VecDuplicate(b, &ustar));
-  PetscCall(VecSet(u, 0.0));
-  PetscCall(VecSet(b, 0.0));
-  PetscCall(VecSet(q, 0.0));
 
   /* Assemble nodal right-hand side and soln vector  */
   for (i = start; i < end; i++) {
@@ -286,14 +283,13 @@ static PetscErrorCode Form2DElementMass(PetscInt P, PetscScalar *Me1D, PetscScal
 /* element stiffness for Laplacian */
 static PetscErrorCode Form2DElementStiffness(PetscInt P, PetscScalar *Ke1D, PetscScalar *Me1D, PetscScalar *Ke2D)
 {
-  PetscInt i1, j1, i2, j2;
   PetscInt indx1, indx2, indx3;
 
   PetscFunctionBeginUser;
-  for (j2 = 0; j2 < (P + 1); ++j2) {
-    for (i2 = 0; i2 < (P + 1); ++i2) {
-      for (j1 = 0; j1 < (P + 1); ++j1) {
-        for (i1 = 0; i1 < (P + 1); ++i1) {
+  for (PetscInt j2 = 0; j2 < (P + 1); ++j2) {
+    for (PetscInt i2 = 0; i2 < (P + 1); ++i2) {
+      for (PetscInt j1 = 0; j1 < (P + 1); ++j1) {
+        for (PetscInt i1 = 0; i1 < (P + 1); ++i1) {
           indx1       = j1 * (P + 1) + i1;
           indx2       = j2 * (P + 1) + i2;
           indx3       = (j2 * (P + 1) + j1) * (P + 1) * (P + 1) + (i2 * (P + 1) + i1);
@@ -403,7 +399,7 @@ routine returns arrays x[0..n-1] and w[0..n-1] of length n, containing the absci
 and weights of the Gauss-Lobatto-Legendre n-point quadrature formula.
 *******************************************************************************/
 {
-  PetscInt  j, m;
+  PetscInt  m;
   PetscReal z1, z, xm, xl, q, qp, Ln, scale;
   if (n == 1) {
     x[0] = x1; /* Scale the root to the desired interval, */
@@ -418,7 +414,7 @@ and weights of the Gauss-Lobatto-Legendre n-point quadrature formula.
     m    = (n + 1) / 2;        /* The roots are symmetric, so we only find half of them. */
     xm   = 0.5 * (x2 + x1);
     xl   = 0.5 * (x2 - x1);
-    for (j = 1; j <= (m - 1); j++) { /* Loop over the desired roots. */
+    for (PetscInt j = 1; j <= (m - 1); j++) { /* Loop over the desired roots. */
       z = -1.0 * PetscCosReal((PETSC_PI * (j + 0.25) / (n)) - (3.0 / (8.0 * n * PETSC_PI)) * (1.0 / (j + 0.25)));
       /* Starting with the above approximation to the ith root, we enter */
       /* the main loop of refinement by Newton's method.                 */
@@ -441,7 +437,7 @@ and weights of the Gauss-Lobatto-Legendre n-point quadrature formula.
   }
   /* scale the weights according to mapping from [-1,1] to [0,1] */
   scale = (x2 - x1) / 2.0;
-  for (j = 0; j <= n; ++j) w[j] = w[j] * scale;
+  for (PetscInt j = 0; j <= n; ++j) w[j] = w[j] * scale;
 }
 
 /******************************************************************************/

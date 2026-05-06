@@ -605,7 +605,7 @@ PetscErrorCode DMPlexGeomPrintModel_Internal(ego model, PetscBool islite)
 
   for (b = 0; b < Nb; ++b) {
     ego body = bodies[b];
-    int id, sh, Nsh, f, Nf, l, Nl, e, Ne, v, Nv;
+    int id, Nsh, f, Nf, l, Nl, e, Ne, v, Nv;
 
     /* List Topology of Bodies */
     PetscCall(PetscPrintf(PETSC_COMM_SELF, "\n"));
@@ -654,7 +654,7 @@ PetscErrorCode DMPlexGeomPrintModel_Internal(ego model, PetscBool islite)
     if (islite) PetscCall(EGlite_getTopology(body, &geom, &oclass, &mtype, NULL, &Nsh, &shobjs, &shsenses));
     else PetscCall(EG_getTopology(body, &geom, &oclass, &mtype, NULL, &Nsh, &shobjs, &shsenses));
 
-    for (sh = 0; sh < Nsh; ++sh) {
+    for (int sh = 0; sh < Nsh; ++sh) {
       ego shell   = shobjs[sh];
       int shsense = shsenses[sh];
 
@@ -1056,11 +1056,11 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
     cOff     = 0;
     for (b = 0; b < nbodies; ++b) {
       ego body = bodies[b];
-      int id, Nl, l;
+      int id, Nl;
 
       if (islite) PetscCall(EGlite_getBodyTopos(body, NULL, LOOP, &Nl, &lobjs));
       else PetscCall(EG_getBodyTopos(body, NULL, LOOP, &Nl, &lobjs));
-      for (l = 0; l < Nl; ++l) {
+      for (int l = 0; l < Nl; ++l) {
         ego loop = lobjs[l];
         int lid, Ner = 0, Ne, e, nc = 0, c, Nt, t;
 
@@ -1075,7 +1075,7 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
         for (e = 0; e < Ne; ++e) {
           ego edge = objs[e];
           int points[3];
-          int eid, Nv, v, tmp;
+          int eid, Nv, tmp;
 
           if (islite) {
             eid = EGlite_indexBodyTopo(body, edge);
@@ -1089,7 +1089,7 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
           else ++Ner;
           PetscCheck(Nv == 2, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Edge %" PetscInt_FMT " has %" PetscInt_FMT " vertices != 2", eid, Nv);
 
-          for (v = 0; v < Nv; ++v) {
+          for (int v = 0; v < Nv; ++v) {
             ego vertex = nobjs[v];
 
             if (islite) {
@@ -1107,7 +1107,7 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
           }
           /* EGADS loops are not oriented, but seem to be in order, so we must piece them together */
           if (!nc) {
-            for (v = 0; v < Nv + 1; ++v) cone[nc++] = points[v];
+            for (int v = 0; v < Nv + 1; ++v) cone[nc++] = points[v];
           } else {
             if (cone[nc - 1] == points[0]) {
               cone[nc++] = points[1];
@@ -1254,11 +1254,11 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
   cOff = 0;
   for (b = 0; b < nbodies; ++b) {
     ego body = bodies[b];
-    int id, Nl, l;
+    int id, Nl;
 
     if (islite) PetscCall(EGlite_getBodyTopos(body, NULL, LOOP, &Nl, &lobjs));
     else PetscCall(EG_getBodyTopos(body, NULL, LOOP, &Nl, &lobjs));
-    for (l = 0; l < Nl; ++l) {
+    for (int l = 0; l < Nl; ++l) {
       ego  loop = lobjs[l];
       ego *fobjs;
       int  lid, Nf, fid, Ner = 0, Ne, e, Nt = 0, t;
@@ -1284,7 +1284,7 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
 
       for (e = 0; e < Ne; ++e) {
         ego             edge = objs[e];
-        int             eid, Nv, v;
+        int eid, Nv;
         PetscInt        points[3], support[2], numEdges, edgeNum;
         const PetscInt *edges;
 
@@ -1298,7 +1298,7 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
 
         if (mtype == DEGENERATE) continue;
         else ++Ner;
-        for (v = 0; v < Nv; ++v) {
+        for (int v = 0; v < Nv; ++v) {
           ego vertex = nobjs[v];
 
           if (islite) {
@@ -1356,12 +1356,12 @@ PetscErrorCode DMPlexCreateGeom_Internal(MPI_Comm comm, ego context, ego model, 
   PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
   for (c = cStart; c < cEnd; ++c) {
     PetscInt *closure = NULL;
-    PetscInt  clSize, cl, bval, fval;
+    PetscInt clSize, bval, fval;
 
     PetscCall(DMPlexGetTransitiveClosure(dm, c, PETSC_TRUE, &clSize, &closure));
     PetscCall(DMLabelGetValue(bodyLabel, c, &bval));
     PetscCall(DMLabelGetValue(faceLabel, c, &fval));
-    for (cl = 0; cl < clSize * 2; cl += 2) {
+    for (PetscInt cl = 0; cl < clSize * 2; cl += 2) {
       PetscCall(DMLabelSetValue(bodyLabel, closure[cl], bval));
       PetscCall(DMLabelSetValue(faceLabel, closure[cl], fval));
     }
@@ -2341,7 +2341,7 @@ PetscErrorCode DMPlexInflateToGeomModelUseXYZ(DM dm) PeNS
   Vec            coordinates;
   PetscScalar   *coords;
   PetscInt       bodyID, faceID, edgeID, vertexID;
-  PetscInt       cdim, d, vStart, vEnd, v;
+  PetscInt cdim, d, vStart, vEnd;
   PetscBool      islite = PETSC_FALSE;
 #endif
 
@@ -2368,7 +2368,7 @@ PetscErrorCode DMPlexInflateToGeomModelUseXYZ(DM dm) PeNS
 
   PetscCall(DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd));
   PetscCall(VecGetArrayWrite(coordinates, &coords));
-  for (v = vStart; v < vEnd; ++v) {
+  for (PetscInt v = vStart; v < vEnd; ++v) {
     PetscScalar *vcoords;
 
     PetscCall(DMLabelGetValue(bodyLabel, v, &bodyID));

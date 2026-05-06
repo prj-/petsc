@@ -725,7 +725,7 @@ PetscErrorCode PreCheckCreate(MPI_Comm comm, PreCheck *precheck)
  */
 PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
 {
-  PetscInt      i, j, k, xs, ys, xm, ym, its, tot_its, sweeps, l, m;
+  PetscInt xs, ys, xm, ym, its, tot_its, sweeps;
   PetscReal     hx, hy, hxdhy, hydhx, dhx, dhy, sc;
   PetscScalar **x, **b, bij, F, F0 = 0, J, y, u, eu;
   PetscReal     atol, rtol, stol;
@@ -759,16 +759,16 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
   PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, localX));
   PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, localX));
   PetscCall(DMDAVecGetArray(da, localX, &x));
-  for (l = 0; l < sweeps; l++) {
+  for (PetscInt l = 0; l < sweeps; l++) {
     /*
      Get local grid boundaries (for 2-dimensional DMDA):
      xs, ys   - starting grid indices (no ghost points)
      xm, ym   - widths of local grid (no ghost points)
      */
     PetscCall(DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL));
-    for (m = 0; m < 2; m++) {
-      for (j = ys; j < ys + ym; j++) {
-        for (i = xs + (m + j) % 2; i < xs + xm; i += 2) {
+    for (PetscInt m = 0; m < 2; m++) {
+      for (PetscInt j = ys; j < ys + ym; j++) {
+        for (PetscInt i = xs + (m + j) % 2; i < xs + xm; i += 2) {
           PetscReal xx = i * hx, yy = j * hy;
           if (B) bij = b[j][i];
           else bij = 0.;
@@ -780,7 +780,7 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
             const PetscScalar u_E = x[j][i + 1], u_W = x[j][i - 1], u_N = x[j + 1][i], u_S = x[j - 1][i];
             const PetscScalar uy_E = 0.25 * dhy * (x[j + 1][i] + x[j + 1][i + 1] - x[j - 1][i] - x[j - 1][i + 1]), uy_W = 0.25 * dhy * (x[j + 1][i - 1] + x[j + 1][i] - x[j - 1][i - 1] - x[j - 1][i]), ux_N = 0.25 * dhx * (x[j][i + 1] + x[j + 1][i + 1] - x[j][i - 1] - x[j + 1][i - 1]), ux_S = 0.25 * dhx * (x[j - 1][i + 1] + x[j][i + 1] - x[j - 1][i - 1] - x[j][i - 1]);
             u = x[j][i];
-            for (k = 0; k < its; k++) {
+            for (PetscInt k = 0; k < its; k++) {
               const PetscScalar ux_E = dhx * (u_E - u), ux_W = dhx * (u - u_W), uy_N = dhy * (u_N - u), uy_S = dhy * (u - u_S), e_E = eta(user, xx, yy, ux_E, uy_E), e_W = eta(user, xx, yy, ux_W, uy_W), e_N = eta(user, xx, yy, ux_N, uy_N), e_S = eta(user, xx, yy, ux_S, uy_S), de_E = deta(user, xx, yy, ux_E, uy_E), de_W = deta(user, xx, yy, ux_W, uy_W), de_N = deta(user, xx, yy, ux_N, uy_N), de_S = deta(user, xx, yy, ux_S, uy_S), newt_E = e_E + de_E * PetscSqr(ux_E), newt_W = e_W + de_W * PetscSqr(ux_W), newt_N = e_N + de_N * PetscSqr(uy_N), newt_S = e_S + de_S * PetscSqr(uy_S), uxx = -hy * (e_E * ux_E - e_W * ux_W), uyy = -hx * (e_N * uy_N - e_S * uy_S);
 
               if (sc) eu = PetscExpScalar(u);

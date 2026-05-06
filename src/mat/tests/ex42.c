@@ -66,11 +66,11 @@ int main(int argc, char **args)
     lsize = (PetscInt)(rand * (m / bs));
     /* shuffle */
     for (j = 0; j < lsize; j++) {
-      PetscInt k, swap, l;
+      PetscInt k, swap;
 
       PetscCall(PetscRandomGetValue(r, &rand));
       k = j + (PetscInt)(rand * ((m / bs) - j));
-      for (l = 0; l < bs; l++) {
+      for (PetscInt l = 0; l < bs; l++) {
         swap            = idx[bs * j + l];
         idx[bs * j + l] = idx[bs * k + l];
         idx[bs * k + l] = swap;

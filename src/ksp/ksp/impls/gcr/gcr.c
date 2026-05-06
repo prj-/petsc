@@ -24,7 +24,7 @@ static PetscErrorCode KSPSolve_GCR_cycle(KSP ksp)
      The residual norm will not be computed when ksp->its > ksp->chknorm hence need to initialize norm_r with some dummy value
   */
   PetscReal norm_r = 0.0, nrm;
-  PetscInt  k, i, restart;
+  PetscInt restart;
   Vec       x;
 
   PetscFunctionBegin;
@@ -35,7 +35,7 @@ static PetscErrorCode KSPSolve_GCR_cycle(KSP ksp)
   x = ksp->vec_sol;
   r = ctx->R;
 
-  for (k = 0; k < restart; k++) {
+  for (PetscInt k = 0; k < restart; k++) {
     v = ctx->VV[k];
     s = ctx->SS[k];
     if (ctx->modifypc) PetscCall((*ctx->modifypc)(ksp, ksp->its, k, ksp->rnorm, ctx->modifypc_ctx));
@@ -44,7 +44,7 @@ static PetscErrorCode KSPSolve_GCR_cycle(KSP ksp)
     PetscCall(KSP_MatMult(ksp, A, s, v)); /* v = A s */
 
     PetscCall(VecMDot(v, k, ctx->VV, ctx->val));
-    for (i = 0; i < k; i++) ctx->val[i] = -ctx->val[i];
+    for (PetscInt i = 0; i < k; i++) ctx->val[i] = -ctx->val[i];
     PetscCall(VecMAXPY(v, k, ctx->val, ctx->VV)); /* v = v - sum_{i=0}^{k-1} alpha_i v_i */
     PetscCall(VecMAXPY(s, k, ctx->val, ctx->SS)); /* s = s - sum_{i=0}^{k-1} alpha_i s_i */
 

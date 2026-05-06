@@ -140,7 +140,7 @@ PetscErrorCode SNESComputeObjective(SNES snes, Vec X, PetscReal *ob)
 PetscErrorCode SNESObjectiveComputeFunctionDefaultFD(SNES snes, Vec X, Vec F, PetscCtx ctx)
 {
   Vec         Xh;
-  PetscInt    i, N, start, end;
+  PetscInt N, start, end;
   PetscReal   ob, ob1, ob2, ob3, fob, dx, eps = 1e-6;
   PetscScalar fv, xv;
 
@@ -160,7 +160,7 @@ PetscErrorCode SNESObjectiveComputeFunctionDefaultFD(SNES snes, Vec X, Vec F, Pe
   if (fob > 0.) dx = 1e-6 * fob;
   else dx = 1e-6;
 
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     /* compute the 1st value */
     PetscCall(VecCopy(X, Xh));
     if (i >= start && i < end) {

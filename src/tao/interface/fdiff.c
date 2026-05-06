@@ -50,7 +50,7 @@ PetscErrorCode TaoDefaultComputeGradient(Tao tao, Vec Xin, Vec G, void *dummy)
   Vec          X;
   PetscScalar *g;
   PetscReal    f, f2;
-  PetscInt     low, high, N, i;
+  PetscInt low, high, N;
   PetscBool    flg;
   PetscReal    h = .5 * PETSC_SQRT_MACHINE_EPSILON;
 
@@ -62,7 +62,7 @@ PetscErrorCode TaoDefaultComputeGradient(Tao tao, Vec Xin, Vec G, void *dummy)
   PetscCall(VecGetOwnershipRange(X, &low, &high));
   PetscCall(VecSetOption(X, VEC_IGNORE_OFF_PROC_ENTRIES, PETSC_TRUE));
   PetscCall(VecGetArray(G, &g));
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     PetscCall(VecSetValue(X, i, -h, ADD_VALUES));
     PetscCall(VecAssemblyBegin(X));
     PetscCall(VecAssemblyEnd(X));

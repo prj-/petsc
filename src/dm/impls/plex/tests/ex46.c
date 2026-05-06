@@ -112,9 +112,8 @@ int main(int argc, char **argv)
   DM       dm;
   Vec      u;
   AppCtx   user;
-  PetscInt cStart, cEnd, c, r;
+  PetscInt cStart, cEnd;
 
-  PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
   PetscCall(ProcessOptions(PETSC_COMM_WORLD, &user));
   PetscCall(CreateMesh(PETSC_COMM_WORLD, &user, &dm));
@@ -122,7 +121,7 @@ int main(int argc, char **argv)
   PetscCall(DMGetGlobalVector(dm, &u));
   PetscCall(DMProjectFunction(dm, 0.0, user.funcs, NULL, INSERT_ALL_VALUES, u));
   PetscCall(CheckError(dm, u, user.funcs));
-  for (r = 0; r < user.Nr; ++r) {
+  for (PetscFunctionBeginUse r = 0; r < user.Nr; ++r) {
     DM      adm;
     DMLabel adapt;
     Vec     au;
@@ -131,7 +130,7 @@ int main(int argc, char **argv)
     PetscCall(DMLabelCreate(PETSC_COMM_SELF, "adapt", &adapt));
     PetscCall(DMLabelSetDefaultValue(adapt, DM_ADAPT_COARSEN));
     PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       if (c % 2) PetscCall(DMLabelSetValue(adapt, c, DM_ADAPT_REFINE));
     }
     PetscCall(DMAdaptLabel(dm, adapt, &adm));

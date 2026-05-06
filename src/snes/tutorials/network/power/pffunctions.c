@@ -240,7 +240,7 @@ PetscErrorCode FormJacobian_Power(SNES snes, Vec X, Mat J, Mat Jpre, void *appct
 PetscErrorCode FormFunction_Power(DM networkdm, Vec localX, Vec localF, PetscInt nv, PetscInt ne, const PetscInt *vtx, const PetscInt *edges, void *appctx)
 {
   UserCtx_Power     *User = (UserCtx_Power *)appctx;
-  PetscInt           e, v, vfrom, vto;
+  PetscInt e, vfrom, vto;
   const PetscScalar *xarr;
   PetscScalar       *farr;
   PetscInt           offsetfrom, offsetto, offset, i, j, key, numComps;
@@ -256,7 +256,7 @@ PetscErrorCode FormFunction_Power(DM networkdm, Vec localX, Vec localF, PetscInt
   PetscCall(VecGetArrayRead(localX, &xarr));
   PetscCall(VecGetArray(localF, &farr));
 
-  for (v = 0; v < nv; v++) {
+  for (PetscInt v = 0; v < nv; v++) {
     PetscCall(DMNetworkIsGhostVertex(networkdm, vtx[v], &ghostvtex));
     PetscCall(DMNetworkGetNumComponents(networkdm, vtx[v], &numComps));
     PetscCall(DMNetworkGetLocalVecOffset(networkdm, vtx[v], ALL_COMPONENTS, &offset));
@@ -350,11 +350,10 @@ PetscErrorCode FormFunction_Power(DM networkdm, Vec localX, Vec localF, PetscInt
 PetscErrorCode SetInitialGuess_Power(DM networkdm, Vec localX, PetscInt nv, PetscInt ne, const PetscInt *vtx, const PetscInt *edges, void *appctx)
 {
   VERTEX_Power   bus;
-  PetscInt       i;
   GEN            gen;
   PetscBool      ghostvtex, sharedv;
   PetscScalar   *xarr;
-  PetscInt       key, numComps, j, offset;
+  PetscInt key, numComps, offset;
   void          *component;
   PetscMPIInt    rank;
   MPI_Comm       comm;
@@ -364,14 +363,14 @@ PetscErrorCode SetInitialGuess_Power(DM networkdm, Vec localX, PetscInt nv, Pets
   PetscCall(PetscObjectGetComm((PetscObject)networkdm, &comm));
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
   PetscCall(VecGetArray(localX, &xarr));
-  for (i = 0; i < nv; i++) {
+  for (PetscInt i = 0; i < nv; i++) {
     PetscCall(DMNetworkIsGhostVertex(networkdm, vtx[i], &ghostvtex));
     PetscCall(DMNetworkIsSharedVertex(networkdm, vtx[i], &sharedv));
     if (ghostvtex || sharedv) continue;
 
     PetscCall(DMNetworkGetLocalVecOffset(networkdm, vtx[i], ALL_COMPONENTS, &offset));
     PetscCall(DMNetworkGetNumComponents(networkdm, vtx[i], &numComps));
-    for (j = 0; j < numComps; j++) {
+    for (PetscInt j = 0; j < numComps; j++) {
       PetscCall(DMNetworkGetComponent(networkdm, vtx[i], j, &key, &component, NULL));
       if (key == User->compkey_bus) {
         bus              = (VERTEX_Power)component;

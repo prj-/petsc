@@ -542,11 +542,10 @@ static PetscErrorCode MatStashScatterBegin_Ref(Mat mat, MatStash *stash, PetscIn
       if (bs2 == 1) {
         svalues[startv[j]] = sp_val[l];
       } else {
-        PetscInt     k;
         PetscScalar *buf1, *buf2;
         buf1 = svalues + bs2 * startv[j];
         buf2 = space->val + bs2 * l;
-        for (k = 0; k < bs2; k++) buf1[k] = buf2[k];
+        for (PetscInt k = 0; k < bs2; k++) buf1[k] = buf2[k];
       }
       sindices[starti[j]]               = sp_idx[l];
       sindices[starti[j] + nlengths[j]] = sp_idy[l];
@@ -703,10 +702,9 @@ static PetscErrorCode MatStashSortCompress_Private(MatStash *stash, InsertMode i
   /* Scan through the rows, sorting each one, combining duplicates, and packing send buffers */
   for (rowstart = 0, cnt = 0, i = 1; i <= n; i++) {
     if (i == n || row[i] != row[rowstart]) { /* Sort the last row. */
-      PetscInt colstart;
       PetscCall(PetscSortIntWithArray(i - rowstart, &col[rowstart], &perm[rowstart]));
-      for (colstart = rowstart; colstart < i;) { /* Compress multiple insertions to the same location */
-        PetscInt       j, l;
+      for (PetscInt colstart = rowstart; colstart < i;) { /* Compress multiple insertions to the same location */
+        PetscInt       j;
         MatStashBlock *block;
         PetscCall(PetscSegBufferGet(stash->segsendblocks, 1, &block));
         block->row = row[rowstart];
@@ -714,7 +712,7 @@ static PetscErrorCode MatStashSortCompress_Private(MatStash *stash, InsertMode i
         PetscCall(PetscArraycpy(block->vals, valptr[perm[colstart]], bs2));
         for (j = colstart + 1; j < i && col[j] == col[colstart]; j++) { /* Add any extra stashed blocks at the same (row,col) */
           if (insertmode == ADD_VALUES) {
-            for (l = 0; l < bs2; l++) block->vals[l] += valptr[perm[j]][l];
+            for (PetscInt l = 0; l < bs2; l++) block->vals[l] += valptr[perm[j]][l];
           } else {
             PetscCall(PetscArraycpy(block->vals, valptr[perm[j]], bs2));
           }
@@ -850,11 +848,11 @@ static PetscErrorCode MatStashScatterBegin_BTS(Mat mat, MatStash *stash, PetscIn
     }
   } else { /* Dynamically count and pack (first time) */
     PetscInt   sendno;
-    PetscCount i, rowstart;
+    PetscCount i;
 
     /* Count number of send ranks and allocate for sends */
     stash->nsendranks = 0;
-    for (rowstart = 0; rowstart < nblocks;) {
+    for (PetscCount rowstart = 0; rowstart < nblocks;) {
       PetscInt       owner;
       MatStashBlock *sendblock_rowstart = (MatStashBlock *)&sendblocks[rowstart * stash->blocktype_size];
 
@@ -872,7 +870,7 @@ static PetscErrorCode MatStashScatterBegin_BTS(Mat mat, MatStash *stash, PetscIn
 
     /* Set up sendhdrs and sendframes */
     sendno = 0;
-    for (rowstart = 0; rowstart < nblocks;) {
+    for (PetscCount rowstart = 0; rowstart < nblocks;) {
       PetscInt       iowner;
       PetscMPIInt    owner;
       MatStashBlock *sendblock_rowstart = (MatStashBlock *)&sendblocks[rowstart * stash->blocktype_size];
@@ -905,11 +903,11 @@ static PetscErrorCode MatStashScatterBegin_BTS(Mat mat, MatStash *stash, PetscIn
   }
 
   if (stash->first_assembly_done) {
-    PetscMPIInt i, tag;
+    PetscMPIInt tag;
 
     PetscCall(PetscCommGetNewTag(stash->comm, &tag));
-    for (i = 0; i < stash->nrecvranks; i++) PetscCall(MatStashBTSRecv_Private(stash->comm, &tag, stash->recvranks[i], &stash->recvhdr[i], &stash->recvreqs[i], stash));
-    for (i = 0; i < stash->nsendranks; i++) PetscCall(MatStashBTSSend_Private(stash->comm, &tag, i, stash->sendranks[i], &stash->sendhdr[i], &stash->sendreqs[i], stash));
+    for (PetscMPIInt i = 0; i < stash->nrecvranks; i++) PetscCall(MatStashBTSRecv_Private(stash->comm, &tag, stash->recvranks[i], &stash->recvhdr[i], &stash->recvreqs[i], stash));
+    for (PetscMPIInt i = 0; i < stash->nsendranks; i++) PetscCall(MatStashBTSSend_Private(stash->comm, &tag, i, stash->sendranks[i], &stash->sendhdr[i], &stash->sendreqs[i], stash));
     stash->use_status = PETSC_TRUE; /* Use count from message status. */
   } else {
     PetscCall(PetscCommBuildTwoSidedFReq(stash->comm, 1, MPIU_INT, stash->nsendranks, stash->sendranks, (PetscInt *)stash->sendhdr, &stash->nrecvranks, &stash->recvranks, (PetscInt *)&stash->recvhdr, 1, &stash->sendreqs, &stash->recvreqs, MatStashBTSSend_Private, MatStashBTSRecv_Private, stash));

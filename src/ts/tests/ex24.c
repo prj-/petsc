@@ -139,7 +139,7 @@ PetscErrorCode RHSJacobian(TS ts, PetscReal t, Vec U, Mat A, Mat BB, PetscCtx ct
 
 PetscErrorCode InitialConditions(DM da, Vec U)
 {
-  PetscInt  i, j, xs, ys, xm, ym, Mx, My;
+  PetscInt xs, ys, xm, ym, Mx, My;
   Field   **u;
   PetscReal hx, hy, x, y;
 
@@ -162,9 +162,9 @@ PetscErrorCode InitialConditions(DM da, Vec U)
   /*
      Compute function over the locally owned part of the grid
   */
-  for (j = ys; j < ys + ym; j++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
     y = j * hy;
-    for (i = xs; i < xs + xm; i++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       x = i * hx;
       if ((1.0 <= x) && (x <= 1.5) && (1.0 <= y) && (y <= 1.5)) u[j][i].v = .25 * PetscPowReal(PetscSinReal(4.0 * PETSC_PI * x), 2.0) * PetscPowReal(PetscSinReal(4.0 * PETSC_PI * y), 2.0);
       else u[j][i].v = 0.0;
@@ -215,7 +215,6 @@ int main(int argc, char **argv)
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   PetscCall(DMCreateGlobalVector(da, &U));
   PetscCall(VecDuplicate(U, &Udot));
-  PetscCall(VecSet(Udot, 0.0));
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      Create timestepping solver context

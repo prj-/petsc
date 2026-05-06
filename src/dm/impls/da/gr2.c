@@ -27,7 +27,7 @@ typedef struct {
 static PetscErrorCode VecView_MPI_Draw_DA2d_Zoom(PetscDraw draw, PetscCtx ctx)
 {
   ZoomCtx           *zctx = (ZoomCtx *)ctx;
-  PetscInt           m, n, i, j, k, dof, id;
+  PetscInt m, n, i, k, dof, id;
   int                c1, c2, c3, c4;
   PetscReal          min, max, x1, x2, x3, x4, y_1, y2, y3, y4;
   const PetscScalar *xy, *v;
@@ -44,7 +44,7 @@ static PetscErrorCode VecView_MPI_Draw_DA2d_Zoom(PetscDraw draw, PetscCtx ctx)
 
   /* PetscDraw the contour plot patch */
   PetscDrawCollectiveBegin(draw);
-  for (j = 0; j < n - 1; j++) {
+  for (PetscInt j = 0; j < n - 1; j++) {
     for (i = 0; i < m - 1; i++) {
       id  = i + j * m;
       x1  = PetscRealPart(xy[2 * id]);

@@ -447,7 +447,7 @@ static PetscErrorCode PCBDDCScalingSetUp_Deluxe_Private(PC pc)
   PCBDDCDeluxeScaling deluxe_ctx = pcbddc->deluxe_ctx;
   PCBDDCSubSchurs     sub_schurs = pcbddc->sub_schurs;
   PetscScalar        *matdata, *matdata2;
-  PetscInt            i, max_subset_size, cum, cum2;
+  PetscInt max_subset_size, cum, cum2;
   const PetscInt     *idxs;
   PetscBool           newsetup = PETSC_FALSE;
 
@@ -468,7 +468,7 @@ static PetscErrorCode PCBDDCScalingSetUp_Deluxe_Private(PC pc)
 
   /* Create objects for deluxe */
   max_subset_size = 0;
-  for (i = 0; i < sub_schurs->n_subs; i++) {
+  for (PetscInt i = 0; i < sub_schurs->n_subs; i++) {
     PetscInt subset_size;
     PetscCall(ISGetLocalSize(sub_schurs->is_subs[i], &subset_size));
     max_subset_size = PetscMax(subset_size, max_subset_size);
@@ -478,7 +478,7 @@ static PetscErrorCode PCBDDCScalingSetUp_Deluxe_Private(PC pc)
   PetscCall(ISGetIndices(sub_schurs->is_Ej_all, &idxs));
   PetscCall(MatSeqAIJGetArray(sub_schurs->S_Ej_all, &matdata));
   PetscCall(MatSeqAIJGetArray(sub_schurs->sum_S_Ej_all, &matdata2));
-  for (i = 0; i < deluxe_ctx->seq_n; i++) {
+  for (PetscInt i = 0; i < deluxe_ctx->seq_n; i++) {
     PetscInt subset_size;
 
     PetscCall(ISGetLocalSize(sub_schurs->is_subs[i], &subset_size));
@@ -554,7 +554,7 @@ static PetscErrorCode PCBDDCScalingSetUp_Deluxe_Private(PC pc)
   }
 
   if (deluxe_ctx->change && !deluxe_ctx->change_with_qr) {
-    for (i = 0; i < deluxe_ctx->seq_n; i++) {
+    for (PetscInt i = 0; i < deluxe_ctx->seq_n; i++) {
       if (newsetup) {
         PC pc;
 

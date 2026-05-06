@@ -355,14 +355,14 @@ static struct {
 
 void PetscDefaultFPTrap(int sig, int code, struct sigcontext *scp)
 {
-  int      err_ind, j;
+  int err_ind;
   fp_ctx_t flt_context;
 
   PetscFunctionBegin;
   fp_sh_trap_info(scp, &flt_context);
 
   err_ind = -1;
-  for (j = 0; error_codes[j].code_no; j++) {
+  for (int j = 0; error_codes[j].code_no; j++) {
     if (error_codes[j].code_no == flt_context.trap) err_ind = j;
   }
 

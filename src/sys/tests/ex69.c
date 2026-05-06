@@ -8,13 +8,13 @@ int main(int argc, char **args)
 {
   double wtime_start, wtime_end, mpiwtime_start, mpiwtime_end;
   double x[100];
-  int    i, maxthreads;
+  int maxthreads;
 
   PetscCall(PetscInitialize(&argc, &args, NULL, NULL));
   wtime_start    = omp_get_wtime();
   mpiwtime_start = MPI_Wtime();
 #pragma omp parallel for schedule(static)
-  for (i = 0; i < 100; i++) x[i] = exp(3.0 * i);
+  for (int i = 0; i < 100; i++) x[i] = exp(3.0 * i);
   wtime_end    = omp_get_wtime();
   mpiwtime_end = MPI_Wtime();
   printf("Wall clock time from MPI_Wtime()     %g\n", wtime_end - wtime_start);

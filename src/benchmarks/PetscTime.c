@@ -4,13 +4,11 @@
 int main(int argc, char **argv)
 {
   PetscLogDouble x, y;
-  int            i;
-
   PetscCall(PetscInitialize(&argc, &argv, 0, 0));
   /* To take care of paging effects */
   PetscTime(&y);
 
-  for (i = 0; i < 2; i++) {
+  for (int i = 0; i < 2; i++) {
     PetscTime(&x);
     PetscTime(&y);
     PetscTime(&y);

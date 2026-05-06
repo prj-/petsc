@@ -26,8 +26,8 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_Mmg_Plex(DM dm, Vec vertexMetric, DMLa
   PetscInt          *cells, *cellsNew, *cellTags, *cellTagsNew, *verTags, *verTagsNew;
   PetscInt          *bdFaces, *faceTags, *facesNew, *faceTagsNew;
   int               *corners, *requiredCells, *requiredVer, *ridges, *requiredFaces;
-  PetscInt           cStart, cEnd, c, numCells, fStart, fEnd, numFaceTags, f, vStart, vEnd, v, numVertices;
-  PetscInt           dim, off, coff, maxConeSize, bdSize, i, j, k, Neq, verbosity, pStart, pEnd;
+  PetscInt cStart, cEnd, c, numCells, fStart, fEnd, numFaceTags, f, vStart, vEnd, numVertices;
+  PetscInt dim, off, coff, maxConeSize, bdSize, i, k, Neq, verbosity, pStart, pEnd;
   PetscInt           numCellsNew, numVerticesNew, numCornersNew, numFacesNew;
   PetscBool          flg        = PETSC_FALSE, noInsert, noSwap, noMove, noSurf, isotropic, uniform;
   MMG5_pMesh         mmg_mesh   = NULL;
@@ -75,7 +75,7 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_Mmg_Plex(DM dm, Vec vertexMetric, DMLa
   PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
   PetscCall(VecGetArrayRead(coordinates, &coords));
   PetscCall(PetscMalloc2(numVertices * Neq, &metric, dim * numVertices, &vertices));
-  for (v = 0; v < vEnd - vStart; ++v) {
+  for (PetscInt v = 0; v < vEnd - vStart; ++v) {
     PetscCall(PetscSectionGetOffset(coordSection, v + vStart, &off));
     for (i = 0; i < dim; ++i) vertices[dim * v + i] = PetscRealPart(coords[off + i]);
   }
@@ -131,9 +131,9 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_Mmg_Plex(DM dm, Vec vertexMetric, DMLa
   PetscCall(VecGetArrayRead(vertexMetric, &met));
   PetscCall(DMPlexMetricIsIsotropic(dm, &isotropic));
   PetscCall(DMPlexMetricIsUniform(dm, &uniform));
-  for (v = 0; v < (vEnd - vStart); ++v) {
+  for (PetscInt v = 0; v < (vEnd - vStart); ++v) {
     for (i = 0, k = 0; i < dim; ++i) {
-      for (j = i; j < dim; ++j) {
+      for (PetscInt j = i; j < dim; ++j) {
         if (isotropic) {
           if (i == j) {
             if (uniform) metric[Neq * v + k] = PetscRealPart(met[0]);
@@ -257,9 +257,9 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_Mmg_Plex(DM dm, Vec vertexMetric, DMLa
     PetscInt        numCoveredPoints, numFaces = 0, facePoints[3];
     const PetscInt *coveredPoints = NULL;
 
-    for (j = 0; j < dim; ++j) facePoints[j] = facesNew[i * dim + j] + vStart;
+    for (PetscInt j = 0; j < dim; ++j) facePoints[j] = facesNew[i * dim + j] + vStart;
     PetscCall(DMPlexGetFullJoin(*dmNew, dim, facePoints, &numCoveredPoints, &coveredPoints));
-    for (j = 0; j < numCoveredPoints; ++j) {
+    for (PetscInt j = 0; j < numCoveredPoints; ++j) {
       if (coveredPoints[j] >= fStart && coveredPoints[j] < fEnd) {
         numFaces++;
         f = j;

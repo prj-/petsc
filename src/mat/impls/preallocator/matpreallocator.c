@@ -45,13 +45,13 @@ static PetscErrorCode MatSetUp_Preallocator(Mat A)
 static PetscErrorCode MatSetValues_Preallocator(Mat A, PetscInt m, const PetscInt *rows, PetscInt n, const PetscInt *cols, const PetscScalar *values, InsertMode addv)
 {
   Mat_Preallocator *p = (Mat_Preallocator *)A->data;
-  PetscInt          rStart, rEnd, r, cStart, cEnd, c, bs;
+  PetscInt rStart, rEnd, cStart, cEnd, bs;
 
   PetscFunctionBegin;
   PetscCall(MatGetBlockSize(A, &bs));
   PetscCall(MatGetOwnershipRange(A, &rStart, &rEnd));
   PetscCall(MatGetOwnershipRangeColumn(A, &cStart, &cEnd));
-  for (r = 0; r < m; ++r) {
+  for (PetscInt r = 0; r < m; ++r) {
     PetscHashIJKey key;
     PetscBool      missing;
 
@@ -61,7 +61,7 @@ static PetscErrorCode MatSetValues_Preallocator(Mat A, PetscInt m, const PetscIn
       PetscCall(MatStashValuesRow_Private(&A->stash, key.i, n, cols, values, PETSC_FALSE));
     } else { /* Hash table is for blocked rows/cols */
       key.i = rows[r] / bs;
-      for (c = 0; c < n; ++c) {
+      for (PetscInt c = 0; c < n; ++c) {
         key.j = cols[c] / bs;
         if (key.j < 0) continue;
         PetscCall(PetscHSetIJQueryAdd(p->ht, key, &missing));

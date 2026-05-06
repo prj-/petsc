@@ -88,7 +88,7 @@ static PetscErrorCode PCMGCreateCoarseSpaceDefault_Private(PC pc, PetscInt level
   PetscBool poly = cstype == PCMG_ADAPT_POLYNOMIAL ? PETSC_TRUE : PETSC_FALSE;
   PetscErrorCode (**funcs)(PetscInt, PetscReal, const PetscReal[], PetscInt, PetscScalar *, void *);
   void   **ctxs;
-  PetscInt dim, d, Nf, f, k, m, M;
+  PetscInt dim, d, Nf, m, M;
   Vec      tmp;
 
   PetscFunctionBegin;
@@ -102,8 +102,8 @@ static PetscErrorCode PCMGCreateCoarseSpaceDefault_Private(PC pc, PetscInt level
   PetscCall(VecGetLocalSize(tmp, &m));
   PetscCall(MatCreateDense(PetscObjectComm((PetscObject)pc), m, PETSC_DECIDE, M, Nc, NULL, coarseSpace));
   PetscCall(DMRestoreGlobalVector(dm, &tmp));
-  for (k = 0; k < Nc / dim; ++k) {
-    for (f = 0; f < Nf; ++f) ctxs[f] = &k;
+  for (PetscInt k = 0; k < Nc / dim; ++k) {
+    for (PetscInt f = 0; f < Nf; ++f) ctxs[f] = &k;
     for (d = 0; d < dim; ++d) {
       PetscCall(MatDenseGetColumnVecWrite(*coarseSpace, k * dim + d, &tmp));
       PetscCall(DMSetBasisFunction_Internal(Nf, poly, d, funcs));

@@ -6,18 +6,18 @@ static PetscErrorCode myF(PetscCtx ctx, Vec x, Vec y)
 {
   const PetscScalar *ax;
   PetscScalar       *ay;
-  PetscInt           i, j, m, n;
+  PetscInt m, n;
 
   PetscFunctionBegin;
   PetscCall(VecGetArrayRead(x, &ax));
   PetscCall(VecGetArray(y, &ay));
   PetscCall(VecGetLocalSize(y, &m));
   PetscCall(VecGetLocalSize(x, &n));
-  for (i = 0; i < m; i++) {
+  for (PetscInt i = 0; i < m; i++) {
     PetscScalar xx, yy;
 
     yy = 0.0;
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       xx = PetscPowScalarInt(ax[j], i + 1);
       yy += xx;
     }

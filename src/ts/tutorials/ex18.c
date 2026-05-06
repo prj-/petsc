@@ -110,14 +110,13 @@ static PetscErrorCode ProcessMonitorOptions(MPI_Comm comm, AppCtx *options)
 {
   Functional func;
   char      *names[256];
-  PetscInt   f;
 
   PetscFunctionBeginUser;
   PetscOptionsBegin(comm, "", "Simulation Monitor Options", "DMPLEX");
   options->numMonitorFuncs = PETSC_STATIC_ARRAY_LENGTH(names);
   PetscCall(PetscOptionsStringArray("-monitor", "List of functionals to monitor", "", names, &options->numMonitorFuncs, NULL));
   PetscCall(PetscMalloc1(options->numMonitorFuncs, &options->monitorFuncs));
-  for (f = 0; f < options->numMonitorFuncs; ++f) {
+  for (PetscInt f = 0; f < options->numMonitorFuncs; ++f) {
     for (func = options->functionalRegistry; func; func = func->next) {
       PetscBool match;
 
@@ -132,7 +131,7 @@ static PetscErrorCode ProcessMonitorOptions(MPI_Comm comm, AppCtx *options)
   /* Find out the maximum index of any functional computed by a function we will be calling (even if we are not using it) */
   options->maxMonitorFunc = -1;
   for (func = options->functionalRegistry; func; func = func->next) {
-    for (f = 0; f < options->numMonitorFuncs; ++f) {
+    for (PetscInt f = 0; f < options->numMonitorFuncs; ++f) {
       Functional call = options->monitorFuncs[f];
 
       if (func->func == call->func && func->ctx == call->ctx) options->maxMonitorFunc = PetscMax(options->maxMonitorFunc, func->offset);
@@ -210,16 +209,13 @@ static void g0_constant_pp(PetscInt dim, PetscInt Nf, PetscInt NfAux, const Pets
 
 static void f0_lap_u(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f0[])
 {
-  PetscInt comp;
-  for (comp = 0; comp < dim; ++comp) f0[comp] = 4.0;
+  for (PetscInt comp = 0; comp < dim; ++comp) f0[comp] = 4.0;
 }
 
 static void f1_lap_u(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f1[])
 {
-  PetscInt comp, d;
-  for (comp = 0; comp < dim; ++comp) {
-    for (d = 0; d < dim; ++d) f1[comp * dim + d] = u_x[comp * dim + d];
-  }
+  for (PetscInt comp = 0; comp < dim; ++comp)
+    for (PetscInt d = 0; d < dim; ++d) f1[comp * dim + d] = u_x[comp * dim + d];
 }
 
 static void f0_lap_periodic_u(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f0[])
@@ -237,9 +233,9 @@ static void f0_lap_doubly_periodic_u(PetscInt dim, PetscInt Nf, PetscInt NfAux, 
 void g3_uu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g3[])
 {
   const PetscInt Ncomp = dim;
-  PetscInt       compI, d;
+  PetscInt       d;
 
-  for (compI = 0; compI < Ncomp; ++compI) {
+  for (PetscInt compI = 0; compI < Ncomp; ++compI) {
     for (d = 0; d < dim; ++d) g3[((compI * Ncomp + compI) * dim + d) * dim + d] = 1.0;
   }
 }
@@ -273,14 +269,12 @@ void g1_adv_pp(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[],
 
 void g0_adv_pu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g0[0] += u_x[dim * dim + d];
+  for (PetscInt d = 0; d < dim; ++d) g0[0] += u_x[dim * dim + d];
 }
 
 void g1_adv_pu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g1[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g1[d * dim + d] = u[dim];
+  for (PetscInt d = 0; d < dim; ++d) g1[d * dim + d] = u[dim];
 }
 
 static void riemann_advection(PetscInt dim, PetscInt Nf, const PetscReal *qp, const PetscReal *n, const PetscScalar *uL, const PetscScalar *uR, PetscInt numConstants, const PetscScalar constants[], PetscScalar *flux, PetscCtx ctx)
@@ -425,8 +419,7 @@ static PetscErrorCode shear_bc(PetscInt dim, PetscReal time, const PetscReal x[]
 
 static PetscErrorCode initialVelocity(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nf, PetscScalar *u, PetscCtx ctx)
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) u[d] = 0.0;
+  for (PetscInt d = 0; d < dim; ++d) u[d] = 0.0;
   return PETSC_SUCCESS;
 }
 
@@ -868,14 +861,14 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
   PetscCall(VecGetArrayRead(X, &x));
   for (p = pStart; p < pEnd; ++p) {
     for (f = 0; f < Nf; ++f) {
-      PetscInt dof, cdof, d;
+      PetscInt dof, cdof;
 
       PetscCall(PetscSectionGetFieldDof(s, p, f, &dof));
       PetscCall(PetscSectionGetFieldConstraintDof(s, p, f, &cdof));
       PetscCall(DMPlexPointGlobalFieldRead(dm, p, f, x, &a));
       /* TODO Use constrained indices here */
-      for (d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 0] = PetscMax(xnorms[f * 2 + 0], PetscAbsScalar(a[d]));
-      for (d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 1] += PetscAbsScalar(a[d]);
+      for (PetscInt d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 0] = PetscMax(xnorms[f * 2 + 0], PetscAbsScalar(a[d]));
+      for (PetscInt d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 1] += PetscAbsScalar(a[d]);
     }
   }
   PetscCall(VecRestoreArrayRead(X, &x));
@@ -885,7 +878,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     const PetscScalar *cgeom;
     PetscScalar      **fx;
     PetscReal         *fmin, *fmax, *fint, *ftmp, t;
-    PetscInt           cStart, cEnd, c, fcount, f, num;
+    PetscInt cStart, cEnd, fcount, num;
 
     size_t ftableused, ftablealloc;
 
@@ -893,7 +886,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     fcount = user->numMonitorFuncs;
     PetscCall(PetscMalloc4(fcount, &fmin, fcount, &fmax, fcount, &fint, fcount, &ftmp));
     PetscCall(PetscMalloc3(fcount, &fdm, fcount, &fv, fcount, &fx));
-    for (f = 0; f < fcount; ++f) {
+    for (PetscInt f = 0; f < fcount; ++f) {
       PetscSection fs;
       const char  *name = user->monitorFuncs[f]->name;
 
@@ -917,14 +910,14 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     PetscCall(VecGetDM(cellgeom, &dmCell));
     PetscCall(VecGetArrayRead(cellgeom, &cgeom));
     PetscCall(VecGetArrayRead(X, &x));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscFVCellGeom *cg;
       PetscScalar     *cx;
 
       PetscCall(DMPlexPointLocalRead(dmCell, c, cgeom, &cg));
       PetscCall(DMPlexPointGlobalFieldRead(dm, c, 1, x, &cx));
       if (!cx) continue; /* not a global cell */
-      for (f = 0; f < user->numMonitorFuncs; ++f) {
+      for (PetscInt f = 0; f < user->numMonitorFuncs; ++f) {
         Functional   func = user->monitorFuncs[f];
         PetscScalar *fxc;
 
@@ -933,7 +926,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
         PetscCall((*func->func)(dm, time, cg->centroid, cx, ftmp, func->ctx));
         fxc[0] = ftmp[user->monitorFuncs[f]->offset];
       }
-      for (f = 0; f < fcount; ++f) {
+      for (PetscInt f = 0; f < fcount; ++f) {
         fmin[f] = PetscMin(fmin[f], ftmp[f]);
         fmax[f] = PetscMax(fmax[f], ftmp[f]);
         fint[f] += cg->volume * ftmp[f];
@@ -948,7 +941,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     ftablealloc = fcount * 100;
     ftableused  = 0;
     PetscCall(PetscCalloc1(ftablealloc, &ftable));
-    for (f = 0; f < user->numMonitorFuncs; ++f) {
+    for (PetscInt f = 0; f < user->numMonitorFuncs; ++f) {
       Functional func      = user->monitorFuncs[f];
       PetscInt   id        = func->offset;
       char       newline[] = "\n";
@@ -995,12 +988,12 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     PetscCall(PetscFree4(fmin, fmax, fint, ftmp));
     PetscCall(PetscFree3(fdm, fv, fx));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "% 3" PetscInt_FMT "  time %8.4g  |x| (", stepnum, (double)time));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       if (f > 0) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), ", "));
       PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "%8.4g", (double)xnorms[f * 2 + 0]));
     }
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), ") |x|_1 ("));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       if (f > 0) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), ", "));
       PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "%8.4g", (double)xnorms[f * 2 + 1]));
     }

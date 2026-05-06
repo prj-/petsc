@@ -249,7 +249,7 @@ static PetscErrorCode CreateSystem(DM dm, Mat *pA, Vec *pRhs)
 {
   PetscInt      N[2], dof[3];
   PetscBool     isLastRankx, isLastRanky, isFirstRankx, isFirstRanky;
-  PetscInt      ex, ey, startx, starty, nx, ny;
+  PetscInt startx, starty, nx, ny;
   PetscInt      iprev, icenter, inext;
   Mat           A;
   Vec           rhs;
@@ -288,8 +288,8 @@ static PetscErrorCode CreateSystem(DM dm, Mat *pA, Vec *pRhs)
 
   /* Loop over all local elements. Note that it may be more efficient in real
      applications to loop over each boundary separately */
-  for (ey = starty; ey < starty + ny; ++ey) {
-    for (ex = startx; ex < startx + nx; ++ex) {
+  for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+    for (PetscInt ex = startx; ex < startx + nx; ++ex) {
       if (ex == N[0] - 1) {
         /* Right Boundary velocity Dirichlet */
         DMStagStencil row;

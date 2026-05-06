@@ -8,7 +8,7 @@ int main(int argc, char **argv)
   DM           dm;
   Vec          u;
   PetscSection section;
-  PetscInt     dim, numFields, numBC, i;
+  PetscInt dim, numFields, numBC;
   PetscMPIInt  rank;
   PetscInt     numComp[2];
   PetscInt     numDof[12];
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
   numFields  = 2;
   numComp[0] = 1;
   numComp[1] = dim;
-  for (i = 0; i < numFields * (dim + 1); ++i) numDof[i] = 0;
+  for (PetscInt i = 0; i < numFields * (dim + 1); ++i) numDof[i] = 0;
   /* Let u be defined on cells */
   numDof[0 * (dim + 1) + dim] = 1;
   /* Let v be defined on vertices */

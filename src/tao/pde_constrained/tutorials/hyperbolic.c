@@ -99,7 +99,6 @@ int main(int argc, char **argv)
   IS            is_allstate, is_alldesign;
   PetscInt      lo, hi, hi2, lo2, ksp_old;
   PetscInt      ntests = 1;
-  PetscInt      i;
   PetscLogStage stages[1];
 
   PetscFunctionBeginUser;
@@ -186,7 +185,7 @@ int main(int argc, char **argv)
   PetscCall(PetscLogStagePush(stages[0]));
   user.ksp_its_initial = user.ksp_its;
   ksp_old              = user.ksp_its;
-  for (i = 0; i < ntests; i++) {
+  for (PetscInt i = 0; i < ntests; i++) {
     PetscCall(TaoSolve(tao));
     PetscCall(PetscPrintf(PETSC_COMM_WORLD, "KSP Iterations = %" PetscInt_FMT "\n", user.ksp_its - ksp_old));
     PetscCall(VecCopy(x0, x));
@@ -672,7 +671,7 @@ PetscErrorCode Gather_yi(Vec y, Vec *yi, VecScatter *scat, PetscInt nt)
 
 PetscErrorCode HyperbolicInitialize(AppCtx *user)
 {
-  PetscInt    n, i, j, linear_index, istart, iend, iblock, lo, hi;
+  PetscInt n, i, j, istart, iend, iblock, lo, hi;
   Vec         XX, YY, XXwork, YYwork, yi, uxi, ui, bc;
   PetscReal   h, sum;
   PetscScalar hinv, neg_hinv, quarter = 0.25, one = 1.0, half_hinv, neg_half_hinv;
@@ -801,7 +800,7 @@ PetscErrorCode HyperbolicInitialize(AppCtx *user)
   PetscCall(VecDuplicate(XX, &user->dwork));
 
   PetscCall(VecGetOwnershipRange(XX, &istart, &iend));
-  for (linear_index = istart; linear_index < iend; linear_index++) {
+  for (PetscInt linear_index = istart; linear_index < iend; linear_index++) {
     i  = linear_index % user->mx;
     j  = (linear_index - i) / user->mx;
     vx = h * (i + 0.5);
@@ -1071,7 +1070,6 @@ PetscErrorCode HyperbolicInitialize(AppCtx *user)
   PetscCall(VecSetFromOptions(user->ytrue));
   user->c_formed = PETSC_TRUE;
   PetscCall(VecCopy(user->utrue, user->u)); /*  Set u=utrue temporarily for StateMatInv */
-  PetscCall(VecSet(user->ytrue, 0.0));      /*  Initial guess */
   PetscCall(StateMatInvMult(user->Js, user->q, user->ytrue));
   PetscCall(VecCopy(user->ur, user->u)); /*  Reset u=ur */
 
@@ -1113,8 +1111,6 @@ PetscErrorCode HyperbolicInitialize(AppCtx *user)
 
 PetscErrorCode HyperbolicDestroy(AppCtx *user)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   PetscCall(MatDestroy(&user->Q));
   PetscCall(MatDestroy(&user->QT));
@@ -1134,7 +1130,7 @@ PetscErrorCode HyperbolicDestroy(AppCtx *user)
   PetscCall(MatDestroy(&user->Gradxy[0]));
   PetscCall(MatDestroy(&user->Gradxy[1]));
   PetscCall(MatDestroy(&user->M));
-  for (i = 0; i < user->nt; i++) {
+  for (PetscInt i = 0; i < user->nt; i++) {
     PetscCall(MatDestroy(&user->C[i]));
     PetscCall(MatDestroy(&user->Cwork[i]));
   }
@@ -1168,7 +1164,7 @@ PetscErrorCode HyperbolicDestroy(AppCtx *user)
   PetscCall(ISDestroy(&user->d_is));
   PetscCall(VecScatterDestroy(&user->state_scatter));
   PetscCall(VecScatterDestroy(&user->design_scatter));
-  for (i = 0; i < user->nt; i++) {
+  for (PetscInt i = 0; i < user->nt; i++) {
     PetscCall(VecScatterDestroy(&user->uxi_scatter[i]));
     PetscCall(VecScatterDestroy(&user->uyi_scatter[i]));
     PetscCall(VecScatterDestroy(&user->ux_scatter[i]));

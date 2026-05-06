@@ -343,8 +343,7 @@ void ps_set_metadata_(const char *name, const char *value) {
 
 void ps_dump_data_(void) {
     #ifndef PERFSTUBS_OFF
-    int i;
-    for (i = 0; i < num_tools_registered ; i++) dump_data_functions[i]();
+    for (int i = 0; i < num_tools_registered ; i++) dump_data_functions[i]();
     #endif
 }
 

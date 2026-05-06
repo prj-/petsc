@@ -68,7 +68,6 @@ PetscErrorCode test_solve(void)
   PetscCall(MatCreateVecs(A12, &h, &f));
 
   PetscCall(VecSet(f, 1.0));
-  PetscCall(VecSet(h, 0.0));
 
   /* Create block vector */
   tmp_x[0] = f;
@@ -119,7 +118,7 @@ PetscErrorCode test_solve_matgetvecs(void)
   KSP      ksp;
   PC       pc;
   Vec      b, x, f, h, diag, x1, x2;
-  PetscInt n, np, i, j;
+  PetscInt n, np;
   Mat      tmp[2][2];
   Vec     *tmp_x;
 
@@ -153,8 +152,8 @@ PetscErrorCode test_solve_matgetvecs(void)
   PetscCall(MatSeqAIJSetPreallocation(A12, np, NULL));
   PetscCall(MatMPIAIJSetPreallocation(A12, np, NULL, np, NULL));
 
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < np; j++) PetscCall(MatSetValue(A12, i, j, i + j * n, INSERT_VALUES));
+  for (PetscInt i = 0; i < n; i++) {
+    for (PetscInt j = 0; j < np; j++) PetscCall(MatSetValue(A12, i, j, i + j * n, INSERT_VALUES));
   }
   PetscCall(MatSetValue(A12, 2, 1, 4, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(A12, MAT_FINAL_ASSEMBLY));

@@ -31,7 +31,7 @@ static PetscErrorCode SNESSolve_Anderson(SNES snes)
   PetscReal           xnorm, ynorm;
   PetscReal           dnorm, dminnorm = 0.0, fminnorm;
   PetscInt            restart_count = 0;
-  PetscInt            k, k_restart, l, ivec;
+  PetscInt k_restart, l, ivec;
   PetscBool           selectRestart;
   SNESConvergedReason reason;
 
@@ -90,7 +90,7 @@ static PetscErrorCode SNESSolve_Anderson(SNES snes)
   k_restart = 0;
   l         = 0;
   ivec      = 0;
-  for (k = 1; k < snes->max_its + 1; k++) {
+  for (PetscInt k = 1; k < snes->max_its + 1; k++) {
     /* Call general purpose update function */
     PetscTryTypeMethod(snes, update, snes->iter);
 

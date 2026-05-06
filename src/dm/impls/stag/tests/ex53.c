@@ -5,7 +5,7 @@ static char help[] = "Test local-to-local for DMStag.\n\n";
 int main(int argc, char **argv)
 {
   DM          dm;
-  PetscInt    dim, start, end, i;
+  PetscInt dim, start, end;
   PetscBool   flg;
   Vec         g, l1, l2;
   PetscMPIInt rank;
@@ -29,12 +29,9 @@ int main(int argc, char **argv)
   PetscCall(DMCreateLocalVector(dm, &l1));
   PetscCall(VecDuplicate(l1, &l2));
 
-  PetscCall(VecSet(l1, 0.0));
-  PetscCall(VecSet(l2, 0.0));
-
   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
   PetscCall(VecGetOwnershipRange(g, &start, &end));
-  for (i = start; i < end; ++i) {
+  for (PetscInt i = start; i < end; ++i) {
     value = rank + i;
     PetscCall(VecSetValues(g, 1, &i, &value, INSERT_VALUES));
   }

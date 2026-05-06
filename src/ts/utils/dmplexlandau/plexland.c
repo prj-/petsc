@@ -162,12 +162,12 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
       for (PetscInt b_id = 0; b_id < ctx->batch_sz; b_id++) { // OpenMP (once)
         for (PetscInt grid = 0; grid < ctx->num_grids; grid++) {
           Vec      locX = locXArray[LAND_PACK_IDX(b_id, grid)], globX = globXArray[LAND_PACK_IDX(b_id, grid)], locX2;
-          PetscInt cStart, cEnd, ei;
+          PetscInt cStart, cEnd;
           PetscCall(VecDuplicate(locX, &locX2));
           PetscCall(DMGlobalToLocalBegin(ctx->plex[grid], globX, INSERT_VALUES, locX2));
           PetscCall(DMGlobalToLocalEnd(ctx->plex[grid], globX, INSERT_VALUES, locX2));
           PetscCall(DMPlexGetHeightStratum(ctx->plex[grid], 0, &cStart, &cEnd));
-          for (ei = cStart; ei < cEnd; ++ei) {
+          for (PetscInt ei = cStart; ei < cEnd; ++ei) {
             PetscScalar *coef = NULL;
             PetscCall(DMPlexVecGetClosure(ctx->plex[grid], section[grid], locX2, ei, NULL, &coef));
             PetscCall(PetscMemcpy(cellClosure_it, coef, Nb * Nf[grid] * sizeof(*cellClosure_it))); /* change if LandauIPReal != PetscScalar */
@@ -282,11 +282,11 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
             /* get f & df */
             for (f = 0; f < loc_Nf; ++f) {
               const PetscInt idx = b_id * IPf_sz_glb + ipf_offset[grid] + f * loc_nip + loc_elem * Nq + qi;
-              PetscInt       b, e;
+              PetscInt       e;
               PetscReal      refSpaceDer[LANDAU_DIM];
               ff[idx] = 0.0;
               for (PetscInt d = 0; d < LANDAU_DIM; ++d) refSpaceDer[d] = 0.0;
-              for (b = 0; b < Nb; ++b) {
+              for (PetscInt b = 0; b < Nb; ++b) {
                 const PetscInt cidx = b;
                 ff[idx] += Bq[cidx] * PetscRealPart(coef[f * Nb + cidx]);
                 for (PetscInt d = 0; d < dim; ++d) refSpaceDer[d] += Dq[cidx * dim + d] * PetscRealPart(coef[f * Nb + cidx]);
@@ -334,7 +334,7 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
         for (PetscInt qj = 0; qj < Nq; ++qj) {
           const PetscInt jpidx_glb = ip_offset[grid] + qj + loc_elem * Nq;
           PetscReal      g0[LANDAU_MAX_SPECIES], g2[LANDAU_MAX_SPECIES][LANDAU_DIM], g3[LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM]; // could make a LANDAU_MAX_SPECIES_GRID ~ number of ions - 1
-          PetscInt       d, d2, dp, d3, IPf_idx;
+          PetscInt d, d2, IPf_idx;
           if (shift == 0.0) { // Jacobian
             const PetscReal *const invJj = &invJe[qj * dim * dim];
             PetscReal              gg2[LANDAU_MAX_SPECIES][LANDAU_DIM], gg3[LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM], gg2_temp[LANDAU_DIM], gg3_temp[LANDAU_DIM][LANDAU_DIM];
@@ -381,7 +381,7 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
                   temp2 *= wi;
 #if LANDAU_DIM == 2
                   for (d2 = 0; d2 < 2; d2++) {
-                    for (d3 = 0; d3 < 2; ++d3) {
+                    for (PetscInt d3 = 0; d3 < 2; ++d3) {
                       /* K = U * grad(f): g2=e: i,A */
                       gg2_temp[d2] += Uk[d2][d3] * temp1[d3];
                       /* D = -U * (I \kron (fx)): g3=f: i,j,A */
@@ -390,7 +390,7 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
                   }
 #else
                   for (d2 = 0; d2 < 3; ++d2) {
-                    for (d3 = 0; d3 < 3; ++d3) {
+                    for (PetscInt d3 = 0; d3 < 3; ++d3) {
                       /* K = U * grad(f): g2 = e: i,A */
                       gg2_temp[d2] += U[d2][d3] * temp1[d3];
                       /* D = -U * (I \kron (fx)): g3 = f: i,j,A */
@@ -407,7 +407,7 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
             for (PetscInt fieldA = 0, f_off = ctx->species_offset[grid]; fieldA < loc_Nf; ++fieldA) {
               for (d2 = 0; d2 < LANDAU_DIM; d2++) {
                 gg2[fieldA][d2] = gg2_temp[d2] * nu_alpha[fieldA + f_off];
-                for (d3 = 0; d3 < LANDAU_DIM; d3++) gg3[fieldA][d2][d3] = -gg3_temp[d2][d3] * nu_alpha[fieldA + f_off] * invMass[fieldA + f_off];
+                for (PetscInt d3 = 0; d3 < LANDAU_DIM; d3++) gg3[fieldA][d2][d3] = -gg3_temp[d2][d3] * nu_alpha[fieldA + f_off] * invMass[fieldA + f_off];
               }
             }
             /* add electric field term once per IP */
@@ -419,8 +419,8 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
                 for (d2 = 0; d2 < dim; ++d2) {
                   g2[fieldA][d] += invJj[d * dim + d2] * gg2[fieldA][d2];
                   g3[fieldA][d][d2] = 0.0;
-                  for (d3 = 0; d3 < dim; ++d3) {
-                    for (dp = 0; dp < dim; ++dp) g3[fieldA][d][d2] += invJj[d * dim + d3] * gg3[fieldA][d3][dp] * invJj[d2 * dim + dp];
+                  for (PetscInt d3 = 0; d3 < dim; ++d3) {
+                    for (PetscInt dp = 0; dp < dim; ++dp) g3[fieldA][d][d2] += invJj[d * dim + d3] * gg3[fieldA][d3][dp] * invJj[d2 * dim + dp];
                   }
                   g3[fieldA][d][d2] *= wj;
                 }
@@ -440,19 +440,18 @@ static PetscErrorCode LandauFormJacobian_Internal(Vec a_X, Mat JacP, const Petsc
           }
           /* FE matrix construction */
           {
-            PetscInt         fieldA, d, f, d2, g;
             const PetscReal *BJq = &BB[qj * Nb], *DIq = &DD[qj * Nb * dim];
             /* assemble - on the diagonal (I,I) */
-            for (fieldA = 0; fieldA < loc_Nf; fieldA++) {
-              for (f = 0; f < Nb; f++) {
+            for (PetscInt fieldA = 0; fieldA < loc_Nf; fieldA++) {
+              for (PetscInt f = 0; f < Nb; f++) {
                 const PetscInt i = fieldA * Nb + f; /* Element matrix row */
-                for (g = 0; g < Nb; ++g) {
+                for (PetscInt g = 0; g < Nb; ++g) {
                   const PetscInt j    = fieldA * Nb + g; /* Element matrix column */
                   const PetscInt fOff = i * totDim + j;
                   if (shift == 0.0) {
-                    for (d = 0; d < dim; ++d) {
+                    for (PetscInt d = 0; d < dim; ++d) {
                       elemMat[fOff] += DIq[f * dim + d] * g2[fieldA][d] * BJq[g];
-                      for (d2 = 0; d2 < dim; ++d2) elemMat[fOff] += DIq[f * dim + d] * g3[fieldA][d][d2] * DIq[g * dim + d2];
+                      for (PetscInt d2 = 0; d2 < dim; ++d2) elemMat[fOff] += DIq[f * dim + d] * g3[fieldA][d][d2] * DIq[g * dim + d2];
                     }
                   } else { // mass
                     elemMat[fOff] += BJq[f] * g0[fieldA] * BJq[g];
@@ -802,12 +801,11 @@ typedef struct {
 static PetscErrorCode maxwellian(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nf_dummy, PetscScalar *u, void *actx)
 {
   MaxwellianCtx *mctx = (MaxwellianCtx *)actx;
-  PetscInt       i;
   PetscReal      v2 = 0, theta = 2 * mctx->kT_m / (mctx->v_0 * mctx->v_0), shift; /* theta = 2kT/mc^2 */
 
   PetscFunctionBegin;
   /* compute the exponents, v^2 */
-  for (i = 0; i < dim; ++i) v2 += x[i] * x[i];
+  for (PetscInt i = 0; i < dim; ++i) v2 += x[i] * x[i];
   /* evaluate the Maxwellian */
   if (mctx->shift < 0) shift = -mctx->shift;
   else {
@@ -816,7 +814,7 @@ static PetscErrorCode maxwellian(PetscInt dim, PetscReal time, const PetscReal x
   }
   if (shift != 0.) {
     v2 = 0;
-    for (i = 0; i < dim - 1; ++i) v2 += x[i] * x[i];
+    for (PetscInt i = 0; i < dim - 1; ++i) v2 += x[i] * x[i];
     v2 += (x[dim - 1] - shift) * (x[dim - 1] - shift);
     /* evaluate the shifted Maxwellian */
     u[0] += mctx->n * PetscPowReal(PETSC_PI * theta, -1.5) * (PetscExpReal(-v2 / theta));
@@ -1013,12 +1011,10 @@ static PetscErrorCode adaptToleranceFEM(PetscFE fem, Vec sol, PetscInt type, Pet
 // forest goes in (ctx->plex[grid]), plex comes out
 static PetscErrorCode adapt(PetscInt grid, LandauCtx *ctx, Vec *uu)
 {
-  PetscInt adaptIter;
-
   PetscFunctionBegin;
   PetscInt type, limits[5] = {(grid == 0) ? ctx->numRERefine : 0, (grid == 0) ? ctx->nZRefine1 : 0, ctx->numAMRRefine[grid], (grid == 0) ? ctx->nZRefine2 : 0, ctx->postAMRRefine[grid]};
   for (type = 0; type < 5; type++) {
-    for (adaptIter = 0; adaptIter < limits[type]; adaptIter++) {
+    for (PetscInt adaptIter = 0; adaptIter < limits[type]; adaptIter++) {
       DM newForest = NULL;
       PetscCall(adaptToleranceFEM(ctx->fe[0], *uu, type, grid, ctx, &newForest));
       if (newForest) {
@@ -1569,13 +1565,13 @@ static PetscErrorCode CreateStaticData(PetscInt dim, IS grid_batch_is_inv[], con
                       jj++;
                     }
                     if (PetscAbs(sum - 1.0) > 10 * PETSC_MACHINE_EPSILON) { // debug
-                      PetscInt  d, f;
+                      PetscInt  d;
                       PetscReal tmp = 0;
                       PetscCall(
                         PetscPrintf(PETSC_COMM_SELF, "\t\t%" PetscInt_FMT ".%" PetscInt_FMT ".%" PetscInt_FMT ") ERROR total I = %22.16e (LANDAU_MAX_Q_FACE=%d, #face=%" PetscInt_FMT ")\n", eidx, q, fieldA, (double)sum, LANDAU_MAX_Q_FACE, maps[grid].num_face));
                       for (d = 0, tmp = 0; d < numindices; ++d) {
                         if (tmp != 0 && PetscAbs(tmp - 1.0) > 10 * PETSC_MACHINE_EPSILON) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%3" PetscInt_FMT ") %3" PetscInt_FMT ": ", d, indices[d]));
-                        for (f = 0; f < numindices; ++f) tmp += PetscRealPart(elMat[d * numindices + f]);
+                        for (PetscInt f = 0; f < numindices; ++f) tmp += PetscRealPart(elMat[d * numindices + f]);
                         if (tmp != 0) PetscCall(PetscPrintf(ctx->comm, " | %22.16e\n", (double)tmp));
                       }
                     }
@@ -1726,7 +1722,7 @@ static PetscErrorCode CreateStaticData(PetscInt dim, IS grid_batch_is_inv[], con
       Vec          v2_2 = NULL;                                                    // projected function: v^2/2 for non-relativistic, gamma... for relativistic
       PetscSection e_section;
       DM           dmEnergy;
-      PetscInt     cStart, cEnd, ej;
+      PetscInt cStart, cEnd;
 
       PetscCall(DMPlexGetHeightStratum(ctx->plex[grid], 0, &cStart, &cEnd));
       // prep energy trick, get v^2 / 2 vector
@@ -1753,7 +1749,7 @@ static PetscErrorCode CreateStaticData(PetscInt dim, IS grid_batch_is_inv[], con
         PetscCall(DMRestoreGlobalVector(dmEnergy, &glob_v2));
       }
       /* append part of the IP data for each grid */
-      for (ej = 0; ej < numCells[grid]; ++ej, ++outer_ej) {
+      for (PetscInt ej = 0; ej < numCells[grid]; ++ej, ++outer_ej) {
         PetscScalar *coefs = NULL;
         PetscReal    vj[LANDAU_MAX_NQND * LANDAU_DIM], detJj[LANDAU_MAX_NQND], Jdummy[LANDAU_MAX_NQND * LANDAU_DIM * LANDAU_DIM], c0 = C_0(ctx->v_0), c02 = PetscSqr(c0);
         invJe = invJ_a + outer_ej * Nq * dim * dim;
@@ -1976,9 +1972,8 @@ static PetscErrorCode LandauCreateJacobianMatrix(MPI_Comm comm, Vec X, IS grid_b
 static void LandauSphereMapping(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar f[])
 {
   PetscReal u_max = 0, u_norm = 0, scale, square_inner_radius = PetscRealPart(constants[0]), square_radius = PetscRealPart(constants[1]);
-  PetscInt  d;
 
-  for (d = 0; d < dim; ++d) {
+  for (PetscInt d = 0; d < dim; ++d) {
     PetscReal val = PetscAbsReal(PetscRealPart(u[d]));
     if (val > u_max) u_max = val;
     u_norm += PetscRealPart(u[d]) * PetscRealPart(u[d]);
@@ -1986,7 +1981,7 @@ static void LandauSphereMapping(PetscInt dim, PetscInt Nf, PetscInt NfAux, const
   u_norm = PetscSqrtReal(u_norm);
 
   if (u_max < square_inner_radius) {
-    for (d = 0; d < dim; ++d) f[d] = u[d];
+    for (PetscInt d = 0; d < dim; ++d) f[d] = u[d];
     return;
   }
 
@@ -2009,7 +2004,7 @@ static void LandauSphereMapping(PetscInt dim, PetscInt Nf, PetscInt NfAux, const
     PetscReal rho_prime = (1.0 - t) * u_0_norm + t * R_max;
     scale               = rho_prime / u_norm;
   }
-  for (d = 0; d < dim; ++d) f[d] = u[d] * scale;
+  for (PetscInt d = 0; d < dim; ++d) f[d] = u[d] * scale;
 }
 
 static PetscErrorCode LandauSphereMesh(DM dm, PetscReal inner, PetscReal radius)

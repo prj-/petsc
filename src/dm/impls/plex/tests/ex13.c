@@ -99,12 +99,12 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
 
 static PetscErrorCode ScrambleOrientation(DM dm, AppCtx *user)
 {
-  PetscInt h, cStart, cEnd, c;
+  PetscInt h, cStart, cEnd;
 
   PetscFunctionBeginUser;
   PetscCall(DMPlexGetVTKCellHeight(dm, &h));
   PetscCall(DMPlexGetHeightStratum(dm, h, &cStart, &cEnd));
-  for (c = cStart; c < cEnd; ++c) {
+  for (PetscInt c = cStart; c < cEnd; ++c) {
     /* Could use PetscRand instead */
     if (c % 2) PetscCall(DMPlexOrientPoint(dm, c, -1));
   }

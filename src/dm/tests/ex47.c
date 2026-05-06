@@ -137,8 +137,6 @@ PetscErrorCode test_3d_nocoord(const char filename[])
   PetscViewer       view;
   DMDALocalInfo     info;
   PetscScalar    ***va;
-  PetscInt          i, j, k;
-
   PetscCall(DMDACreate3d(comm, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE, DMDA_STENCIL_STAR, M, N, P, PETSC_DECIDE, PETSC_DECIDE, PETSC_DECIDE, dof, sw, NULL, NULL, NULL, &da));
   PetscCall(DMSetFromOptions(da));
   PetscCall(DMSetUp(da));
@@ -146,9 +144,9 @@ PetscErrorCode test_3d_nocoord(const char filename[])
   PetscCall(DMDAGetLocalInfo(da, &info));
   PetscCall(DMCreateGlobalVector(da, &v));
   PetscCall(DMDAVecGetArray(da, v, &va));
-  for (k = info.zs; k < info.zs + info.zm; k++) {
-    for (j = info.ys; j < info.ys + info.ym; j++) {
-      for (i = info.xs; i < info.xs + info.xm; i++) {
+  for (PetscInt k = info.zs; k < info.zs + info.zm; k++) {
+    for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {
+      for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {
         PetscScalar x = (Lx * i) / M;
         PetscScalar y = (Ly * j) / N;
         PetscScalar z = (Lz * k) / P;

@@ -37,7 +37,7 @@ PetscErrorCode SPARSEPACKqmdmrg(const PetscInt *xadj, const PetscInt *adjncy, Pe
   PetscInt i__1, i__2, i__3;
 
   /* Local variables */
-  PetscInt head, inhd, irch, node, mark, ilink, root, j, lnode, nabor, jstop, jstrt, rchsze, mrgsze, novrlp, iov, deg1;
+  PetscInt head, node, mark, ilink, root, lnode, nabor, jstop, jstrt, rchsze, mrgsze, novrlp, deg1;
 
   PetscFunctionBegin;
   /* Parameter adjustments */
@@ -53,14 +53,14 @@ PetscErrorCode SPARSEPACKqmdmrg(const PetscInt *xadj, const PetscInt *adjncy, Pe
 
   if (*nhdsze <= 0) PetscFunctionReturn(PETSC_SUCCESS);
   i__1 = *nhdsze;
-  for (inhd = 1; inhd <= i__1; ++inhd) {
+  for (PetscInt inhd = 1; inhd <= i__1; ++inhd) {
     root         = nbrhd[inhd];
     marker[root] = 0;
   }
   /*       LOOP THROUGH EACH ELIMINATED SUPERNODE IN THE SET     */
   /*       (NHDSZE, NBRHD).                                      */
   i__1 = *nhdsze;
-  for (inhd = 1; inhd <= i__1; ++inhd) {
+  for (PetscInt inhd = 1; inhd <= i__1; ++inhd) {
     root         = nbrhd[inhd];
     marker[root] = -1;
     rchsze       = 0;
@@ -72,7 +72,7 @@ PetscErrorCode SPARSEPACKqmdmrg(const PetscInt *xadj, const PetscInt *adjncy, Pe
     /*          DETERMINE THE REACHABLE SET AND ITS PETSCINTERSECT-     */
     /*          ION WITH THE INPUT REACHABLE SET.                  */
     i__2 = jstop;
-    for (j = jstrt; j <= i__2; ++j) {
+    for (PetscInt j = jstrt; j <= i__2; ++j) {
       nabor = adjncy[j];
       root  = -nabor;
       if (nabor < 0) goto L200;
@@ -102,12 +102,12 @@ PetscErrorCode SPARSEPACKqmdmrg(const PetscInt *xadj, const PetscInt *adjncy, Pe
     head   = 0;
     mrgsze = 0;
     i__2   = novrlp;
-    for (iov = 1; iov <= i__2; ++iov) {
+    for (PetscInt iov = 1; iov <= i__2; ++iov) {
       node  = ovrlp[iov];
       jstrt = xadj[node];
       jstop = xadj[node + 1] - 1;
       i__3  = jstop;
-      for (j = jstrt; j <= i__3; ++j) {
+      for (PetscInt j = jstrt; j <= i__3; ++j) {
         nabor = adjncy[j];
         if (marker[nabor] != 0) goto L800;
         marker[node] = 1;
@@ -139,7 +139,7 @@ PetscErrorCode SPARSEPACKqmdmrg(const PetscInt *xadj, const PetscInt *adjncy, Pe
     marker[root] = 0;
     if (rchsze <= 0) goto L1400;
     i__2 = rchsze;
-    for (irch = 1; irch <= i__2; ++irch) {
+    for (PetscInt irch = 1; irch <= i__2; ++irch) {
       node         = rchset[irch];
       marker[node] = 0;
     }

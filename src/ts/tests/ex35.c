@@ -48,7 +48,7 @@ PetscReal erfinv(PetscReal x)
 
 int main(int argc, char **argv)
 {
-  PetscInt      p, dim, Np;
+  PetscInt dim, Np;
   PetscScalar  *randVecNums;
   PetscReal     speed, value, *x, *v;
   PetscRandom   rngx, rng1, rng2;
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
   /* Set particle positions and velocities */
   if (user.dim_inp == 1) {
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       PetscReal temp;
       PetscCall(PetscRandomGetValueReal(rngx, &value));
       x[p * dim]     = value;
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     PetscCall(VecRestoreSubVector(randVec, isvy, &subvecvy));
     PetscCall(VecGetArray(randVec, &randVecNums));
 
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       PetscReal u1, u2, mag, zx, zy;
 
       u1 = PetscRealPart(randVecNums[p * dim]);
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
   PetscCall(PetscDrawSetSave(positionDraw, "ex35_pos.ppm"));
   PetscCall(PetscDrawSPReset(positionDrawSP));
   PetscCall(PetscDrawSPSetLimits(positionDrawSP, 0, 1, 0, 1));
-  for (p = 0; p < Np; ++p) {
+  for (PetscInt p = 0; p < Np; ++p) {
     speed = PetscSqrtReal(PetscSqr(v[p * dim]) + PetscSqr(v[p * dim + 1]));
     PetscCall(PetscDrawSPAddPointColorized(positionDrawSP, &x[p * dim], &x[p * dim + 1], &speed));
   }

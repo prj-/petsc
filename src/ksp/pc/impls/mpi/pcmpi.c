@@ -157,7 +157,7 @@ static PetscErrorCode PCMPISetMat(PC pc)
 {
   PC_MPI            *km = pc ? (PC_MPI *)pc->data : NULL;
   Mat                A;
-  PetscInt           m, n, j, bs;
+  PetscInt m, n, bs;
   Mat                sA;
   MPI_Comm           comm = PC_MPI_COMM_WORLD;
   KSP                ksp;
@@ -233,7 +233,7 @@ static PetscErrorCode PCMPISetMat(PC pc)
       }
       displi[0]  = 0;
       NZdispl[0] = 0;
-      for (j = 1; j < size; j++) {
+      for (PetscInt j = 1; j < size; j++) {
         displi[j]  = displi[j - 1] + sendcounti[j - 1] - 1;
         NZdispl[j] = NZdispl[j - 1] + NZ[j - 1];
       }
@@ -685,15 +685,13 @@ PetscErrorCode PCMPIServerEnd(void)
       PetscCall(PetscObjectTypeCompare((PetscObject)viewer, PETSCVIEWERASCII, &isascii));
       if (isascii) {
         PetscMPIInt size;
-        PetscMPIInt i;
-
         PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD, &size));
         PetscCall(PetscViewerASCIIPrintf(viewer, "MPI linear solver server statistics:\n"));
         PetscCall(PetscViewerASCIIPrintf(viewer, "    Ranks        KSPSolve()s     Mats        KSPs       Avg. Size      Avg. Its\n"));
         if (PCMPIKSPCountsSeq) {
           PetscCall(PetscViewerASCIIPrintf(viewer, "  Sequential         %" PetscInt_FMT "                         %" PetscInt_FMT "            %" PetscInt_FMT "           %" PetscInt_FMT "\n", PCMPISolveCountsSeq, PCMPIKSPCountsSeq, PCMPISizesSeq / PCMPISolveCountsSeq, PCMPIIterationsSeq / PCMPISolveCountsSeq));
         }
-        for (i = 0; i < size; i++) {
+        for (PetscMPIInt i = 0; i < size; i++) {
           if (PCMPIKSPCounts[i]) {
             PetscCall(PetscViewerASCIIPrintf(viewer, "     %d               %" PetscInt_FMT "            %" PetscInt_FMT "           %" PetscInt_FMT "            %" PetscInt_FMT "            %" PetscInt_FMT "\n", i + 1, PCMPISolveCounts[i], PCMPIMatCounts[i], PCMPIKSPCounts[i], PCMPISizes[i] / PCMPISolveCounts[i], PCMPIIterations[i] / PCMPISolveCounts[i]));
           }

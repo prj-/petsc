@@ -13,7 +13,6 @@ int main(int argc, char **args)
   PetscInt    M = 8, N = 8, m, n, rstart, rend, r;
   PetscBool   userSubdomains = PETSC_FALSE;
 
-  PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &args, NULL, help));
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-M", &M, NULL));
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-N", &N, NULL));
@@ -34,7 +33,7 @@ int main(int argc, char **args)
   PetscCall(MatSetFromOptions(A));
   PetscCall(MatSetUp(A));
   PetscCall(MatGetOwnershipRange(A, &rstart, &rend));
-  for (r = rstart; r < rend; ++r) {
+  for (PetscFunctionBeginUse r = rstart; r < rend; ++r) {
     const PetscScalar diag = 4.0, offdiag = -1.0;
     const PetscInt    i = r / N;
     const PetscInt    j = r - i * N;
@@ -76,7 +75,7 @@ int main(int argc, char **args)
 
     /* Use no overlap for now */
     PetscCall(PetscMalloc1(rend - rstart, &rows));
-    for (r = rstart; r < rend; ++r) rows[r - rstart] = r;
+    for (PetscFunctionBeginUse r = rstart; r < rend; ++r) rows[r - rstart] = r;
     PetscCall(ISCreateGeneral(PETSC_COMM_SELF, rend - rstart, rows, PETSC_OWN_POINTER, &is));
     PetscCall(PCASMSetLocalSubdomains(pc, 1, &is, &is));
     PetscCall(ISDestroy(&is));

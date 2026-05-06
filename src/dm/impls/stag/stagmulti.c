@@ -1207,7 +1207,7 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction2d_Internal(DM dmc, DM dmf,
 PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf, Mat A)
 {
   PetscInt       Mc, Nc, Pc, Mf, Nf, Pf, factorx, factory, factorz, dof[4];
-  PetscInt       xc, yc, zc, mc, nc, pc, nExtraxc, nExtrayc, nExtrazc, i, j, k, d, ii, jj, kk, count;
+  PetscInt xc, yc, zc, mc, nc, pc, nExtraxc, nExtrayc, nExtrazc, k, d, kk, count;
   PetscInt       maxFinePoints, maxOffRankFinePoints;
   DMStagStencil  rowc;
   DMStagStencil *colf;
@@ -1237,8 +1237,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[0]; ++d)
     for (k = zc; k < zc + pc + nExtrazc; ++k)
-      for (j = yc; j < yc + nc + nExtrayc; ++j)
-        for (i = xc; i < xc + mc + nExtraxc; ++i) {
+      for (PetscInt j = yc; j < yc + nc + nExtrayc; ++j)
+        for (PetscInt i = xc; i < xc + mc + nExtraxc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1246,8 +1246,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_BACK_DOWN_LEFT;
           count    = 0;
           for (kk = -(factorz - 1); kk <= factorz - 1; ++kk)
-            for (jj = -(factory - 1); jj <= factory - 1; ++jj)
-              for (ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
+            for (PetscInt jj = -(factory - 1); jj <= factory - 1; ++jj)
+              for (PetscInt ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1274,8 +1274,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[1]; ++d)
     for (k = zc; k < zc + pc; ++k)
-      for (j = yc; j < yc + nc + nExtrayc; ++j)
-        for (i = xc; i < xc + mc + nExtraxc; ++i) {
+      for (PetscInt j = yc; j < yc + nc + nExtrayc; ++j)
+        for (PetscInt i = xc; i < xc + mc + nExtraxc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1283,8 +1283,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_DOWN_LEFT;
           count    = 0;
           for (kk = 0; kk < factorz; ++kk)
-            for (jj = -(factory - 1); jj <= factory - 1; ++jj)
-              for (ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
+            for (PetscInt jj = -(factory - 1); jj <= factory - 1; ++jj)
+              for (PetscInt ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1309,8 +1309,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[1]; ++d)
     for (k = zc; k < zc + pc + nExtrazc; ++k)
-      for (j = yc; j < yc + nc; ++j)
-        for (i = xc; i < xc + mc + nExtraxc; ++i) {
+      for (PetscInt j = yc; j < yc + nc; ++j)
+        for (PetscInt i = xc; i < xc + mc + nExtraxc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1318,8 +1318,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_BACK_LEFT;
           count    = 0;
           for (kk = -(factorz - 1); kk <= factorz - 1; ++kk)
-            for (jj = 0; jj < factory; ++jj)
-              for (ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
+            for (PetscInt jj = 0; jj < factory; ++jj)
+              for (PetscInt ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1339,8 +1339,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[1]; ++d)
     for (k = zc; k < zc + pc + nExtrazc; ++k)
-      for (j = yc; j < yc + nc + nExtrayc; ++j)
-        for (i = xc; i < xc + mc; ++i) {
+      for (PetscInt j = yc; j < yc + nc + nExtrayc; ++j)
+        for (PetscInt i = xc; i < xc + mc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1348,8 +1348,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_BACK_DOWN;
           count    = 0;
           for (kk = -(factorz - 1); kk <= factorz - 1; ++kk)
-            for (jj = -(factory - 1); jj <= factory - 1; ++jj)
-              for (ii = 0; ii < factorx; ++ii) {
+            for (PetscInt jj = -(factory - 1); jj <= factory - 1; ++jj)
+              for (PetscInt ii = 0; ii < factorx; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1374,8 +1374,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[2]; ++d)
     for (k = zc; k < zc + pc; ++k)
-      for (j = yc; j < yc + nc; ++j)
-        for (i = xc; i < xc + mc + nExtraxc; ++i) {
+      for (PetscInt j = yc; j < yc + nc; ++j)
+        for (PetscInt i = xc; i < xc + mc + nExtraxc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1383,8 +1383,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_LEFT;
           count    = 0;
           for (kk = 0; kk < factorz; ++kk)
-            for (jj = 0; jj < factory; ++jj)
-              for (ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
+            for (PetscInt jj = 0; jj < factory; ++jj)
+              for (PetscInt ii = -(factorx - 1); ii <= factorx - 1; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1407,8 +1407,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[2]; ++d)
     for (k = zc; k < zc + pc; ++k)
-      for (j = yc; j < yc + nc + nExtrayc; ++j)
-        for (i = xc; i < xc + mc; ++i) {
+      for (PetscInt j = yc; j < yc + nc + nExtrayc; ++j)
+        for (PetscInt i = xc; i < xc + mc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1416,8 +1416,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_DOWN;
           count    = 0;
           for (kk = 0; kk < factorz; ++kk)
-            for (jj = -(factory - 1); jj <= factory - 1; ++jj)
-              for (ii = 0; ii < factorx; ++ii) {
+            for (PetscInt jj = -(factory - 1); jj <= factory - 1; ++jj)
+              for (PetscInt ii = 0; ii < factorx; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1440,8 +1440,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[2]; ++d)
     for (k = zc; k < zc + pc + nExtrazc; ++k)
-      for (j = yc; j < yc + nc; ++j)
-        for (i = xc; i < xc + mc; ++i) {
+      for (PetscInt j = yc; j < yc + nc; ++j)
+        for (PetscInt i = xc; i < xc + mc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1449,8 +1449,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_BACK;
           count    = 0;
           for (kk = -(factorz - 1); kk <= factorz - 1; ++kk)
-            for (jj = 0; jj < factory; ++jj)
-              for (ii = 0; ii < factorx; ++ii) {
+            for (PetscInt jj = 0; jj < factory; ++jj)
+              for (PetscInt ii = 0; ii < factorx; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;
@@ -1473,8 +1473,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
 
   for (d = 0; d < dof[3]; ++d)
     for (k = zc; k < zc + pc; ++k)
-      for (j = yc; j < yc + nc; ++j)
-        for (i = xc; i < xc + mc; ++i) {
+      for (PetscInt j = yc; j < yc + nc; ++j)
+        for (PetscInt i = xc; i < xc + mc; ++i) {
           rowc.i   = i;
           rowc.j   = j;
           rowc.k   = k;
@@ -1482,8 +1482,8 @@ PETSC_INTERN PetscErrorCode DMStagPopulateRestriction3d_Internal(DM dmc, DM dmf,
           rowc.loc = DMSTAG_ELEMENT;
           count    = 0;
           for (kk = 0; kk < factorz; ++kk)
-            for (jj = 0; jj < factory; ++jj)
-              for (ii = 0; ii < factorx; ++ii) {
+            for (PetscInt jj = 0; jj < factory; ++jj)
+              for (PetscInt ii = 0; ii < factorx; ++ii) {
                 colf[count].i   = i * factorx + ii;
                 colf[count].j   = j * factory + jj;
                 colf[count].k   = k * factorz + kk;

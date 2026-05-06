@@ -57,12 +57,12 @@ static PetscErrorCode SBRSplitLocalEdges_Private(DMPlexTransform tr, DMPlexPoint
   while (!DMPlexPointQueueEmpty(queue)) {
     PetscInt        p = -1;
     const PetscInt *support;
-    PetscInt        supportSize, s;
+    PetscInt        supportSize;
 
     PetscCall(DMPlexPointQueueDequeue(queue, &p));
     PetscCall(DMPlexGetSupport(dm, p, &support));
     PetscCall(DMPlexGetSupportSize(dm, p, &supportSize));
-    for (s = 0; s < supportSize; ++s) {
+    for (PetscInt s = 0; s < supportSize; ++s) {
       const PetscInt  cell = support[s];
       const PetscInt *cone;
       PetscInt        coneSize, c;
@@ -147,7 +147,7 @@ static PetscErrorCode DMPlexTransformSetUp_SBR(DMPlexTransform tr)
   DMPlexPointQueue  queue = NULL;
   IS                refineIS;
   const PetscInt   *refineCells;
-  PetscInt          pStart, pEnd, p, eStart, eEnd, e, edgeLenSize, Nc, c;
+  PetscInt pStart, pEnd, p, eStart, eEnd, edgeLenSize, Nc;
   PetscBool         empty;
 
   PetscFunctionBegin;
@@ -158,7 +158,7 @@ static PetscErrorCode DMPlexTransformSetUp_SBR(DMPlexTransform tr)
   PetscCall(DMPlexGetDepthStratum(dm, 1, &eStart, &eEnd));
   PetscCall(PetscSectionCreate(PETSC_COMM_SELF, &sbr->secEdgeLen));
   PetscCall(PetscSectionSetChart(sbr->secEdgeLen, eStart, eEnd));
-  for (e = eStart; e < eEnd; ++e) PetscCall(PetscSectionSetDof(sbr->secEdgeLen, e, 1));
+  for (PetscInt e = eStart; e < eEnd; ++e) PetscCall(PetscSectionSetDof(sbr->secEdgeLen, e, 1));
   PetscCall(PetscSectionSetUp(sbr->secEdgeLen));
   PetscCall(PetscSectionGetStorageSize(sbr->secEdgeLen, &edgeLenSize));
   PetscCall(PetscCalloc1(edgeLenSize, &sbr->edgeLen));
@@ -169,7 +169,7 @@ static PetscErrorCode DMPlexTransformSetUp_SBR(DMPlexTransform tr)
   PetscCall(DMLabelGetStratumIS(active, DM_ADAPT_REFINE, &refineIS));
   PetscCall(DMLabelGetStratumSize(active, DM_ADAPT_REFINE, &Nc));
   if (refineIS) PetscCall(ISGetIndices(refineIS, &refineCells));
-  for (c = 0; c < Nc; ++c) {
+  for (PetscInt c = 0; c < Nc; ++c) {
     const PetscInt cell = refineCells[c];
     PetscInt       depth;
 
@@ -179,11 +179,11 @@ static PetscErrorCode DMPlexTransformSetUp_SBR(DMPlexTransform tr)
       PetscCall(DMPlexPointQueueEnqueue(queue, cell));
     } else {
       PetscInt *closure = NULL;
-      PetscInt  Ncl, cl;
+      PetscInt  Ncl;
 
       PetscCall(DMLabelSetValue(sbr->splitPoints, cell, depth));
       PetscCall(DMPlexGetTransitiveClosure(dm, cell, PETSC_TRUE, &Ncl, &closure));
-      for (cl = 0; cl < Ncl; cl += 2) {
+      for (PetscInt cl = 0; cl < Ncl; cl += 2) {
         const PetscInt edge = closure[cl];
 
         if (edge >= eStart && edge < eEnd) {

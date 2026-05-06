@@ -1483,7 +1483,7 @@ static PetscErrorCode DMGetLocalToGlobalMapping_Composite(DM dm)
 
 static PetscErrorCode DMCreateColoring_Composite(DM dm, ISColoringType ctype, ISColoring *coloring)
 {
-  PetscInt         n, i, cnt;
+  PetscInt n, cnt;
   ISColoringValue *colors;
   PetscBool        dense  = PETSC_FALSE;
   ISColoringValue  maxcol = 0;
@@ -1499,7 +1499,7 @@ static PetscErrorCode DMCreateColoring_Composite(DM dm, ISColoringType ctype, IS
   PetscCall(PetscOptionsGetBool(((PetscObject)dm)->options, ((PetscObject)dm)->prefix, "-dmcomposite_dense_jacobian", &dense, NULL));
   if (dense) {
     PetscCall(ISColoringValueCast(com->N, &maxcol));
-    for (i = 0; i < n; i++) PetscCall(ISColoringValueCast(com->rstart + i, colors + i));
+    for (PetscInt i = 0; i < n; i++) PetscCall(ISColoringValueCast(com->rstart + i, colors + i));
   } else {
     struct DMCompositeLink *next = com->next;
     PetscMPIInt             rank;
@@ -1510,7 +1510,7 @@ static PetscErrorCode DMCreateColoring_Composite(DM dm, ISColoringType ctype, IS
       ISColoring lcoloring;
 
       PetscCall(DMCreateColoring(next->dm, IS_COLORING_GLOBAL, &lcoloring));
-      for (i = 0; i < lcoloring->N; i++) PetscCall(ISColoringValueCast(maxcol + lcoloring->colors[i], colors + cnt++));
+      for (PetscInt i = 0; i < lcoloring->N; i++) PetscCall(ISColoringValueCast(maxcol + lcoloring->colors[i], colors + cnt++));
       maxcol += lcoloring->n;
       PetscCall(ISColoringDestroy(&lcoloring));
       next = next->next;

@@ -583,13 +583,13 @@ static PetscErrorCode PetscDualSpaceGetAllPointsUnion(PetscInt Nf, PetscDualSpac
   for (f = 0; f < Nf; ++f) {
     if (funcs[f]) {
       PetscQuadrature  fAllPoints;
-      PetscInt         qdim, fNumPoints, q;
+      PetscInt qdim, fNumPoints;
       const PetscReal *fPoints;
 
       PetscCall(PetscDualSpaceGetAllData(sp[f], &fAllPoints, NULL));
       PetscCall(PetscQuadratureGetData(fAllPoints, &qdim, NULL, &fNumPoints, &fPoints, NULL));
       PetscCheck(qdim == dim, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Spatial dimension %" PetscInt_FMT " for dual basis does not match input dimension %" PetscInt_FMT, qdim, dim);
-      for (q = 0; q < fNumPoints * dim; ++q) points[numPoints * dim + q] = fPoints[q];
+      for (PetscInt q = 0; q < fNumPoints * dim; ++q) points[numPoints * dim + q] = fPoints[q];
       numPoints += fNumPoints;
     }
   }
@@ -1009,9 +1009,7 @@ static PetscErrorCode DMProjectLocal_Generic_Plex(DM dm, PetscReal time, Vec loc
       PetscCall(ISRestoreIndices(fieldIS, &fields));
     }
     if (label) {
-      PetscInt i;
-
-      for (i = 0; i < numIds; ++i) {
+      for (PetscInt i = 0; i < numIds; ++i) {
         IS              pointIS, isectIS;
         const PetscInt *points;
         PetscInt        n;

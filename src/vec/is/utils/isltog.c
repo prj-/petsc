@@ -1227,7 +1227,7 @@ static PetscErrorCode ISLocalToGlobalMappingSetUpBlockInfo_Private(ISLocalToGlob
   PetscBool          missing;
   const PetscInt    *gidxs, *rootdegree;
   PetscInt          *mask, *mrootdata, *leafdata, *newleafdata, *leafrd, *tmpg;
-  PetscInt           nroots, nleaves, newnleaves, bs, i, j, m, mnroots, p;
+  PetscInt nroots, nleaves, newnleaves, bs, i, j, m, mnroots;
   PetscMPIInt        rank, size;
 
   PetscFunctionBegin;
@@ -1333,7 +1333,7 @@ static PetscErrorCode ISLocalToGlobalMappingSetUpBlockInfo_Private(ISLocalToGlob
 
   PetscCall(PetscMalloc1(nleaves, &mask));
   PetscCall(PetscMalloc1(nleaves, &tmpg));
-  for (p = 0; p < mapping->info_nproc; p++) {
+  for (PetscInt p = 0; p < mapping->info_nproc; p++) {
     PetscInt *tmp, trank = mapping->info_procs[p];
 
     PetscCall(PetscMemzero(mask, nleaves * sizeof(*mask)));

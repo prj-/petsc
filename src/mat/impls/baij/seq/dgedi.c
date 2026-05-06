@@ -16,7 +16,7 @@
 
 PetscErrorCode PetscLINPACKgedi(MatScalar *a, PetscInt n, PetscInt *ipvt, MatScalar *work)
 {
-  PetscInt   i__2, kb, kp1, nm1, i, j, k, l, ll, kn, knp1, jn1;
+  PetscInt i__2, kp1, nm1, k, l, kn, knp1, jn1;
   MatScalar *aa, *ax, *ay, tmp;
   MatScalar  t;
 
@@ -34,16 +34,16 @@ PetscErrorCode PetscLINPACKgedi(MatScalar *a, PetscInt n, PetscInt *ipvt, MatSca
     t       = -a[knp1];
     i__2    = k - 1;
     aa      = &a[1 + kn];
-    for (ll = 0; ll < i__2; ll++) aa[ll] *= t;
+    for (PetscInt ll = 0; ll < i__2; ll++) aa[ll] *= t;
     kp1 = k + 1;
     if (n < kp1) continue;
     ax = aa;
-    for (j = kp1; j <= n; ++j) {
+    for (PetscInt j = kp1; j <= n; ++j) {
       jn1        = j * n;
       t          = a[k + jn1];
       a[k + jn1] = 0.;
       ay         = &a[1 + jn1];
-      for (ll = 0; ll < k; ll++) ay[ll] += t * ax[ll];
+      for (PetscInt ll = 0; ll < k; ll++) ay[ll] += t * ax[ll];
     }
   }
 
@@ -51,26 +51,26 @@ PetscErrorCode PetscLINPACKgedi(MatScalar *a, PetscInt n, PetscInt *ipvt, MatSca
 
   nm1 = n - 1;
   if (nm1 < 1) PetscFunctionReturn(PETSC_SUCCESS);
-  for (kb = 1; kb <= nm1; ++kb) {
+  for (PetscInt kb = 1; kb <= nm1; ++kb) {
     k   = n - kb;
     kn  = k * n;
     kp1 = k + 1;
     aa  = a + kn;
-    for (i = kp1; i <= n; ++i) {
+    for (PetscInt i = kp1; i <= n; ++i) {
       work[i] = aa[i];
       aa[i]   = 0.;
     }
-    for (j = kp1; j <= n; ++j) {
+    for (PetscInt j = kp1; j <= n; ++j) {
       t  = work[j];
       ax = &a[j * n + 1];
       ay = &a[kn + 1];
-      for (ll = 0; ll < n; ll++) ay[ll] += t * ax[ll];
+      for (PetscInt ll = 0; ll < n; ll++) ay[ll] += t * ax[ll];
     }
     l = ipvt[k];
     if (l != k) {
       ax = &a[kn + 1];
       ay = &a[l * n + 1];
-      for (ll = 0; ll < n; ll++) {
+      for (PetscInt ll = 0; ll < n; ll++) {
         tmp    = ax[ll];
         ax[ll] = ay[ll];
         ay[ll] = tmp;

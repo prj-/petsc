@@ -183,7 +183,6 @@ int main(int argc, char **args)
   PetscCall(PetscObjectSetName((PetscObject)x, "Solution vector"));
   PetscCall(VecDuplicate(b, &u));
   PetscCall(PetscObjectSetName((PetscObject)u, "True Solution vector"));
-  PetscCall(VecSet(x, 0.0));
 
   if (ckerror) { /* Set true solution */
     PetscCall(VecSet(u, 1.0));
@@ -253,14 +252,14 @@ int main(int argc, char **args)
     PetscCall(PetscOptionsGetBool(NULL, NULL, "-diagonal_scale", &diagonalscale, NULL));
     if (diagonalscale) {
       PC       pc;
-      PetscInt j, start, end, n;
+      PetscInt start, end, n;
       Vec      scale;
 
       PetscCall(KSPGetPC(ksp, &pc));
       PetscCall(VecGetSize(x, &n));
       PetscCall(VecDuplicate(x, &scale));
       PetscCall(VecGetOwnershipRange(scale, &start, &end));
-      for (j = start; j < end; j++) PetscCall(VecSetValue(scale, j, ((PetscReal)(j + 1)) / ((PetscReal)n), INSERT_VALUES));
+      for (PetscInt j = start; j < end; j++) PetscCall(VecSetValue(scale, j, ((PetscReal)(j + 1)) / ((PetscReal)n), INSERT_VALUES));
       PetscCall(VecAssemblyBegin(scale));
       PetscCall(VecAssemblyEnd(scale));
       PetscCall(PCSetDiagonalScale(pc, scale));

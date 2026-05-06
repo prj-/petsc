@@ -687,7 +687,6 @@ PetscErrorCode FormIFunction(TS ts, PetscReal t, Vec X, Vec Xdot, Vec F, Userctx
         }
       } else if (key == 4) {
         if (!ghostvtex) {
-          PetscInt     k;
           PetscInt     ld_nsegsp;
           PetscInt     ld_nsegsq;
           PetscScalar *ld_alphap;
@@ -711,8 +710,8 @@ PetscErrorCode FormIFunction(TS ts, PetscReal t, Vec X, Vec Xdot, Vec F, Userctx
           Vm2 = Vm * Vm;
           Vm0 = PetscSqrtScalar(Vr0 * Vr0 + Vi0 * Vi0);
           PD = QD = 0.0;
-          for (k = 0; k < ld_nsegsp; k++) PD += ld_alphap[k] * PD0 * PetscPowScalar(Vm / Vm0, ld_betap[k]);
-          for (k = 0; k < ld_nsegsq; k++) QD += ld_alphaq[k] * QD0 * PetscPowScalar(Vm / Vm0, ld_betaq[k]);
+          for (PetscInt k = 0; k < ld_nsegsp; k++) PD += ld_alphap[k] * PD0 * PetscPowScalar(Vm / Vm0, ld_betap[k]);
+          for (PetscInt k = 0; k < ld_nsegsq; k++) QD += ld_alphaq[k] * QD0 * PetscPowScalar(Vm / Vm0, ld_betaq[k]);
 
           /* Load currents */
           IDr = (PD * Vr + QD * Vi) / Vm2;
@@ -748,7 +747,7 @@ PetscErrorCode AlgFunction(SNES snes, Vec X, Vec F, PetscCtx ctx)
   DM                 networkdm;
   Vec                localX, localF;
   PetscInt           vfrom, vto, offsetfrom, offsetto;
-  PetscInt           v, vStart, vEnd, e;
+  PetscInt vStart, vEnd, e;
   PetscScalar       *farr;
   Userctx           *user = (Userctx *)ctx;
   const PetscScalar *xarr;
@@ -771,7 +770,7 @@ PetscErrorCode AlgFunction(SNES snes, Vec X, Vec F, PetscCtx ctx)
 
   PetscCall(DMNetworkGetVertexRange(networkdm, &vStart, &vEnd));
 
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     PetscInt    i, j, offsetbus, offsetgen, key, numComps;
     PetscScalar Yffr, Yffi, Vm, Vm2, Vm0, Vr0 = 0, Vi0 = 0, PD, QD;
     Bus        *bus;
@@ -902,7 +901,7 @@ PetscErrorCode AlgFunction(SNES snes, Vec X, Vec F, PetscCtx ctx)
         }
       } else if (key == 4) {
         if (!ghostvtex) {
-          PetscInt     k, ld_nsegsp, ld_nsegsq;
+          PetscInt ld_nsegsp, ld_nsegsq;
           PetscScalar *ld_alphap, *ld_betap, *ld_alphaq, *ld_betaq, PD0, QD0, IDr, IDi;
 
           load = (Load *)(component);
@@ -922,8 +921,8 @@ PetscErrorCode AlgFunction(SNES snes, Vec X, Vec F, PetscCtx ctx)
           Vm2 = Vm * Vm;
           Vm0 = PetscSqrtScalar(Vr0 * Vr0 + Vi0 * Vi0);
           PD = QD = 0.0;
-          for (k = 0; k < ld_nsegsp; k++) PD += ld_alphap[k] * PD0 * PetscPowScalar(Vm / Vm0, ld_betap[k]);
-          for (k = 0; k < ld_nsegsq; k++) QD += ld_alphaq[k] * QD0 * PetscPowScalar(Vm / Vm0, ld_betaq[k]);
+          for (PetscInt k = 0; k < ld_nsegsp; k++) PD += ld_alphap[k] * PD0 * PetscPowScalar(Vm / Vm0, ld_betap[k]);
+          for (PetscInt k = 0; k < ld_nsegsq; k++) QD += ld_alphaq[k] * QD0 * PetscPowScalar(Vm / Vm0, ld_betaq[k]);
 
           /* Load currents */
           IDr = (PD * Vr + QD * Vi) / Vm2;

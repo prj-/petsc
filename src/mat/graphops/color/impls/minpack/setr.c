@@ -8,7 +8,7 @@ PetscErrorCode MINPACKsetr(PetscInt *m, PetscInt *n, PetscInt *indrow, PetscInt 
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt jcol, jp, ir;
+  PetscInt ir;
 
   /*     Given a column-oriented definition of the sparsity pattern */
   /*     of an m by n matrix A, this subroutine determines a */
@@ -58,7 +58,7 @@ PetscErrorCode MINPACKsetr(PetscInt *m, PetscInt *n, PetscInt *indrow, PetscInt 
   for (ir = 1; ir <= i__1; ++ir) iwa[ir] = 0;
 
   i__1 = jpntr[*n + 1] - 1;
-  for (jp = 1; jp <= i__1; ++jp) ++iwa[indrow[jp]];
+  for (PetscInt jp = 1; jp <= i__1; ++jp) ++iwa[indrow[jp]];
 
   /*     Set pointers to the start of the rows in indcol. */
 
@@ -73,9 +73,9 @@ PetscErrorCode MINPACKsetr(PetscInt *m, PetscInt *n, PetscInt *indrow, PetscInt 
   /*     Fill indcol. */
 
   i__1 = *n;
-  for (jcol = 1; jcol <= i__1; ++jcol) {
+  for (PetscInt jcol = 1; jcol <= i__1; ++jcol) {
     i__2 = jpntr[jcol + 1] - 1;
-    for (jp = jpntr[jcol]; jp <= i__2; ++jp) {
+    for (PetscInt jp = jpntr[jcol]; jp <= i__2; ++jp) {
       ir              = indrow[jp];
       indcol[iwa[ir]] = jcol;
       ++iwa[ir];

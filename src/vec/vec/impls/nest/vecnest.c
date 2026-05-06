@@ -543,13 +543,13 @@ static PetscErrorCode VecGetArray_Nest(Vec X, PetscScalar **x)
   for (i = 0; i < bx->nb; i++) {
     Vec                subvec = bx->v[i];
     IS                 isy    = bx->is[i];
-    PetscInt           j, sm;
+    PetscInt           sm;
     const PetscInt    *ixy;
     const PetscScalar *y;
     PetscCall(VecGetLocalSize(subvec, &sm));
     PetscCall(VecGetArrayRead(subvec, &y));
     PetscCall(ISGetIndices(isy, &ixy));
-    for (j = 0; j < sm; j++) {
+    for (PetscInt j = 0; j < sm; j++) {
       PetscInt ix = ixy[j];
       PetscCheck(ix >= rstart && rend > ix, PETSC_COMM_SELF, PETSC_ERR_SUP, "No support for getting array from nonlocal subvec");
       (*x)[ix - rstart] = y[j];
@@ -571,13 +571,13 @@ static PetscErrorCode VecRestoreArray_Nest(Vec X, PetscScalar **x)
   for (i = 0; i < bx->nb; i++) {
     Vec             subvec = bx->v[i];
     IS              isy    = bx->is[i];
-    PetscInt        j, sm;
+    PetscInt        sm;
     const PetscInt *ixy;
     PetscScalar    *y;
     PetscCall(VecGetLocalSize(subvec, &sm));
     PetscCall(VecGetArray(subvec, &y));
     PetscCall(ISGetIndices(isy, &ixy));
-    for (j = 0; j < sm; j++) {
+    for (PetscInt j = 0; j < sm; j++) {
       PetscInt ix = ixy[j];
       PetscCheck(ix >= rstart && rend > ix, PETSC_COMM_SELF, PETSC_ERR_SUP, "No support for getting array from nonlocal subvec");
       y[j] = (*x)[ix - rstart];
@@ -1189,13 +1189,13 @@ static PetscErrorCode VecSetUp_Nest_Private(Vec V, PetscInt nb, Vec x[])
 static PetscErrorCode VecSetUp_NestIS_Private(Vec V, PetscInt nb, IS is[])
 {
   Vec_Nest *ctx = (Vec_Nest *)V->data;
-  PetscInt  i, offset, m, n, M, N;
+  PetscInt offset, m, n, M, N;
 
   PetscFunctionBegin;
   (void)nb;
   if (is) { /* Do some consistency checks and reference the is */
     offset = V->map->rstart;
-    for (i = 0; i < ctx->nb; i++) {
+    for (PetscInt i = 0; i < ctx->nb; i++) {
       PetscCall(ISGetSize(is[i], &M));
       PetscCall(VecGetSize(ctx->v[i], &N));
       PetscCheck(M == N, PetscObjectComm((PetscObject)V), PETSC_ERR_ARG_INCOMP, "In slot %" PetscInt_FMT ", IS of size %" PetscInt_FMT " is not compatible with Vec of size %" PetscInt_FMT, i, M, N);
@@ -1208,7 +1208,7 @@ static PetscErrorCode VecSetUp_NestIS_Private(Vec V, PetscInt nb, IS is[])
     }
   } else { /* Create a contiguous ISStride for each entry */
     offset = V->map->rstart;
-    for (i = 0; i < ctx->nb; i++) {
+    for (PetscInt i = 0; i < ctx->nb; i++) {
       PetscInt bs;
       PetscCall(VecGetLocalSize(ctx->v[i], &n));
       PetscCall(VecGetBlockSize(ctx->v[i], &bs));

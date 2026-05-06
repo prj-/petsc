@@ -8,7 +8,7 @@ PetscErrorCode MINPACKslo(PetscInt *n, const PetscInt *indrow, const PetscInt *j
   PetscInt i__1, i__2, i__3, i__4;
 
   /* Local variables */
-  PetscInt jcol, ic, ip, jp, ir, mindeg, numdeg, numord;
+  PetscInt jcol, ic, ir, mindeg, numdeg, numord;
 
   /*     Given the sparsity pattern of an m by n matrix A, this */
   /*     subroutine determines the smallest-last ordering of the */
@@ -73,7 +73,7 @@ PetscErrorCode MINPACKslo(PetscInt *n, const PetscInt *indrow, const PetscInt *j
   /* Function Body */
   mindeg = *n;
   i__1   = *n;
-  for (jp = 1; jp <= i__1; ++jp) {
+  for (PetscInt jp = 1; jp <= i__1; ++jp) {
     iwa1[jp - 1] = 0;
     iwa4[jp]     = *n;
     list[jp]     = ndeg[jp];
@@ -107,7 +107,7 @@ PetscErrorCode MINPACKslo(PetscInt *n, const PetscInt *indrow, const PetscInt *j
   /*     is the smallest-last order of column jcol. */
 
   i__1 = *n;
-  for (jp = 1; jp <= i__1; ++jp) {
+  for (PetscInt jp = 1; jp <= i__1; ++jp) {
     numdeg   = ndeg[jp];
     iwa2[jp] = 0;
     iwa3[jp] = iwa1[numdeg];
@@ -154,14 +154,14 @@ L50:
   /*        to non-zeroes in the matrix. */
 
   i__1 = jpntr[jcol + 1] - 1;
-  for (jp = jpntr[jcol]; jp <= i__1; ++jp) {
+  for (PetscInt jp = jpntr[jcol]; jp <= i__1; ++jp) {
     ir = indrow[jp];
 
     /*           For each row ir, determine all positions (ir,ic) */
     /*           which correspond to non-zeroes in the matrix. */
 
     i__2 = ipntr[ir + 1] - 1;
-    for (ip = ipntr[ir]; ip <= i__2; ++ip) {
+    for (PetscInt ip = ipntr[ir]; ip <= i__2; ++ip) {
       ic = indcol[ip];
 
       /*              Array iwa4 marks columns which are adjacent to */
@@ -207,6 +207,6 @@ L80:
   for (jcol = 1; jcol <= i__1; ++jcol) iwa2[list[jcol]] = jcol;
 
   i__1 = *n;
-  for (jp = 1; jp <= i__1; ++jp) list[jp] = iwa2[jp];
+  for (PetscInt jp = 1; jp <= i__1; ++jp) list[jp] = iwa2[jp];
   PetscFunctionReturn(PETSC_SUCCESS);
 }

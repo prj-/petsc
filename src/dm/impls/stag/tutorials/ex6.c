@@ -58,12 +58,11 @@ static PetscErrorCode UpdateStress(const Ctx *, Vec, Vec, Vec);
 
 int main(int argc, char *argv[])
 {
-  Ctx      ctx;
-  Vec      velocity, stress;
-  PetscInt timestep;
+  Ctx ctx;
+  Vec velocity, stress;
 
-  /* Initialize PETSc */
   PetscFunctionBeginUser;
+  /* Initialize PETSc */
   PetscCall(PetscInitialize(&argc, &argv, 0, help));
 
   /* Populate application context */
@@ -188,8 +187,6 @@ int main(int argc, char *argv[])
   PetscCall(DMCreateGlobalVector(ctx.dm_stress, &stress));
 
   /* Initial State */
-  PetscCall(VecSet(velocity, 0.0));
-  PetscCall(VecSet(stress, 0.0));
   PetscCall(ForceStress(&ctx, stress, 0.0));
   if (ctx.dump_output) {
     PetscCall(DumpVelocity(&ctx, velocity, 0));
@@ -197,7 +194,7 @@ int main(int argc, char *argv[])
   }
 
   /* Time Loop */
-  for (timestep = 1; timestep <= ctx.timesteps; ++timestep) {
+  for (PetscInt timestep = 1; timestep <= ctx.timesteps; ++timestep) {
     const PetscReal t = timestep * ctx.dt;
 
     PetscCall(UpdateVelocity(&ctx, velocity, stress, ctx.buoyancy));
@@ -824,7 +821,7 @@ static PetscErrorCode DumpVelocity(const Ctx *ctx, Vec velocity, PetscInt timest
   DM       daVelAvg;
   Vec      vecVelAvg;
   Vec      velocity_local;
-  PetscInt ex, ey, ez, startx, starty, startz, nx, ny, nz;
+  PetscInt startx, starty, startz, nx, ny, nz;
 
   PetscFunctionBeginUser;
   if (ctx->dim == 2) {
@@ -839,8 +836,8 @@ static PetscErrorCode DumpVelocity(const Ctx *ctx, Vec velocity, PetscInt timest
   PetscCall(DMGlobalToLocal(ctx->dm_velocity, velocity, INSERT_VALUES, velocity_local));
   PetscCall(DMStagGetCorners(dmVelAvg, &startx, &starty, &startz, &nx, &ny, &nz, NULL, NULL, NULL));
   if (ctx->dim == 2) {
-    for (ey = starty; ey < starty + ny; ++ey) {
-      for (ex = startx; ex < startx + nx; ++ex) {
+    for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+      for (PetscInt ex = startx; ex < startx + nx; ++ex) {
         DMStagStencil from[4], to[2];
         PetscScalar   valFrom[4], valTo[2];
 
@@ -875,9 +872,9 @@ static PetscErrorCode DumpVelocity(const Ctx *ctx, Vec velocity, PetscInt timest
       }
     }
   } else if (ctx->dim == 3) {
-    for (ez = startz; ez < startz + nz; ++ez) {
-      for (ey = starty; ey < starty + ny; ++ey) {
-        for (ex = startx; ex < startx + nx; ++ex) {
+    for (PetscInt ez = startz; ez < startz + nz; ++ez) {
+      for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+        for (PetscInt ex = startx; ex < startx + nx; ++ex) {
           DMStagStencil from[6], to[3];
           PetscScalar   valFrom[6], valTo[3];
 

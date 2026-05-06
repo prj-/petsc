@@ -265,7 +265,7 @@ int main(int argc, char **argv)
   const PetscScalar  *ivals, *vcoords;
   PetscReal          *pcoords;
   PetscBool           pointsAllProcs = PETSC_TRUE;
-  PetscInt            dim, spaceDim, Nc, c, Np, p;
+  PetscInt dim, spaceDim, Nc, Np;
   PetscMPIInt         rank, size;
   PetscViewer         selfviewer;
 
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
   PetscCall(DMInterpolationAddPoints(interpolator, Np, pcoords));
   PetscCall(DMInterpolationSetUp(interpolator, dm, pointsAllProcs, PETSC_FALSE));
   /* Check locations */
-  for (c = 0; c < interpolator->n; ++c) PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "[%d]Point %" PetscInt_FMT " is in Cell %" PetscInt_FMT "\n", rank, c, interpolator->cells[c]));
+  for (PetscInt c = 0; c < interpolator->n; ++c) PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "[%d]Point %" PetscInt_FMT " is in Cell %" PetscInt_FMT "\n", rank, c, interpolator->cells[c]));
   PetscCall(PetscSynchronizedFlush(PETSC_COMM_WORLD, NULL));
   PetscCall(VecView(interpolator->coords, PETSC_VIEWER_STDOUT_WORLD));
   Nc = dim;
@@ -294,10 +294,10 @@ int main(int argc, char **argv)
   PetscCall(PetscCalloc2(Nc, &funcs, Nc, &vals));
   switch (ctx.funcType) {
   case CONSTANT:
-    for (c = 0; c < Nc; ++c) funcs[c] = constant;
+    for (PetscInt c = 0; c < Nc; ++c) funcs[c] = constant;
     break;
   case LINEAR:
-    for (c = 0; c < Nc; ++c) funcs[c] = linear;
+    for (PetscInt c = 0; c < Nc; ++c) funcs[c] = linear;
     break;
   default:
     SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "Invalid function type: %d", (int)ctx.funcType);
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
   PetscCall(VecCreateSeq(PETSC_COMM_SELF, interpolator->n * Nc, &fieldVals));
   PetscCall(DMInterpolationSetDof(interpolator, Nc));
   PetscCall(DMInterpolationEvaluate(interpolator, dm, lu, fieldVals));
-  for (p = 0; p < size; ++p) {
+  for (PetscInt p = 0; p < size; ++p) {
     if (p == rank) {
       PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%d]Field values\n", rank));
       PetscCall(VecView(fieldVals, PETSC_VIEWER_STDOUT_SELF));
@@ -323,8 +323,8 @@ int main(int argc, char **argv)
   }
   PetscCall(VecGetArrayRead(interpolator->coords, &vcoords));
   PetscCall(VecGetArrayRead(fieldVals, &ivals));
-  for (p = 0; p < interpolator->n; ++p) {
-    for (c = 0; c < Nc; ++c) {
+  for (PetscInt p = 0; p < interpolator->n; ++p) {
+    for (PetscInt c = 0; c < Nc; ++c) {
 #if defined(PETSC_USE_COMPLEX)
       PetscReal vcoordsReal[3];
 

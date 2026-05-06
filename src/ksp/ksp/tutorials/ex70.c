@@ -193,7 +193,7 @@ static void BForm_Grad(PetscScalar Ke[], PetscScalar coords[])
   PetscScalar gp_xi[GAUSS_POINTS][NSD], gp_weight[GAUSS_POINTS];
   PetscScalar Ni_p[NODES_PER_EL], GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
-  PetscInt    p, i, j, di, ngp;
+  PetscInt p, i, j, ngp;
 
   /* define quadrature rule */
   CreateGaussQuadrature(&ngp, gp_xi, gp_weight);
@@ -206,7 +206,7 @@ static void BForm_Grad(PetscScalar Ke[], PetscScalar coords[])
     fac = gp_weight[p] * J_p;
 
     for (i = 0; i < NODES_PER_EL; i++) { /* u nodes */
-      for (di = 0; di < NSD; di++) {     /* u dofs */
+      for (PetscInt di = 0; di < NSD; di++) {     /* u dofs */
         for (j = 0; j < 4; j++) {        /* p nodes, p dofs = 1 (ie no loop) */
           PetscInt IJ;
           IJ = map_wIwDI_uJuDJ(i, di, NODES_PER_EL, 2, j, 0, NODES_PER_EL, 1);
@@ -464,7 +464,7 @@ static PetscErrorCode AssembleStokes_RHS(Vec F, DM stokes_da, DM quadrature)
   const PetscScalar *_coords;
   PetscInt           u_eqn[NODES_PER_EL * U_DOFS]; /* 2 degrees of freedom */
   PetscInt           p_eqn[NODES_PER_EL * P_DOFS]; /* 1 degrees of freedom */
-  PetscInt           nel, npe, eidx, i;
+  PetscInt nel, npe, i;
   const PetscInt    *element_list;
   PetscScalar        Fe[NODES_PER_EL * U_DOFS];
   PetscScalar        He[NODES_PER_EL * P_DOFS];
@@ -489,7 +489,7 @@ static PetscErrorCode AssembleStokes_RHS(Vec F, DM stokes_da, DM quadrature)
   PetscCall(VecGetArray(local_F, &LA_F));
 
   PetscCall(DMDAGetElements(stokes_da, &nel, &npe, &element_list));
-  for (eidx = 0; eidx < nel; eidx++) {
+  for (PetscInt eidx = 0; eidx < nel; eidx++) {
     const PetscInt *element = &element_list[npe * eidx];
 
     /* get coords for the element */
@@ -523,7 +523,7 @@ static PetscErrorCode AssembleStokes_RHS(Vec F, DM stokes_da, DM quadrature)
 PetscErrorCode DMSwarmPICInsertPointsCellwise(DM dm, DM dmc, PetscInt e, PetscInt npoints, PetscReal xi[], PetscBool proximity_initialization)
 {
   DMSwarmCellDM      celldm;
-  PetscInt           dim, nel, npe, q, k, d, ncurr, Nfc;
+  PetscInt dim, nel, npe, q, k, ncurr, Nfc;
   const PetscInt    *element_list;
   Vec                coor;
   const PetscScalar *_coor;
@@ -574,12 +574,12 @@ PetscErrorCode DMSwarmPICInsertPointsCellwise(DM dm, DM dmc, PetscInt e, PetscIn
     const PetscInt *element = &element_list[npe * e];
 
     for (k = 0; k < npe; k++) {
-      for (d = 0; d < dim; d++) elcoor[dim * k + d] = PetscRealPart(_coor[dim * element[k] + d]);
+      for (PetscInt d = 0; d < dim; d++) elcoor[dim * k + d] = PetscRealPart(_coor[dim * element[k] + d]);
     }
     for (q = 0; q < npoints; q++) {
-      for (d = 0; d < dim; d++) xp[dim * q + d] = 0.0;
+      for (PetscInt d = 0; d < dim; d++) xp[dim * q + d] = 0.0;
       for (k = 0; k < npe; k++) {
-        for (d = 0; d < dim; d++) xp[dim * q + d] += basis[q][k] * elcoor[dim * k + d];
+        for (PetscInt d = 0; d < dim; d++) xp[dim * q + d] += basis[q][k] * elcoor[dim * k + d];
       }
     }
   }
@@ -612,7 +612,7 @@ PetscErrorCode DMSwarmPICInsertPointsCellwise(DM dm, DM dmc, PetscInt e, PetscIn
       for (qn = 0; qn < npoints_e; qn++) {
         coor_qn = &swarm_coor[dim * plist_e[qn]];
         sep     = 0.0;
-        for (d = 0; d < dim; d++) sep += (coor_q[d] - coor_qn[d]) * (coor_q[d] - coor_qn[d]);
+        for (PetscInt d = 0; d < dim; d++) sep += (coor_q[d] - coor_qn[d]) * (coor_q[d] - coor_qn[d]);
         if (sep < min_sep) {
           nearest_neighbour = plist_e[qn];
           min_sep           = sep;
@@ -630,7 +630,7 @@ PetscErrorCode DMSwarmPICInsertPointsCellwise(DM dm, DM dmc, PetscInt e, PetscIn
     PetscCall(DMSwarmGetField(dm, cellid, NULL, NULL, (void **)&swarm_cellid));
     for (q = 0; q < npoints; q++) {
       /* set the coordinates */
-      for (d = 0; d < dim; d++) swarm_coor[dim * (ncurr + q) + d] = xp[dim * q + d];
+      for (PetscInt d = 0; d < dim; d++) swarm_coor[dim * (ncurr + q) + d] = xp[dim * q + d];
       /* set the cell index */
       swarm_cellid[ncurr + q] = e;
     }
@@ -644,7 +644,7 @@ PetscErrorCode DMSwarmPICInsertPointsCellwise(DM dm, DM dmc, PetscInt e, PetscIn
     PetscCall(DMSwarmGetField(dm, cellid, NULL, NULL, (void **)&swarm_cellid));
     for (q = 0; q < npoints; q++) {
       /* set the coordinates */
-      for (d = 0; d < dim; d++) swarm_coor[dim * (ncurr + q) + d] = xp[dim * q + d];
+      for (PetscInt d = 0; d < dim; d++) swarm_coor[dim * (ncurr + q) + d] = xp[dim * q + d];
       /* set the cell index */
       swarm_cellid[ncurr + q] = e;
     }
@@ -793,7 +793,6 @@ PetscErrorCode MaterialPoint_Interpolate(DM dm, Vec eta_v, Vec rho_v, DM dm_quad
   PetscInt        nqp, npe, nel;
   PetscScalar     qp_xi[GAUSS_POINTS][NSD];
   PetscScalar     qp_weight[GAUSS_POINTS];
-  PetscInt        q, k, e;
   PetscScalar     Ni[GAUSS_POINTS][NODES_PER_EL];
   const PetscInt *element_list;
   PetscReal      *q_eta, *q_rhs;
@@ -801,7 +800,7 @@ PetscErrorCode MaterialPoint_Interpolate(DM dm, Vec eta_v, Vec rho_v, DM dm_quad
   PetscFunctionBeginUser;
   /* define quadrature rule */
   CreateGaussQuadrature(&nqp, qp_xi, qp_weight);
-  for (q = 0; q < nqp; q++) EvaluateBasis_Q1(qp_xi[q], Ni[q]);
+  for (PetscInt q = 0; q < nqp; q++) EvaluateBasis_Q1(qp_xi[q], Ni[q]);
 
   PetscCall(DMGetLocalVector(dm, &eta_l));
   PetscCall(DMGetLocalVector(dm, &rho_l));
@@ -818,21 +817,21 @@ PetscErrorCode MaterialPoint_Interpolate(DM dm, Vec eta_v, Vec rho_v, DM dm_quad
   PetscCall(DMSwarmGetField(dm_quadrature, "rho_q", NULL, NULL, (void **)&q_rhs));
 
   PetscCall(DMDAGetElements(dm, &nel, &npe, &element_list));
-  for (e = 0; e < nel; e++) {
+  for (PetscInt e = 0; e < nel; e++) {
     PetscScalar     eta_field_e[NODES_PER_EL];
     PetscScalar     rho_field_e[NODES_PER_EL];
     const PetscInt *element = &element_list[4 * e];
 
-    for (k = 0; k < NODES_PER_EL; k++) {
+    for (PetscInt k = 0; k < NODES_PER_EL; k++) {
       eta_field_e[k] = _eta_l[element[k]];
       rho_field_e[k] = _rho_l[element[k]];
     }
 
-    for (q = 0; q < nqp; q++) {
+    for (PetscInt q = 0; q < nqp; q++) {
       PetscScalar eta_q, rho_q;
 
       eta_q = rho_q = 0.0;
-      for (k = 0; k < NODES_PER_EL; k++) {
+      for (PetscInt k = 0; k < NODES_PER_EL; k++) {
         eta_q += Ni[q][k] * eta_field_e[k];
         rho_q += Ni[q][k] * rho_field_e[k];
       }
@@ -867,7 +866,7 @@ static PetscErrorCode SolveTimeDepStokes(PetscInt mx, PetscInt my)
   DM              dms_quadrature, dms_mpoint;
   PetscInt        nel, npe, npoints;
   const PetscInt *element_list;
-  PetscInt        tk, nt, dump_freq;
+  PetscInt nt, dump_freq;
   PetscReal       dt, dt_max = 0.0;
   PetscReal       vx[2], vy[2], max_v = 0.0, max_v_step, dh;
   const char     *fieldnames[] = {"eta", "rho"};
@@ -1008,7 +1007,6 @@ static PetscErrorCode SolveTimeDepStokes(PetscInt mx, PetscInt my)
   PetscCheck(randomize_fac <= 1.0, PETSC_COMM_WORLD, PETSC_ERR_USER, "The value of -randomize_fac should be <= 1.0");
   {
     PetscReal  *array_x, *array_e, *array_r;
-    PetscInt    p;
     PetscRandom r;
     PetscMPIInt rank;
 
@@ -1035,7 +1033,7 @@ static PetscErrorCode SolveTimeDepStokes(PetscInt mx, PetscInt my)
     PetscCall(DMSwarmGetField(dms_mpoint, "rho", NULL, NULL, (void **)&array_r));
 
     PetscCall(DMSwarmGetLocalSize(dms_mpoint, &npoints));
-    for (p = 0; p < npoints; p++) {
+    for (PetscInt p = 0; p < npoints; p++) {
       PetscReal x_p[2], rr[2];
 
       if (randomize_coords) {
@@ -1177,7 +1175,7 @@ static PetscErrorCode SolveTimeDepStokes(PetscInt mx, PetscInt my)
   nt = 10;
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-nt", &nt, NULL));
   time = 0.0;
-  for (tk = 1; tk <= nt; tk++) {
+  for (PetscInt tk = 1; tk <= nt; tk++) {
     PetscCall(PetscPrintf(PETSC_COMM_WORLD, ".... assemble\n"));
     PetscCall(AssembleStokes_A(A, dm_stokes, dms_quadrature));
     PetscCall(AssembleStokes_PC(B, dm_stokes, dms_quadrature));
@@ -1461,7 +1459,7 @@ static PetscErrorCode BCApplyZero_SOUTH(DM da, PetscInt d_idx, Mat A, Vec b)
 {
   DM                     cda;
   Vec                    coords;
-  PetscInt               si, sj, nx, ny, i, j;
+  PetscInt si, sj, nx, ny, j;
   PetscInt               M, N;
   DMDACoor2d           **_coords;
   const PetscInt        *g_idx;
@@ -1485,10 +1483,10 @@ static PetscErrorCode BCApplyZero_SOUTH(DM da, PetscInt d_idx, Mat A, Vec b)
   PetscCall(PetscMalloc1(nx, &bc_vals));
 
   /* init the entries to -1 so VecSetValues will ignore them */
-  for (i = 0; i < nx; i++) bc_global_ids[i] = -1;
+  for (PetscInt i = 0; i < nx; i++) bc_global_ids[i] = -1;
 
   j = 0;
-  for (i = 0; i < nx; i++) {
+  for (PetscInt i = 0; i < nx; i++) {
     PetscInt local_id;
 
     local_id = i + j * nx;

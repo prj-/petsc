@@ -101,7 +101,7 @@ int main(int argc, char **argv)
   PetscScalar tmp;
   PetscInt    prob_id = 0;
   PetscBool   flg, testall = PETSC_FALSE;
-  int         i, i0, imax;
+  int i0, imax;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     imax = (int)prob_id;
   }
 
-  for (i = i0; i <= imax; ++i) {
+  for (int i = i0; i <= imax; ++i) {
     PetscCall(PetscPrintf(PETSC_COMM_SELF, "%d\n", i));
     PetscCall(PetscMatlabEngineEvaluate(user.mengine, "np = %d; ProblemInitialize", i));
     PetscCall(PetscMatlabEngineGetArray(user.mengine, 1, 1, &tmp, "n"));

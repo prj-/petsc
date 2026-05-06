@@ -19,19 +19,17 @@ CreateStarGraphEdgeList - Create a k-Star Graph Edgelist on current processor
 */
 PetscErrorCode CreateStarGraphEdgeList(PetscInt k, PetscBool directin, PetscInt *ne, PetscInt *edgelist[])
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   *ne = k;
   PetscCall(PetscCalloc1(2 * k, edgelist));
 
   if (directin) {
-    for (i = 0; i < k; i++) {
+    for (PetscInt i = 0; i < k; i++) {
       (*edgelist)[2 * i]     = i + 1;
       (*edgelist)[2 * i + 1] = 0;
     }
   } else {
-    for (i = 0; i < k; i++) {
+    for (PetscInt i = 0; i < k; i++) {
       (*edgelist)[2 * i]     = 0;
       (*edgelist)[2 * i + 1] = i + 1;
     }
@@ -92,7 +90,7 @@ PetscErrorCode CreateSimpleStarGraph(MPI_Comm comm, PetscInt numdofvert, PetscIn
 int main(int argc, char **argv)
 {
   DM           dm, dmclone, plex;
-  PetscInt     e, eStart, eEnd, ndofs, ndofsprev;
+  PetscInt eStart, eEnd, ndofs, ndofsprev;
   PetscInt    *compprev, *comp, compkey;
   PetscInt     dofv = 1, dofe = 1, ne = 1;
   PetscSection sec;
@@ -120,7 +118,7 @@ int main(int argc, char **argv)
   PetscCall(DMNetworkRegisterComponent(dmclone, "unusedclone", sizeof(PetscInt), &compkey));
   PetscCall(DMNetworkGetEdgeRange(dmclone, &eStart, &eEnd));
   PetscCall(PetscMalloc1(eEnd - eStart, &comp));
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     comp[e - eStart] = e;
     PetscCall(DMNetworkAddComponent(dmclone, e, compkey, &comp[e - eStart], 2));
   }

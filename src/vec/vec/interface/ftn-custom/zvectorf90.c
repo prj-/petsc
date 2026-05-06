@@ -115,11 +115,9 @@ PETSC_EXTERN void vecduplicatevecs_(Vec *v, int *m, F90Array1d *ptr, int *ierr P
 PETSC_EXTERN void vecdestroyvecs_(int *m, F90Array1d *ptr, int *ierr PETSC_F90_2PTR_PROTO(ptrd))
 {
   Vec *vecs;
-  int  i;
-
   *ierr = F90Array1dAccess(ptr, MPIU_FORTRANADDR, (void **)&vecs PETSC_F90_2PTR_PARAM(ptrd));
   if (*ierr) return;
-  for (i = 0; i < *m; i++) {
+  for (int i = 0; i < *m; i++) {
     PETSC_FORTRAN_OBJECT_F_DESTROYED_TO_C_NULL(&vecs[i]);
     *ierr = VecDestroy(&vecs[i]);
     if (*ierr) return;

@@ -667,7 +667,7 @@ static void FormGradientOperatorQ13D(PetscScalar Ke[], PetscScalar coords[])
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][NSD];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, di;
+  PetscInt p, i, j;
   PetscScalar Ni_p[NODES_PER_EL];
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
@@ -683,7 +683,7 @@ static void FormGradientOperatorQ13D(PetscScalar Ke[], PetscScalar coords[])
     fac = gp_weight[p] * J_p;
 
     for (i = 0; i < NODES_PER_EL; i++) {     /* u nodes */
-      for (di = 0; di < NSD; di++) {         /* u dofs */
+      for (PetscInt di = 0; di < NSD; di++) {         /* u dofs */
         for (j = 0; j < NODES_PER_EL; j++) { /* p nodes, p dofs = 1 (ie no loop) */
           PetscInt IJ;
           IJ = ASS_MAP_wIwDI_uJuDJ(i, di, NODES_PER_EL, 3, j, 0, NODES_PER_EL, 1);
@@ -825,7 +825,7 @@ static void FormMomentumRhsQ13D(PetscScalar Fe[], PetscScalar coords[], PetscSca
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][NSD];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i;
+  PetscInt    i;
   PetscScalar Ni_p[NODES_PER_EL];
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
@@ -834,7 +834,7 @@ static void FormMomentumRhsQ13D(PetscScalar Fe[], PetscScalar coords[], PetscSca
   ConstructGaussQuadrature3D(&ngp, gp_xi, gp_weight);
 
   /* evaluate integral */
-  for (p = 0; p < ngp; p++) {
+  for (PetscInt p = 0; p < ngp; p++) {
     ShapeFunctionQ13D_Evaluate(gp_xi[p], Ni_p);
     ShapeFunctionQ13D_Evaluate_dxi(gp_xi[p], GNi_p);
     ShapeFunctionQ13D_Evaluate_dx(GNi_p, GNx_p, coords, &J_p);
@@ -853,7 +853,7 @@ static void FormContinuityRhsQ13D(PetscScalar Fe[], PetscScalar coords[], PetscS
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][NSD];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i;
+  PetscInt    i;
   PetscScalar Ni_p[NODES_PER_EL];
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
@@ -862,7 +862,7 @@ static void FormContinuityRhsQ13D(PetscScalar Fe[], PetscScalar coords[], PetscS
   ConstructGaussQuadrature3D(&ngp, gp_xi, gp_weight);
 
   /* evaluate integral */
-  for (p = 0; p < ngp; p++) {
+  for (PetscInt p = 0; p < ngp; p++) {
     ShapeFunctionQ13D_Evaluate(gp_xi[p], Ni_p);
     ShapeFunctionQ13D_Evaluate_dxi(gp_xi[p], GNi_p);
     ShapeFunctionQ13D_Evaluate_dx(GNi_p, GNx_p, coords, &J_p);
@@ -1274,7 +1274,7 @@ static PetscErrorCode DMDAIntegrateErrors3D(DM stokes_da, Vec X, Vec X_analytic)
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][NSD];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i;
+  PetscInt    i;
   PetscScalar J_p, fac;
   PetscScalar h, p_e_L2, u_e_L2, u_e_H1, p_L2, u_L2, u_H1, tp_L2, tu_L2, tu_H1;
   PetscScalar tint_p_ms, tint_p, int_p_ms, int_p;
@@ -1321,7 +1321,7 @@ static PetscErrorCode DMDAIntegrateErrors3D(DM stokes_da, Vec X, Vec X_analytic)
         PetscCall(StokesDAGetNodalFields3D(stokes_analytic, ei, ej, ek, stokes_analytic_e));
 
         /* evaluate integral */
-        for (p = 0; p < ngp; p++) {
+        for (PetscInt p = 0; p < ngp; p++) {
           ShapeFunctionQ13D_Evaluate(gp_xi[p], Ni_p);
           ShapeFunctionQ13D_Evaluate_dxi(gp_xi[p], GNi_p);
           ShapeFunctionQ13D_Evaluate_dx(GNi_p, GNx_p, el_coords, &J_p);
@@ -1375,7 +1375,7 @@ static PetscErrorCode DMDAIntegrateErrors3D(DM stokes_da, Vec X, Vec X_analytic)
         p_e_L2 = 0.0;
         u_e_L2 = 0.0;
         u_e_H1 = 0.0;
-        for (p = 0; p < ngp; p++) {
+        for (PetscInt p = 0; p < ngp; p++) {
           ShapeFunctionQ13D_Evaluate(gp_xi[p], Ni_p);
           ShapeFunctionQ13D_Evaluate_dxi(gp_xi[p], GNi_p);
           ShapeFunctionQ13D_Evaluate_dx(GNi_p, GNx_p, el_coords, &J_p);
@@ -1544,7 +1544,7 @@ PetscErrorCode DAViewVTK_write_PieceExtend(FILE *vtk_fp, PetscInt indent_level, 
   const PetscInt *lx, *ly, *lz;
   PetscInt        M, N, P, pM, pN, pP, sum, *olx, *oly, *olz;
   PetscInt       *osx, *osy, *osz, *oex, *oey, *oez;
-  PetscInt        i, j, k, II, stencil;
+  PetscInt i, k, stencil;
 
   PetscFunctionBeginUser;
   /* create file name */
@@ -1605,12 +1605,12 @@ PetscErrorCode DAViewVTK_write_PieceExtend(FILE *vtk_fp, PetscInt indent_level, 
   }
 
   for (k = 0; k < pP; k++) {
-    for (j = 0; j < pN; j++) {
+    for (PetscInt j = 0; j < pN; j++) {
       for (i = 0; i < pM; i++) {
         char     name[PETSC_MAX_PATH_LEN];
         PetscInt procid = i + j * pM + k * pM * pN; /* convert proc(i,j,k) to pid */
         PetscCall(PetscSNPrintf(name, sizeof(name), "subdomain-%s-p%1.4" PetscInt_FMT ".vts", local_file_prefix, procid));
-        for (II = 0; II < indent_level; II++) PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "  "));
+        for (PetscInt II = 0; II < indent_level; II++) PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "  "));
 
         PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "<Piece Extent=\"%" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT "\"      Source=\"%s\"/>\n", osx[i], oex[i] - 1, osy[j], oey[j] - 1, osz[k], oez[k] - 1, name));
       }
@@ -1636,7 +1636,7 @@ PetscErrorCode DAView_3DVTK_PStructuredGrid(DM da, const char file_prefix[], con
   FILE       *vtk_fp     = NULL;
   const char *byte_order = PetscBinaryBigEndian() ? "BigEndian" : "LittleEndian";
   PetscInt    M, N, P, si, sj, sk, nx, ny, nz;
-  PetscInt    i, dofs;
+  PetscInt    dofs;
 
   PetscFunctionBeginUser;
   /* only rank-0 generates this file */
@@ -1670,7 +1670,7 @@ PetscErrorCode DAView_3DVTK_PStructuredGrid(DM da, const char file_prefix[], con
   PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "    </PPoints>\n"));
 
   PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "    <PPointData>\n"));
-  for (i = 0; i < dofs; i++) {
+  for (PetscInt i = 0; i < dofs; i++) {
     const char *fieldname;
     PetscCall(DMDAGetFieldName(da, i, &fieldname));
     PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "      <PDataArray type=\"Float64\" Name=\"%s\" NumberOfComponents=\"1\"/>\n", fieldname));
@@ -1731,7 +1731,7 @@ PetscErrorCode KSPMonitorStokesBlocks(KSP ksp, PetscInt n, PetscReal rnorm, void
 
 static PetscErrorCode PCMGSetupViaCoarsen(PC pc, DM da_fine)
 {
-  PetscInt              nlevels, k;
+  PetscInt              nlevels;
   PETSC_UNUSED PetscInt finest;
   DM                   *da_list, *daclist;
   Mat                   R;
@@ -1741,16 +1741,16 @@ static PetscErrorCode PCMGSetupViaCoarsen(PC pc, DM da_fine)
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-levels", &nlevels, 0));
 
   PetscCall(PetscMalloc1(nlevels, &da_list));
-  for (k = 0; k < nlevels; k++) da_list[k] = NULL;
+  for (PetscInt k = 0; k < nlevels; k++) da_list[k] = NULL;
   PetscCall(PetscMalloc1(nlevels, &daclist));
-  for (k = 0; k < nlevels; k++) daclist[k] = NULL;
+  for (PetscInt k = 0; k < nlevels; k++) daclist[k] = NULL;
 
   /* finest grid is nlevels - 1 */
   finest     = nlevels - 1;
   daclist[0] = da_fine;
   PetscCall(PetscObjectReference((PetscObject)da_fine));
   PetscCall(DMCoarsenHierarchy(da_fine, nlevels - 1, &daclist[1]));
-  for (k = 0; k < nlevels; k++) {
+  for (PetscInt k = 0; k < nlevels; k++) {
     da_list[k] = daclist[nlevels - 1 - k];
     PetscCall(DMDASetUniformCoordinates(da_list[k], 0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
   }
@@ -1759,14 +1759,14 @@ static PetscErrorCode PCMGSetupViaCoarsen(PC pc, DM da_fine)
   PetscCall(PCMGSetType(pc, PC_MG_MULTIPLICATIVE));
   PetscCall(PCMGSetGalerkin(pc, PC_MG_GALERKIN_PMAT));
 
-  for (k = 1; k < nlevels; k++) {
+  for (PetscInt k = 1; k < nlevels; k++) {
     PetscCall(DMCreateInterpolation(da_list[k - 1], da_list[k], &R, NULL));
     PetscCall(PCMGSetInterpolation(pc, k, R));
     PetscCall(MatDestroy(&R));
   }
 
   /* tidy up */
-  for (k = 0; k < nlevels; k++) PetscCall(DMDestroy(&da_list[k]));
+  for (PetscInt k = 0; k < nlevels; k++) PetscCall(DMDestroy(&da_list[k]));
   PetscCall(PetscFree(da_list));
   PetscCall(PetscFree(daclist));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -1785,7 +1785,7 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
   PetscInt       its;
   KSP            ksp_S;
   PetscInt       model_definition = 0;
-  PetscInt       ei, ej, ek, sex, sey, sez, Imx, Jmy, Kmz;
+  PetscInt sex, sey, sez, Imx, Jmy, Kmz;
   CellProperties cell_properties;
   PetscBool      write_output = PETSC_FALSE, resolve = PETSC_FALSE;
 
@@ -1818,9 +1818,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
   PetscCall(DMDAVecGetArray(vel_cda, vel_coords, &_vel_coords));
   PetscCall(DMDAGetElementsCorners(da_Stokes, &sex, &sey, &sez));
   PetscCall(DMDAGetElementsSizes(da_Stokes, &Imx, &Jmy, &Kmz));
-  for (ek = sez; ek < sez + Kmz; ek++) {
-    for (ej = sey; ej < sey + Jmy; ej++) {
-      for (ei = sex; ei < sex + Imx; ei++) {
+  for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+    for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+      for (PetscInt ei = sex; ei < sex + Imx; ei++) {
         /* get coords for the element */
         PetscInt                ngp;
         PetscScalar             gp_xi[GAUSS_POINTS][NSD], gp_weight[GAUSS_POINTS];
@@ -1834,7 +1834,6 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
         for (p = 0; p < GAUSS_POINTS; p++) {
           PetscScalar xi_p[NSD], Ni_p[NODES_PER_EL];
           PetscScalar gp_x, gp_y, gp_z;
-          PetscInt    n;
 
           xi_p[0] = gp_xi[p][0];
           xi_p[1] = gp_xi[p][1];
@@ -1842,7 +1841,7 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
           ShapeFunctionQ13D_Evaluate(xi_p, Ni_p);
 
           gp_x = gp_y = gp_z = 0.0;
-          for (n = 0; n < NODES_PER_EL; n++) {
+          for (PetscInt n = 0; n < NODES_PER_EL; n++) {
             gp_x = gp_x + Ni_p[n] * el_coords[NSD * n];
             gp_y = gp_y + Ni_p[n] * el_coords[NSD * n + 1];
             gp_z = gp_z + Ni_p[n] * el_coords[NSD * n + 2];
@@ -1859,9 +1858,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
 
   switch (model_definition) {
   case 0: /* isoviscous */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           GaussPointCoefficients *cell;
 
           PetscCall(CellPropertiesGetCell(cell_properties, ei, ej, ek, &cell));
@@ -1883,9 +1882,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 1: /* manufactured */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           PetscReal               eta, Fm[NSD], Fc, pos[NSD];
           GaussPointCoefficients *cell;
 
@@ -1913,9 +1912,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 2: /* solcx */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           GaussPointCoefficients *cell;
 
           PetscCall(CellPropertiesGetCell(cell_properties, ei, ej, ek, &cell));
@@ -1937,9 +1936,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 3: /* sinker */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           GaussPointCoefficients *cell;
 
           PetscCall(CellPropertiesGetCell(cell_properties, ei, ej, ek, &cell));
@@ -1965,9 +1964,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 4: /* subdomain jumps */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           PetscReal               opts_mag, opts_eta0;
           PetscInt                px, py, pz;
           PetscBool               jump;
@@ -2015,7 +2014,6 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
   /* assemble A11 */
   PetscCall(MatZeroEntries(A));
   PetscCall(MatZeroEntries(B));
-  PetscCall(VecZeroEntries(f));
 
   PetscCall(AssembleA_Stokes(A, da_Stokes, cell_properties));
   PetscCall(MatViewFromOptions(A, NULL, "-amat_view"));

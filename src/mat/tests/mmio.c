@@ -296,8 +296,6 @@ int mm_write_banner(FILE *f, MM_typecode matcode)
 int mm_write_mtx_crd(char fname[], int M, int N, int nz, int ia[], int ja[], double val[], MM_typecode matcode)
 {
   FILE *f;
-  int   i;
-
   if (strcmp(fname, "stdout") == 0) f = stdout;
   else if ((f = fopen(fname, "w")) == NULL) return MM_COULD_NOT_WRITE_FILE;
 
@@ -310,11 +308,11 @@ int mm_write_mtx_crd(char fname[], int M, int N, int nz, int ia[], int ja[], dou
 
   /* print values */
   if (mm_is_pattern(matcode))
-    for (i = 0; i < nz; i++) fprintf(f, "%d %d\n", ia[i], ja[i]);
+    for (int i = 0; i < nz; i++) fprintf(f, "%d %d\n", ia[i], ja[i]);
   else if (mm_is_real(matcode))
-    for (i = 0; i < nz; i++) fprintf(f, "%d %d %20.16g\n", ia[i], ja[i], val[i]);
+    for (int i = 0; i < nz; i++) fprintf(f, "%d %d %20.16g\n", ia[i], ja[i], val[i]);
   else if (mm_is_complex(matcode))
-    for (i = 0; i < nz; i++) fprintf(f, "%d %d %20.16g %20.16g\n", ia[i], ja[i], val[2 * i], val[2 * i + 1]);
+    for (int i = 0; i < nz; i++) fprintf(f, "%d %d %20.16g %20.16g\n", ia[i], ja[i], val[2 * i], val[2 * i + 1]);
   else {
     if (f != stdout) fclose(f);
     return MM_UNSUPPORTED_TYPE;

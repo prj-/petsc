@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   Mat      M, A, P, sA[2][2], sP[2][2];
   Vec      x, b;
   IS       f[2];
-  PetscInt i, j, rstart, rend;
+  PetscInt rstart, rend;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
   PetscCall(MatGetOwnershipRange(M, &rstart, &rend));
   PetscCall(ISCreateStride(PetscObjectComm((PetscObject)M), 7, rstart, 1, &f[0]));
   PetscCall(ISComplement(f[0], rstart, rend, &f[1]));
-  for (i = 0; i < 2; i++) {
-    for (j = 0; j < 2; j++) {
+  for (PetscInt i = 0; i < 2; i++) {
+    for (PetscInt j = 0; j < 2; j++) {
       PetscCall(MatCreateSubMatrix(M, f[i], f[j], MAT_INITIAL_MATRIX, &sA[i][j]));
       PetscCall(MatCreateSubMatrix(M, f[i], f[j], MAT_INITIAL_MATRIX, &sP[i][j]));
     }
@@ -77,9 +77,9 @@ int main(int argc, char *argv[])
   PetscCall(VecDestroy(&b));
   PetscCall(MatDestroy(&A));
   PetscCall(MatDestroy(&P));
-  for (i = 0; i < 2; i++) {
+  for (PetscInt i = 0; i < 2; i++) {
     PetscCall(ISDestroy(&f[i]));
-    for (j = 0; j < 2; j++) {
+    for (PetscInt j = 0; j < 2; j++) {
       PetscCall(MatDestroy(&sA[i][j]));
       PetscCall(MatDestroy(&sP[i][j]));
     }

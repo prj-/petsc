@@ -142,7 +142,7 @@ static PetscErrorCode MatGetDiagonal_Normal(Mat N, Vec v)
 {
   Mat_Normal        *Na;
   Mat                A;
-  PetscInt           i, j, rstart, rend, nnz;
+  PetscInt rstart, rend, nnz;
   const PetscInt    *cols;
   PetscScalar       *work, *values;
   const PetscScalar *mvalues;
@@ -153,9 +153,9 @@ static PetscErrorCode MatGetDiagonal_Normal(Mat N, Vec v)
   PetscCall(PetscMalloc1(A->cmap->N, &work));
   PetscCall(PetscArrayzero(work, A->cmap->N));
   PetscCall(MatGetOwnershipRange(A, &rstart, &rend));
-  for (i = rstart; i < rend; i++) {
+  for (PetscInt i = rstart; i < rend; i++) {
     PetscCall(MatGetRow(A, i, &nnz, &cols, &mvalues));
-    for (j = 0; j < nnz; j++) work[cols[j]] += mvalues[j] * mvalues[j];
+    for (PetscInt j = 0; j < nnz; j++) work[cols[j]] += mvalues[j] * mvalues[j];
     PetscCall(MatRestoreRow(A, i, &nnz, &cols, &mvalues));
   }
   PetscCallMPI(MPIU_Allreduce(MPI_IN_PLACE, work, A->cmap->N, MPIU_SCALAR, MPIU_SUM, PetscObjectComm((PetscObject)N)));

@@ -98,13 +98,12 @@ PetscErrorCode PetscSFGetGraphLayout(PetscSF sf, PetscLayout *layout, PetscInt *
   PetscCall(PetscSFGetGraph(sf, &nr, &nl, ilocal, &ir));
   PetscCall(PetscLayoutCreateFromSizes(PetscObjectComm((PetscObject)sf), nr, PETSC_DECIDE, 1, &lt));
   if (gremote) {
-    PetscInt        i;
     const PetscInt *range;
     PetscInt       *gr;
 
     PetscCall(PetscLayoutGetRanges(lt, &range));
     PetscCall(PetscMalloc1(nl, &gr));
-    for (i = 0; i < nl; i++) gr[i] = range[ir[i].rank] + ir[i].index;
+    for (PetscInt i = 0; i < nl; i++) gr[i] = range[ir[i].rank] + ir[i].index;
     *gremote = gr;
   }
   if (nleaves) *nleaves = nl;
@@ -484,11 +483,11 @@ PetscErrorCode PetscSFCreateSectionSF(PetscSF sf, PetscSection rootSection, Pets
 
     if ((localPoint >= lpStart) && (localPoint < lpEnd)) {
       PetscInt remoteOffset = remoteOffsets[localPoint - lpStart];
-      PetscInt loff, dof, d;
+      PetscInt loff, dof;
 
       PetscCall(PetscSectionGetOffset(leafSection, localPoint, &loff));
       PetscCall(PetscSectionGetDof(leafSection, localPoint, &dof));
-      for (d = 0; d < dof; ++d, ++ind) {
+      for (PetscInt d = 0; d < dof; ++d, ++ind) {
         localIndices[ind]        = loff + d;
         remoteIndices[ind].rank  = rank;
         remoteIndices[ind].index = remoteOffset + d;

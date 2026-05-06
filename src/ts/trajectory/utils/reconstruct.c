@@ -14,8 +14,8 @@ static inline void LagrangeBasisVals(PetscInt n, PetscReal t, const PetscReal T[
 
 static inline void LagrangeBasisDers(PetscInt n, PetscReal t, const PetscReal T[], PetscScalar dL[])
 {
-  PetscInt k, j, i;
-  for (k = 0; k < n; k++) {
+  PetscInt j, i;
+  for (PetscInt k = 0; k < n; k++) {
     for (dL[k] = 0, j = 0; j < n; j++) {
       if (j != k) {
         PetscReal L = 1 / (T[k] - T[j]);
@@ -51,7 +51,7 @@ PetscErrorCode TSTrajectoryReconstruct_Private(TSTrajectory tj, TS ts, PetscReal
   TSHistory        tsh = tj->tsh;
   const PetscReal *tshhist;
   const PetscInt  *tshhist_id;
-  PetscInt         id, cnt, i, tshn;
+  PetscInt id, cnt, tshn;
 
   PetscFunctionBegin;
   PetscCall(TSHistoryGetLocFromTime(tsh, t, &id));
@@ -65,7 +65,7 @@ PetscErrorCode TSTrajectoryReconstruct_Private(TSTrajectory tj, TS ts, PetscReal
   if (!tj->lag.T) {
     PetscInt o = tj->lag.order + 1;
     PetscCall(PetscMalloc5(o, &tj->lag.L, o, &tj->lag.T, o, &tj->lag.WW, 2 * o, &tj->lag.TT, o, &tj->lag.TW));
-    for (i = 0; i < o; i++) tj->lag.T[i] = PETSC_MAX_REAL;
+    for (PetscInt i = 0; i < o; i++) tj->lag.T[i] = PETSC_MAX_REAL;
     PetscCall(VecDuplicateVecs(U ? U : Udot, o, &tj->lag.W));
   }
   cnt = 0;

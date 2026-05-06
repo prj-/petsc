@@ -7,7 +7,7 @@ int main(int argc, char **argv)
   Mat         A, B;
   MatScalar   a[1], alpha;
   PetscMPIInt size, rank;
-  PetscInt    m, n, i, col, prid;
+  PetscInt m, n, col, prid;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   PetscCall(MatSetUp(A));
 
   a[0] = rank + 1;
-  for (i = 0; i < m - rank; i++) {
+  for (PetscInt i = 0; i < m - rank; i++) {
     col = i + rank;
     PetscCall(MatSetValues(A, 1, &i, 1, &col, a, INSERT_VALUES));
   }
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 
   /* Test MAT_REUSE_MATRIX */
   alpha = 0.1;
-  for (i = 0; i < 3; i++) {
+  for (PetscInt i = 0; i < 3; i++) {
     PetscCall(MatScale(A, alpha));
     PetscCall(MatCreateMPIAIJSumSeqAIJ(PETSC_COMM_WORLD, A, PETSC_DECIDE, PETSC_DECIDE, MAT_REUSE_MATRIX, &B));
   }

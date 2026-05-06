@@ -362,27 +362,23 @@ static void g2_bd_uu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt u
 {
   const PetscReal mu = PetscRealPart(constants[0]);
   const PetscInt  Nc = uOff[1] - uOff[0];
-  PetscInt        c, d, e;
+  PetscInt c, d;
 
   for (c = 0; c < Nc; ++c)
     for (d = 0; d < Nc; ++d)
-      for (e = 0; e < dim; ++e) g2[(c * Nc + d) * dim + e] = -mu * (n[e] * (c == d ? 1.0 : 0.0) + n[c] * (e == d ? 1.0 : 0.0));
+      for (PetscInt e = 0; e < dim; ++e) g2[(c * Nc + d) * dim + e] = -mu * (n[e] * (c == d ? 1.0 : 0.0) + n[c] * (e == d ? 1.0 : 0.0));
 }
 
 /* g0_bd_up[c*1+0] = n[c]  (velocity-pressure coupling: df0_u/dp) */
 static void g0_bd_up(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], const PetscReal n[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt c;
-
-  for (c = 0; c < dim; ++c) g0[c] = n[c];
+  for (PetscInt c = 0; c < dim; ++c) g0[c] = n[c];
 }
 
 /* g0_bd_pu[0*Nc+d] = n[d]  (pressure-velocity coupling: df0_p/du) */
 static void g0_bd_pu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], const PetscReal n[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt d;
-
-  for (d = 0; d < dim; ++d) g0[d] = n[d];
+  for (PetscInt d = 0; d < dim; ++d) g0[d] = n[d];
 }
 
 static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
@@ -494,7 +490,7 @@ static PetscErrorCode SetupEqn(DM dm, AppCtx *user)
     DMLabel         faceSetsLabel;
     IS              valueIS;
     const PetscInt *faceSetValues;
-    PetscInt        numValues, bd, i;
+    PetscInt numValues, bd;
 
     PetscCall(DMGetLabel(dm, "Face Sets", &faceSetsLabel));
     PetscCall(DMLabelGetNumValues(faceSetsLabel, &numValues));
@@ -504,7 +500,7 @@ static PetscErrorCode SetupEqn(DM dm, AppCtx *user)
     /* Velocity boundary: natural BC with Nitsche terms on all boundary faces */
     PetscCall(DMAddBoundary(dm, DM_BC_NATURAL, "wall", faceSetsLabel, numValues, faceSetValues, 0, 0, NULL, NULL, NULL, user, &bd));
     PetscCall(PetscDSGetBoundary(ds, bd, &wf, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL));
-    for (i = 0; i < numValues; ++i) {
+    for (PetscInt i = 0; i < numValues; ++i) {
       /* Velocity residual (field 0): f0 and f1 */
       PetscCall(PetscWeakFormSetIndexBdResidual(wf, faceSetsLabel, faceSetValues[i], 0, 0, 0, f0_bd_u, 0, f1_bd_u));
       /* Velocity-velocity Jacobian (field 0, field 0): g0 (penalty), g1 (consistency), g2 (symmetry) */
@@ -516,7 +512,7 @@ static PetscErrorCode SetupEqn(DM dm, AppCtx *user)
     /* Pressure boundary: natural BC for continuity equation correction */
     PetscCall(DMAddBoundary(dm, DM_BC_NATURAL, "wall_pres", faceSetsLabel, numValues, faceSetValues, 1, 0, NULL, NULL, NULL, user, &bd));
     PetscCall(PetscDSGetBoundary(ds, bd, &wf, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL));
-    for (i = 0; i < numValues; ++i) {
+    for (PetscInt i = 0; i < numValues; ++i) {
       /* Pressure residual (field 1): f0 */
       PetscCall(PetscWeakFormSetIndexBdResidual(wf, faceSetsLabel, faceSetValues[i], 1, 0, 0, f0_bd_p, 0, NULL));
       /* Pressure-velocity Jacobian (field 1, field 0): g0 */
@@ -555,14 +551,12 @@ static PetscErrorCode SetupEqn(DM dm, AppCtx *user)
 
 static PetscErrorCode zero(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, PetscCtx ctx)
 {
-  PetscInt c;
-  for (c = 0; c < Nc; ++c) u[c] = 0.0;
+  for (PetscInt c = 0; c < Nc; ++c) u[c] = 0.0;
   return PETSC_SUCCESS;
 }
 static PetscErrorCode one(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nc, PetscScalar *u, PetscCtx ctx)
 {
-  PetscInt c;
-  for (c = 0; c < Nc; ++c) u[c] = 1.0;
+  for (PetscInt c = 0; c < Nc; ++c) u[c] = 1.0;
   return PETSC_SUCCESS;
 }
 

@@ -29,7 +29,7 @@ static PetscErrorCode ComputePseudoGrad_OWLQN(Vec x, Vec gv, PetscReal lambda)
 {
   const PetscReal *xptr;
   PetscReal       *gptr;
-  PetscInt         low, high, low1, high1, i;
+  PetscInt low, high, low1, high1;
 
   PetscFunctionBegin;
   PetscCall(VecGetOwnershipRange(x, &low, &high));
@@ -37,7 +37,7 @@ static PetscErrorCode ComputePseudoGrad_OWLQN(Vec x, Vec gv, PetscReal lambda)
 
   PetscCall(VecGetArrayRead(x, &xptr));
   PetscCall(VecGetArray(gv, &gptr));
-  for (i = 0; i < high - low; i++) {
+  for (PetscInt i = 0; i < high - low; i++) {
     if (xptr[i] < 0.0) gptr[i] = gptr[i] - lambda;
     else if (xptr[i] > 0.0) gptr[i] = gptr[i] + lambda;
     else if (gptr[i] + lambda < 0.0) gptr[i] = gptr[i] + lambda;

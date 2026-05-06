@@ -30,7 +30,7 @@ static PetscErrorCode ComputeVolume(DM dm)
   PetscObject obj = (PetscObject)dm;
   DMLabel     bodyLabel, faceLabel, edgeLabel;
   double      surface = 0., volume = 0., vol;
-  PetscInt    dim, pStart, pEnd, p, pid;
+  PetscInt dim, pStart, pEnd, pid;
   const char *name;
 
   PetscFunctionBeginUser;
@@ -41,7 +41,7 @@ static PetscErrorCode ComputeVolume(DM dm)
   PetscCall(DMGetLabel(dm, "EGADS Edge ID", &edgeLabel));
 
   PetscCall(DMPlexGetHeightStratum(dm, 0, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscCall(DMLabelGetValue(dim == 2 ? faceLabel : bodyLabel, p, &pid));
     if (pid >= 0) {
       PetscCall(DMPlexComputeCellGeometryFVM(dm, p, &vol, NULL, NULL));
@@ -49,7 +49,7 @@ static PetscErrorCode ComputeVolume(DM dm)
     }
   }
   PetscCall(DMPlexGetHeightStratum(dm, 1, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscCall(DMLabelGetValue(dim == 2 ? edgeLabel : faceLabel, p, &pid));
     if (pid >= 0) {
       PetscCall(DMPlexComputeCellGeometryFVM(dm, p, &vol, NULL, NULL));

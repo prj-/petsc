@@ -18,7 +18,7 @@ int main(int argc, char **args)
   PetscViewer fd;                          /* viewer */
   char        file[1][PETSC_MAX_PATH_LEN]; /* input file name */
   PetscBool   flg;
-  PetscInt    M, N, i, its;
+  PetscInt M, N, its;
   PetscReal   norm;
   PetscScalar val = 1.0;
   PetscMPIInt size;
@@ -46,7 +46,7 @@ int main(int argc, char **args)
      to match the block size of the system), then create a new padded vector.
   */
   {
-    PetscInt     m, n, j, mvec, start, end, indx;
+    PetscInt m, n, mvec, start, end, indx;
     Vec          tmp;
     PetscScalar *bold;
 
@@ -59,7 +59,7 @@ int main(int argc, char **args)
     PetscCall(VecGetOwnershipRange(b, &start, &end));
     PetscCall(VecGetLocalSize(b, &mvec));
     PetscCall(VecGetArray(b, &bold));
-    for (j = 0; j < mvec; j++) {
+    for (PetscInt j = 0; j < mvec; j++) {
       indx = start + j;
       PetscCall(VecSetValues(tmp, 1, &indx, bold + j, INSERT_VALUES));
     }
@@ -71,7 +71,6 @@ int main(int argc, char **args)
   }
   PetscCall(VecDuplicate(b, &x));
   PetscCall(VecDuplicate(b, &u));
-  PetscCall(VecSet(x, 0.0));
 
   /* Create dense matrices B and X. Set B as an identity matrix */
   PetscCall(MatGetSize(A, &M, &N));
@@ -79,7 +78,7 @@ int main(int argc, char **args)
   PetscCall(MatSetSizes(B, M, N, M, N));
   PetscCall(MatSetType(B, MATSEQDENSE));
   PetscCall(MatSeqDenseSetPreallocation(B, NULL));
-  for (i = 0; i < M; i++) PetscCall(MatSetValues(B, 1, &i, 1, &i, &val, INSERT_VALUES));
+  for (PetscInt i = 0; i < M; i++) PetscCall(MatSetValues(B, 1, &i, 1, &i, &val, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(B, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(B, MAT_FINAL_ASSEMBLY));
 

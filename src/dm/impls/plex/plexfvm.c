@@ -60,7 +60,7 @@ PetscErrorCode DMPlexReconstructGradients_Internal(DM dm, PetscFV fvm, PetscInt 
   const PetscScalar *facegeom, *cellgeom, *x;
   PetscScalar       *gr;
   PetscReal         *cellPhi;
-  PetscInt           dim, face, cell, field, dof, cStart, cEnd, nFields;
+  PetscInt dim, cell, field, dof, cStart, cEnd, nFields;
 
   PetscFunctionBegin;
   PetscCall(DMGetDimension(dm, &dim));
@@ -79,13 +79,13 @@ PetscErrorCode DMPlexReconstructGradients_Internal(DM dm, PetscFV fvm, PetscInt 
   PetscCall(VecZeroEntries(grad));
   PetscCall(VecGetArray(grad, &gr));
   /* Reconstruct gradients */
-  for (face = fStart; face < fEnd; ++face) {
+  for (PetscInt face = fStart; face < fEnd; ++face) {
     const PetscInt  *cells;
     PetscFVFaceGeom *fg;
     PetscScalar     *cx[2];
     PetscScalar     *cgrad[2];
     PetscBool        boundary;
-    PetscInt         ghost, c, pd, d, numChildren, numCells;
+    PetscInt ghost, pd, d, numChildren, numCells;
 
     PetscCall(DMLabelGetValue(ghostLabel, face, &ghost));
     PetscCall(DMIsBoundaryPoint(dm, face, &boundary));
@@ -95,7 +95,7 @@ PetscErrorCode DMPlexReconstructGradients_Internal(DM dm, PetscFV fvm, PetscInt 
     PetscCheck(numCells == 2, PETSC_COMM_SELF, PETSC_ERR_PLIB, "facet %" PetscInt_FMT " has %" PetscInt_FMT " support points: expected 2", face, numCells);
     PetscCall(DMPlexGetSupport(dm, face, &cells));
     PetscCall(DMPlexPointLocalRead(dmFace, face, facegeom, &fg));
-    for (c = 0; c < 2; ++c) {
+    for (PetscInt c = 0; c < 2; ++c) {
       if (nFields > 1) PetscCall(DMPlexPointLocalFieldRead(dm, cells[c], field, x, &cx[c]));
       else PetscCall(DMPlexPointLocalRead(dm, cells[c], x, &cx[c]));
       PetscCall(DMPlexPointGlobalRef(dmGrad, cells[c], gr, &cgrad[c]));
@@ -118,7 +118,7 @@ PetscErrorCode DMPlexReconstructGradients_Internal(DM dm, PetscFV fvm, PetscInt 
     PetscScalar     *cx;
     PetscFVCellGeom *cg;
     PetscScalar     *cgrad;
-    PetscInt         coneSize, f, pd, d;
+    PetscInt coneSize, f, pd;
 
     PetscCall(DMPlexGetConeSize(dm, cell, &coneSize));
     PetscCall(DMPlexGetCone(dm, cell, &faces));
@@ -129,14 +129,14 @@ PetscErrorCode DMPlexReconstructGradients_Internal(DM dm, PetscFV fvm, PetscInt 
     if (!cgrad) continue; /* Unowned overlap cell, we do not compute */
     if (limType) {
       /* Limiter will be minimum value over all neighbors */
-      for (d = 0; d < dof; ++d) cellPhi[d] = PETSC_MAX_REAL;
+      for (PetscInt d = 0; d < dof; ++d) cellPhi[d] = PETSC_MAX_REAL;
       for (f = 0; f < coneSize; ++f) PetscCall(DMPlexApplyLimiter_Internal(dm, dmCell, lim, dim, dof, cell, nFields > 1 ? field : -1, faces[f], fStart, fEnd, cellPhi, x, cellgeom, cg, cx, cgrad));
     } else {
-      for (d = 0; d < dof; ++d) cellPhi[d] = 1.0;
+      for (PetscInt d = 0; d < dof; ++d) cellPhi[d] = 1.0;
     }
     /* Apply limiter to gradient */
     for (pd = 0; pd < dof; ++pd) /* Scalar limiter applied to each component separately */
-      for (d = 0; d < dim; ++d) cgrad[pd * dim + d] *= cellPhi[pd];
+      for (PetscInt d = 0; d < dim; ++d) cgrad[pd * dim + d] *= cellPhi[pd];
   }
   PetscCall(DMRestoreWorkArray(dm, dof, MPIU_REAL, &cellPhi));
   PetscCall(VecRestoreArrayRead(faceGeometry, &facegeom));
@@ -163,7 +163,7 @@ PetscErrorCode DMPlexReconstructGradients_Internal(DM dm, PetscFV fvm, PetscInt 
 PetscErrorCode DMPlexReconstructGradientsFVM(DM dm, Vec locX, Vec grad)
 {
   PetscDS          prob;
-  PetscInt         Nf, f, fStart, fEnd;
+  PetscInt Nf, fStart, fEnd;
   PetscBool        useFVM = PETSC_FALSE;
   PetscFV          fvm    = NULL;
   Vec              faceGeometryFVM, cellGeometryFVM;
@@ -174,7 +174,7 @@ PetscErrorCode DMPlexReconstructGradientsFVM(DM dm, Vec locX, Vec grad)
   PetscFunctionBegin;
   PetscCall(DMGetDS(dm, &prob));
   PetscCall(PetscDSGetNumFields(prob, &Nf));
-  for (f = 0; f < Nf; ++f) {
+  for (PetscInt f = 0; f < Nf; ++f) {
     PetscObject  obj;
     PetscClassId id;
 

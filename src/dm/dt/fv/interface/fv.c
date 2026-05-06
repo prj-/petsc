@@ -1116,8 +1116,6 @@ PetscErrorCode PetscFVSetUp(PetscFV fvm)
 @*/
 PetscErrorCode PetscFVDestroy(PetscFV *fvm)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   if (!*fvm) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific(*fvm, PETSCFV_CLASSID, 1);
@@ -1128,7 +1126,7 @@ PetscErrorCode PetscFVDestroy(PetscFV *fvm)
   }
   ((PetscObject)*fvm)->refct = 0;
 
-  for (i = 0; i < (*fvm)->numComponents; i++) PetscCall(PetscFree((*fvm)->componentNames[i]));
+  for (PetscInt i = 0; i < (*fvm)->numComponents; i++) PetscCall(PetscFree((*fvm)->componentNames[i]));
   PetscCall(PetscFree((*fvm)->componentNames));
   PetscCall(PetscLimiterDestroy(&(*fvm)->limiter));
   PetscCall(PetscDualSpaceDestroy(&(*fvm)->dualSpace));
@@ -1243,9 +1241,7 @@ PetscErrorCode PetscFVSetNumComponents(PetscFV fvm, PetscInt comp)
   PetscFunctionBegin;
   PetscValidHeaderSpecific(fvm, PETSCFV_CLASSID, 1);
   if (fvm->numComponents != comp) {
-    PetscInt i;
-
-    for (i = 0; i < fvm->numComponents; i++) PetscCall(PetscFree(fvm->componentNames[i]));
+    for (PetscInt i = 0; i < fvm->numComponents; i++) PetscCall(PetscFree(fvm->componentNames[i]));
     PetscCall(PetscFree(fvm->componentNames));
     PetscCall(PetscCalloc1(comp, &fvm->componentNames));
   }
@@ -1643,7 +1639,7 @@ PetscErrorCode PetscFVCreateTabulation(PetscFV fvm, PetscInt nrepl, PetscInt npo
   PetscInt pdim; // Dimension of approximation space P
   PetscInt cdim; // Spatial dimension
   PetscInt Nc;   // Field components
-  PetscInt k, p, d, c, e;
+  PetscInt p, d, c;
 
   PetscFunctionBegin;
   if (!npoints || K < 0) {
@@ -1664,7 +1660,7 @@ PetscErrorCode PetscFVCreateTabulation(PetscFV fvm, PetscInt nrepl, PetscInt npo
   (*T)->Nc   = Nc;
   (*T)->cdim = cdim;
   PetscCall(PetscMalloc1((*T)->K + 1, &(*T)->T));
-  for (k = 0; k <= (*T)->K; ++k) PetscCall(PetscMalloc1(nrepl * npoints * pdim * Nc * PetscPowInt(cdim, k), &(*T)->T[k]));
+  for (PetscInt k = 0; k <= (*T)->K; ++k) PetscCall(PetscMalloc1(nrepl * npoints * pdim * Nc * PetscPowInt(cdim, k), &(*T)->T[k]));
   if (K >= 0) {
     for (p = 0; p < nrepl * npoints; ++p)
       for (d = 0; d < pdim; ++d)
@@ -1674,13 +1670,13 @@ PetscErrorCode PetscFVCreateTabulation(PetscFV fvm, PetscInt nrepl, PetscInt npo
     for (p = 0; p < nrepl * npoints; ++p)
       for (d = 0; d < pdim; ++d)
         for (c = 0; c < Nc; ++c)
-          for (e = 0; e < cdim; ++e) (*T)->T[1][((p * pdim + d) * Nc + c) * cdim + e] = 0.0;
+          for (PetscInt e = 0; e < cdim; ++e) (*T)->T[1][((p * pdim + d) * Nc + c) * cdim + e] = 0.0;
   }
   if (K >= 2) {
     for (p = 0; p < nrepl * npoints; ++p)
       for (d = 0; d < pdim; ++d)
         for (c = 0; c < Nc; ++c)
-          for (e = 0; e < cdim * cdim; ++e) (*T)->T[2][((p * pdim + d) * Nc + c) * cdim * cdim + e] = 0.0;
+          for (PetscInt e = 0; e < cdim * cdim; ++e) (*T)->T[2][((p * pdim + d) * Nc + c) * cdim * cdim + e] = 0.0;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1865,7 +1861,7 @@ static PetscErrorCode PetscFVDestroy_Upwind(PetscFV fvm)
 
 static PetscErrorCode PetscFVView_Upwind_Ascii(PetscFV fv, PetscViewer viewer)
 {
-  PetscInt          Nc, c;
+  PetscInt          Nc;
   PetscViewerFormat format;
 
   PetscFunctionBegin;
@@ -1873,7 +1869,7 @@ static PetscErrorCode PetscFVView_Upwind_Ascii(PetscFV fv, PetscViewer viewer)
   PetscCall(PetscViewerGetFormat(viewer, &format));
   PetscCall(PetscViewerASCIIPrintf(viewer, "Upwind Finite Volume:\n"));
   PetscCall(PetscViewerASCIIPrintf(viewer, "  num components: %" PetscInt_FMT "\n", Nc));
-  for (c = 0; c < Nc; c++) {
+  for (PetscInt c = 0; c < Nc; c++) {
     if (fv->componentNames[c]) PetscCall(PetscViewerASCIIPrintf(viewer, "    component %" PetscInt_FMT ": %s\n", c, fv->componentNames[c]));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -1981,7 +1977,7 @@ static PetscErrorCode PetscFVDestroy_LeastSquares(PetscFV fvm)
 
 static PetscErrorCode PetscFVView_LeastSquares_Ascii(PetscFV fv, PetscViewer viewer)
 {
-  PetscInt          Nc, c;
+  PetscInt          Nc;
   PetscViewerFormat format;
 
   PetscFunctionBegin;
@@ -1989,7 +1985,7 @@ static PetscErrorCode PetscFVView_LeastSquares_Ascii(PetscFV fv, PetscViewer vie
   PetscCall(PetscViewerGetFormat(viewer, &format));
   PetscCall(PetscViewerASCIIPrintf(viewer, "Finite Volume with Least Squares Reconstruction:\n"));
   PetscCall(PetscViewerASCIIPrintf(viewer, "  num components: %" PetscInt_FMT "\n", Nc));
-  for (c = 0; c < Nc; c++) {
+  for (PetscInt c = 0; c < Nc; c++) {
     if (fv->componentNames[c]) PetscCall(PetscViewerASCIIPrintf(viewer, "    component %" PetscInt_FMT ": %s\n", c, fv->componentNames[c]));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -2065,7 +2061,7 @@ static PetscErrorCode PetscFVLeastSquaresPseudoInverseSVD_Static(PetscInt m, Pet
   PetscInt   rworkSize;
   PetscReal *rwork, *rtau;
 #endif
-  PetscInt     i, j, maxmn;
+  PetscInt maxmn;
   PetscBLASInt M, N, lda, ldb, ldwork;
   PetscBLASInt nrhs, irank, info;
 
@@ -2074,8 +2070,8 @@ static PetscErrorCode PetscFVLeastSquaresPseudoInverseSVD_Static(PetscInt m, Pet
   tmpwork = work;
   Brhs    = Ainv;
   maxmn   = PetscMax(m, n);
-  for (j = 0; j < maxmn; j++) {
-    for (i = 0; i < maxmn; i++) Brhs[i + j * maxmn] = 1.0 * (i == j);
+  for (PetscInt j = 0; j < maxmn; j++) {
+    for (PetscInt i = 0; i < maxmn; i++) Brhs[i + j * maxmn] = 1.0 * (i == j);
   }
 
   PetscCall(PetscBLASIntCast(m, &M));
@@ -2093,7 +2089,7 @@ static PetscErrorCode PetscFVLeastSquaresPseudoInverseSVD_Static(PetscInt m, Pet
   PetscCallBLAS("LAPACKgelss", LAPACKgelss_(&M, &N, &nrhs, A, &lda, Brhs, &ldb, rtau, &rcond, &irank, tmpwork, &ldwork, rwork, &info));
   PetscCall(PetscFPTrapPop());
   PetscCall(PetscFree(rwork));
-  for (i = 0; i < PetscMin(M, N); i++) tau[i] = rtau[i];
+  for (PetscInt i = 0; i < PetscMin(M, N); i++) tau[i] = rtau[i];
   PetscCall(PetscFree(rtau));
 #else
   nrhs = M;
@@ -2124,7 +2120,7 @@ static PetscErrorCode PetscFVLeastSquaresDebugCell_Static(PetscFV fvm, PetscInt 
 
     PetscCall(DMPlexGetSupport(dm, faces[f], &fcells));
     PetscCall(DMPlexPointLocalRead(dmFace, faces[f], fgeom, &fg));
-    for (i = 0; i < 2; ++i) {
+    for (PetscInt i = 0; i < 2; ++i) {
       PetscScalar du;
 
       if (fcells[i] == c) continue;
@@ -2195,7 +2191,7 @@ static PetscErrorCode PetscFVIntegrateRHSFunction_LeastSquares(PetscFV fvm, Pets
   void              *rctx;
   PetscScalar       *flux = fvm->fluxWork;
   const PetscScalar *constants;
-  PetscInt           dim, numConstants, pdim, Nc, totDim, off, f, d;
+  PetscInt dim, numConstants, pdim, Nc, totDim, off;
 
   PetscFunctionBegin;
   PetscCall(PetscDSGetTotalComponents(prob, &Nc));
@@ -2206,9 +2202,9 @@ static PetscErrorCode PetscFVIntegrateRHSFunction_LeastSquares(PetscFV fvm, Pets
   PetscCall(PetscDSGetConstants(prob, &numConstants, &constants));
   PetscCall(PetscFVGetSpatialDimension(fvm, &dim));
   PetscCall(PetscFVGetNumComponents(fvm, &pdim));
-  for (f = 0; f < Nf; ++f) {
+  for (PetscInt f = 0; f < Nf; ++f) {
     (*riemann)(dim, pdim, fgeom[f].centroid, fgeom[f].normal, &uL[f * Nc], &uR[f * Nc], numConstants, constants, flux, rctx);
-    for (d = 0; d < pdim; ++d) {
+    for (PetscInt d = 0; d < pdim; ++d) {
       fluxL[f * totDim + off + d] = flux[d] / neighborVol[f * 2 + 0];
       fluxR[f * totDim + off + d] = flux[d] / neighborVol[f * 2 + 1];
     }

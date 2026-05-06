@@ -130,7 +130,7 @@ static PetscErrorCode ComputeMetric(DM dm, AppCtx *user, Vec *metric)
     const PetscScalar *coords;
     PetscScalar       *met;
     PetscReal          h;
-    PetscInt           dim, i, j, vStart, vEnd, v;
+    PetscInt dim, vStart, vEnd;
 
     PetscCall(DMPlexMetricCreate(dm, 0, metric));
     PetscCall(DMGetDimension(dm, &dim));
@@ -139,7 +139,7 @@ static PetscErrorCode ComputeMetric(DM dm, AppCtx *user, Vec *metric)
     PetscCall(VecGetArrayRead(coordinates, &coords));
     PetscCall(VecGetArray(*metric, &met));
     PetscCall(DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd));
-    for (v = vStart; v < vEnd; ++v) {
+    for (PetscInt v = vStart; v < vEnd; ++v) {
       PetscScalar *vcoords;
       PetscScalar *pmet;
 
@@ -155,8 +155,8 @@ static PetscErrorCode ComputeMetric(DM dm, AppCtx *user, Vec *metric)
         SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "metOpt = 0, 1, 2 or 3, cannot be %d", user->metOpt);
       }
       PetscCall(DMPlexPointLocalRef(dm, v, met, &pmet));
-      for (i = 0; i < dim; ++i) {
-        for (j = 0; j < dim; ++j) {
+      for (PetscInt i = 0; i < dim; ++i) {
+        for (PetscInt j = 0; j < dim; ++j) {
           if (i == j) {
             if (i == 0) pmet[i * dim + j] = 1 / (h * h);
             else pmet[i * dim + j] = lambda;
@@ -263,7 +263,6 @@ int main(int argc, char *argv[])
   MPI_Comm comm;
   DM       dma, odm;
   Vec      metric;
-  PetscInt r;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -277,7 +276,7 @@ int main(int argc, char *argv[])
     dm = odm;
   } else PetscCall(DMDestroy(&odm));
 
-  for (r = 0; r < user.Nr; ++r) {
+  for (PetscInt r = 0; r < user.Nr; ++r) {
     DMLabel label;
 
     PetscCall(ComputeMetric(dm, &user, &metric));

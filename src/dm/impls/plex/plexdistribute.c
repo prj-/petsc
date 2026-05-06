@@ -267,14 +267,13 @@ PetscErrorCode DMPlexGetAdjacency_Internal(DM dm, PetscInt p, PetscBool useCone,
       if (p >= aStart && p < aEnd) PetscCall(PetscSectionGetDof(aSec, p, &aDof));
       if (aDof) {
         PetscInt aOff;
-        PetscInt s, q;
 
         for (j = i + 1; j < numAdj; j++) orig[j - 1] = orig[j];
         origSize--;
         numAdj--;
         PetscCall(PetscSectionGetOffset(aSec, p, &aOff));
-        for (s = 0; s < aDof; ++s) {
-          for (q = 0; q < numAdj || ((void)(orig[numAdj++] = anchors[aOff + s]), 0); ++q) {
+        for (PetscInt s = 0; s < aDof; ++s) {
+          for (PetscInt q = 0; q < numAdj || ((void)(orig[numAdj++] = anchors[aOff + s]), 0); ++q) {
             if (anchors[aOff + s] == orig[q]) break;
           }
           PetscCheck(numAdj <= maxAdjSize, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Invalid mesh exceeded adjacency allocation (%" PetscInt_FMT ")", maxAdjSize);
@@ -667,7 +666,7 @@ PetscErrorCode DMPlexCreateOverlapLabelFromLabels(DM dm, PetscInt numLabels, con
   const PetscInt    *local;
   const PetscInt    *nrank, *rrank;
   PetscInt          *adj = NULL;
-  PetscInt           pStart, pEnd, p, sStart, sEnd, nleaves, l, el;
+  PetscInt pStart, pEnd, p, sStart, sEnd, nleaves, l;
   PetscMPIInt        rank, size;
   PetscBool          flg;
 
@@ -709,7 +708,7 @@ PetscErrorCode DMPlexCreateOverlapLabelFromLabels(DM dm, PetscInt numLabels, con
           for (PetscInt a = 0; a < adjSize; ++a) {
             PetscBool insert = PETSC_TRUE;
 
-            for (el = 0; el < numExLabels; ++el) {
+            for (PetscInt el = 0; el < numExLabels; ++el) {
               PetscInt exVal;
               PetscCall(DMLabelGetValue(exLabel[el], adj[a], &exVal));
               if (exVal == exValue[el]) {
@@ -1136,9 +1135,8 @@ static PetscErrorCode DMPlexDistributeCones(DM dm, PetscSF migrationSF, ISLocalT
   PetscCall(PetscSectionGetStorageSize(newConeSection, &newConesSize));
   PetscCall(ISGlobalToLocalMappingApplyBlock(renumbering, IS_GTOLM_MASK, newConesSize, newCones, NULL, newCones));
   if (PetscDefined(USE_DEBUG)) {
-    PetscInt  p;
     PetscBool valid = PETSC_TRUE;
-    for (p = 0; p < newConesSize; ++p) {
+    for (PetscInt p = 0; p < newConesSize; ++p) {
       if (newCones[p] < 0) {
         valid = PETSC_FALSE;
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%d] Point %" PetscInt_FMT " not in overlap SF\n", PetscGlobalRank, p));
@@ -2387,7 +2385,7 @@ PetscErrorCode DMPlexGetRedundantDM(DM dm, PetscSF *sf, PeOp DM *redundantMesh)
 {
   MPI_Comm     comm;
   PetscMPIInt  size, rank;
-  PetscInt     pStart, pEnd, p;
+  PetscInt pStart, pEnd;
   PetscInt     numPoints = -1;
   PetscSF      migrationSF, sfPoint, gatherSF;
   DM           gatherDM, dmCoord;
@@ -2413,7 +2411,7 @@ PetscErrorCode DMPlexGetRedundantDM(DM dm, PetscSF *sf, PeOp DM *redundantMesh)
   PetscCallMPI(MPI_Bcast(&numPoints, 1, MPIU_INT, 0, comm));
   PetscCall(PetscMalloc1(numPoints, &points));
   PetscCall(PetscSFCreate(comm, &migrationSF));
-  for (p = 0; p < numPoints; p++) {
+  for (PetscInt p = 0; p < numPoints; p++) {
     points[p].index = p;
     points[p].rank  = 0;
   }

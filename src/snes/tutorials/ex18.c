@@ -292,7 +292,7 @@ PetscErrorCode FormFunction(SNES snes, Vec X, Vec F, void *ptr)
 PetscErrorCode FormJacobian(SNES snes, Vec X, Mat jac, Mat B, void *ptr)
 {
   AppCtx     *user = (AppCtx *)ptr;
-  PetscInt    i, j, mx, my, xs, ys, xm, ym;
+  PetscInt mx, my, xs, ys, xm, ym;
   PetscScalar one = 1.0, hx, hy, hxdhy, hydhx, t0, tn, ts, te, tw;
   PetscScalar dn, ds, de, dw, an, as, ae, aw, bn, bs, be, bw, gn, gs, ge, gw;
   PetscScalar tleft, tright, beta, bm1, coef;
@@ -322,8 +322,8 @@ PetscErrorCode FormJacobian(SNES snes, Vec X, Mat jac, Mat B, void *ptr)
   PetscCall(DMDAVecGetArray(da, localX, &x));
 
   /* Evaluate Jacobian of function */
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       t0 = x[j][i];
 
       if (i > 0 && i < mx - 1 && j > 0 && j < my - 1) {

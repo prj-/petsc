@@ -4,7 +4,7 @@ static char help[] = "Tests retrieving unused PETSc options.\n\n";
 
 int main(int argc, char **argv)
 {
-  PetscInt  i, N, M;
+  PetscInt N, M;
   char    **names, **values;
   PetscBool set;
 
@@ -14,7 +14,7 @@ int main(int argc, char **argv)
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-get_an_integer", &M, &set));
   if (set) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Option used: name:-get_an_integer value: %" PetscInt_FMT "\n", M));
   PetscCall(PetscOptionsLeftGet(NULL, &N, &names, &values));
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     if (values[i]) {
       PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Option left: name:-%s value: %s\n", names[i], values[i]));
     } else {

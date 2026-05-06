@@ -18,7 +18,7 @@ static PetscReal Peaks(PetscReal x, PetscReal y)
 
 static PetscErrorCode DrawFunction(PetscDraw draw, PetscCtx ctx)
 {
-  int         i, j, w, h;
+  int w, h;
   Function    function = ((FunctionCtx *)ctx)->function;
   PetscReal   min = PETSC_MAX_REAL, max = PETSC_MIN_REAL;
   MPI_Comm    comm = PetscObjectComm((PetscObject)draw);
@@ -31,8 +31,8 @@ static PetscErrorCode DrawFunction(PetscDraw draw, PetscCtx ctx)
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
 
   PetscDrawCollectiveBegin(draw);
-  for (j = rank; j < h; j += size) {
-    for (i = 0; i < w; i++) {
+  for (int j = rank; j < h; j += size) {
+    for (int i = 0; i < w; i++) {
       PetscReal x, y, f;
       int       color;
       PetscCall(PetscDrawPixelToCoordinate(draw, i, j, &x, &y));

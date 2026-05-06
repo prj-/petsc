@@ -9,7 +9,7 @@ static char help[] = "Tests DMDA with variable multiple degrees of freedom per n
 
 PetscErrorCode doit(DM da, Vec global)
 {
-  PetscInt i, j, k, M, N, dof;
+  PetscInt M, N, dof;
 
   PetscCall(DMDAGetInfo(da, 0, &M, &N, 0, 0, 0, 0, &dof, 0, 0, 0, 0, 0));
   {
@@ -17,9 +17,9 @@ PetscErrorCode doit(DM da, Vec global)
       PetscScalar inside[dof];
     } **mystruct;
     PetscCall(DMDAVecGetArrayRead(da, global, (void *)&mystruct));
-    for (i = 0; i < N; i++) {
-      for (j = 0; j < M; j++) {
-        for (k = 0; k < dof; k++) {
+    for (PetscInt i = 0; i < N; i++) {
+      for (PetscInt j = 0; j < M; j++) {
+        for (PetscInt k = 0; k < dof; k++) {
           PetscCall(PetscPrintf(PETSC_COMM_WORLD, "%" PetscInt_FMT " %" PetscInt_FMT " %g\n", i, j, (double)mystruct[i][j].inside[0]));
 
           mystruct[i][j].inside[1] = 2.1;

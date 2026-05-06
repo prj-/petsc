@@ -33,12 +33,12 @@ static PetscErrorCode PetscDualSpaceDestroy_Simple(PetscDualSpace sp)
 
 static PetscErrorCode PetscDualSpaceDuplicate_Simple(PetscDualSpace sp, PetscDualSpace spNew)
 {
-  PetscInt dim, d;
+  PetscInt dim;
 
   PetscFunctionBegin;
   PetscCall(PetscDualSpaceGetDimension(sp, &dim));
   PetscCall(PetscDualSpaceSimpleSetDimension(spNew, dim));
-  for (d = 0; d < dim; ++d) {
+  for (PetscInt d = 0; d < dim; ++d) {
     PetscQuadrature q;
 
     PetscCall(PetscDualSpaceGetFunctional(sp, d, &q));
@@ -51,10 +51,10 @@ static PetscErrorCode PetscDualSpaceSimpleSetDimension_Simple(PetscDualSpace sp,
 {
   PetscDualSpace_Simple *s = (PetscDualSpace_Simple *)sp->data;
   DM                     dm;
-  PetscInt               spatialDim, f;
+  PetscInt               spatialDim;
 
   PetscFunctionBegin;
-  for (f = 0; f < s->dim; ++f) PetscCall(PetscQuadratureDestroy(&sp->functional[f]));
+  for (PetscInt f = 0; f < s->dim; ++f) PetscCall(PetscQuadratureDestroy(&sp->functional[f]));
   PetscCall(PetscFree(sp->functional));
   s->dim = dim;
   PetscCall(PetscCalloc1(s->dim, &sp->functional));
@@ -70,18 +70,18 @@ static PetscErrorCode PetscDualSpaceSimpleSetFunctional_Simple(PetscDualSpace sp
 {
   PetscDualSpace_Simple *s = (PetscDualSpace_Simple *)sp->data;
   PetscReal             *weights;
-  PetscInt               Nc, c, Nq, p;
+  PetscInt Nc, Nq;
 
   PetscFunctionBegin;
   PetscCheck(!(f < 0) && !(f >= s->dim), PetscObjectComm((PetscObject)sp), PETSC_ERR_ARG_OUTOFRANGE, "Basis index %" PetscInt_FMT " not in [0, %" PetscInt_FMT ")", f, s->dim);
   PetscCall(PetscQuadratureDuplicate(q, &sp->functional[f]));
   /* Reweight so that it has unit volume: Do we want to do this for Nc > 1? */
   PetscCall(PetscQuadratureGetData(sp->functional[f], NULL, &Nc, &Nq, NULL, (const PetscReal **)&weights));
-  for (c = 0; c < Nc; ++c) {
+  for (PetscInt c = 0; c < Nc; ++c) {
     PetscReal vol = 0.0;
 
-    for (p = 0; p < Nq; ++p) vol += weights[p * Nc + c];
-    for (p = 0; p < Nq; ++p) weights[p * Nc + c] /= (vol == 0.0 ? 1.0 : vol);
+    for (PetscInt p = 0; p < Nq; ++p) vol += weights[p * Nc + c];
+    for (PetscInt p = 0; p < Nq; ++p) weights[p * Nc + c] /= (vol == 0.0 ? 1.0 : vol);
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }

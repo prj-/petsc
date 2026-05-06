@@ -1617,7 +1617,7 @@ PetscErrorCode DMCreateMatrix_DA_1d_MPIAIJ(DM da, Mat J)
 
 PetscErrorCode DMCreateMatrix_DA_1d_SeqAIJ_NoPreallocation(DM da, Mat J)
 {
-  PetscInt               xs, nx, i, i1, slot, gxs, gnx;
+  PetscInt xs, nx, i, slot, gxs, gnx;
   PetscInt               m, dim, s, *cols = NULL, nc, *rows = NULL, col, cnt, l;
   PetscInt               istart, iend;
   DMBoundaryType         bx;
@@ -1654,7 +1654,7 @@ PetscErrorCode DMCreateMatrix_DA_1d_SeqAIJ_NoPreallocation(DM da, Mat J)
       slot   = i - gxs;
 
       cnt = 0;
-      for (i1 = istart; i1 < iend + 1; i1++) {
+      for (PetscInt i1 = istart; i1 < iend + 1; i1++) {
         cols[cnt++] = nc * (slot + i1);
         for (l = 1; l < nc; l++) {
           cols[cnt] = 1 + cols[cnt - 1];
@@ -2095,9 +2095,9 @@ PetscErrorCode DMCreateMatrix_DA_3d_MPISBAIJ(DM da, Mat J)
 
 PetscErrorCode DMCreateMatrix_DA_3d_MPIAIJ_Fill(DM da, Mat J)
 {
-  PetscInt               xs, ys, nx, ny, i, j, slot, gxs, gys, gnx, gny;
+  PetscInt xs, ys, nx, ny, slot, gxs, gys, gnx, gny;
   PetscInt               m, n, dim, s, *cols, k, nc, row, col, cnt, maxcnt = 0, l, p, *dnz, *onz;
-  PetscInt               istart, iend, jstart, jend, kstart, kend, zs, nz, gzs, gnz, ii, jj, kk, M, N, P;
+  PetscInt istart, iend, jstart, jend, kstart, kend, zs, nz, gzs, gnz, M, N, P;
   DM_DA                 *dd = (DM_DA *)da->data;
   PetscInt               ifill_col, *dfill = dd->dfill, *ofill = dd->ofill;
   MPI_Comm               comm;
@@ -2134,10 +2134,10 @@ PetscErrorCode DMCreateMatrix_DA_3d_MPIAIJ_Fill(DM da, Mat J)
   MatPreallocateBegin(comm, nc * nx * ny * nz, nc * nx * ny * nz, dnz, onz);
 
   PetscCall(MatSetBlockSize(J, nc));
-  for (i = xs; i < xs + nx; i++) {
+  for (PetscInt i = xs; i < xs + nx; i++) {
     istart = (bx == DM_BOUNDARY_PERIODIC) ? -s : (PetscMax(-s, -i));
     iend   = (bx == DM_BOUNDARY_PERIODIC) ? s : (PetscMin(s, m - i - 1));
-    for (j = ys; j < ys + ny; j++) {
+    for (PetscInt j = ys; j < ys + ny; j++) {
       jstart = (by == DM_BOUNDARY_PERIODIC) ? -s : (PetscMax(-s, -j));
       jend   = (by == DM_BOUNDARY_PERIODIC) ? s : (PetscMin(s, n - j - 1));
       for (k = zs; k < zs + nz; k++) {
@@ -2148,9 +2148,9 @@ PetscErrorCode DMCreateMatrix_DA_3d_MPIAIJ_Fill(DM da, Mat J)
 
         for (l = 0; l < nc; l++) {
           cnt = 0;
-          for (ii = istart; ii < iend + 1; ii++) {
-            for (jj = jstart; jj < jend + 1; jj++) {
-              for (kk = kstart; kk < kend + 1; kk++) {
+          for (PetscInt ii = istart; ii < iend + 1; ii++) {
+            for (PetscInt jj = jstart; jj < jend + 1; jj++) {
+              for (PetscInt kk = kstart; kk < kend + 1; kk++) {
                 if (ii || jj || kk) {
                   if (st == DMDA_STENCIL_BOX || ((!ii && !jj) || (!jj && !kk) || (!ii && !kk))) { /* entries on star*/
                     for (ifill_col = ofill[l]; ifill_col < ofill[l + 1]; ifill_col++) cols[cnt++] = ofill[ifill_col] + nc * (slot + ii + gnx * jj + gnx * gny * kk);
@@ -2185,10 +2185,10 @@ PetscErrorCode DMCreateMatrix_DA_3d_MPIAIJ_Fill(DM da, Mat J)
   */
   if (!da->prealloc_only) {
     PetscCall(PetscCalloc1(maxcnt, &values));
-    for (i = xs; i < xs + nx; i++) {
+    for (PetscInt i = xs; i < xs + nx; i++) {
       istart = (bx == DM_BOUNDARY_PERIODIC) ? -s : (PetscMax(-s, -i));
       iend   = (bx == DM_BOUNDARY_PERIODIC) ? s : (PetscMin(s, m - i - 1));
-      for (j = ys; j < ys + ny; j++) {
+      for (PetscInt j = ys; j < ys + ny; j++) {
         jstart = (by == DM_BOUNDARY_PERIODIC) ? -s : (PetscMax(-s, -j));
         jend   = (by == DM_BOUNDARY_PERIODIC) ? s : (PetscMin(s, n - j - 1));
         for (k = zs; k < zs + nz; k++) {
@@ -2199,9 +2199,9 @@ PetscErrorCode DMCreateMatrix_DA_3d_MPIAIJ_Fill(DM da, Mat J)
 
           for (l = 0; l < nc; l++) {
             cnt = 0;
-            for (ii = istart; ii < iend + 1; ii++) {
-              for (jj = jstart; jj < jend + 1; jj++) {
-                for (kk = kstart; kk < kend + 1; kk++) {
+            for (PetscInt ii = istart; ii < iend + 1; ii++) {
+              for (PetscInt jj = jstart; jj < jend + 1; jj++) {
+                for (PetscInt kk = kstart; kk < kend + 1; kk++) {
                   if (ii || jj || kk) {
                     if (st == DMDA_STENCIL_BOX || ((!ii && !jj) || (!jj && !kk) || (!ii && !kk))) { /* entries on star*/
                       for (ifill_col = ofill[l]; ifill_col < ofill[l + 1]; ifill_col++) cols[cnt++] = ofill[ifill_col] + nc * (slot + ii + gnx * jj + gnx * gny * kk);

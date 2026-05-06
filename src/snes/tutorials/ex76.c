@@ -229,11 +229,11 @@ static void g1_vu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff
 {
   PetscInt NcI = dim;
   PetscInt NcJ = dim;
-  PetscInt c, d, e;
+  PetscInt c, d;
 
   for (c = 0; c < NcI; ++c) {
     for (d = 0; d < NcJ; ++d) {
-      for (e = 0; e < dim; ++e) {
+      for (PetscInt e = 0; e < dim; ++e) {
         if (c == d) g1[(c * NcJ + d) * dim + e] = u[e];
       }
     }
@@ -250,9 +250,9 @@ static void g3_vu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff
 {
   const PetscReal nu = PetscRealPart(constants[0]);
   const PetscInt  Nc = dim;
-  PetscInt        c, d;
+  PetscInt        d;
 
-  for (c = 0; c < Nc; ++c) {
+  for (PetscInt c = 0; c < Nc; ++c) {
     for (d = 0; d < dim; ++d) {
       g3[((c * Nc + c) * dim + d) * dim + d] += nu; // gradU
       g3[((c * Nc + d) * dim + d) * dim + c] += nu; // gradU transpose
@@ -262,22 +262,19 @@ static void g3_vu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff
 
 static void g0_wu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g0[d] = u_x[uOff_x[2] + d];
+  for (PetscInt d = 0; d < dim; ++d) g0[d] = u_x[uOff_x[2] + d];
 }
 
 static void g1_wT(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g1[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g1[d] = u[uOff[0] + d];
+  for (PetscInt d = 0; d < dim; ++d) g1[d] = u[uOff[0] + d];
 }
 
 static void g3_wT(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g3[])
 {
   const PetscReal alpha = PetscRealPart(constants[1]);
-  PetscInt        d;
 
-  for (d = 0; d < dim; ++d) g3[d * dim + d] = alpha;
+  for (PetscInt d = 0; d < dim; ++d) g3[d * dim + d] = alpha;
 }
 
 static PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
@@ -323,7 +320,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     Vec          coordinates;
     PetscScalar *coords;
     PetscReal    theta;
-    PetscInt     cdim, N, bs, i;
+    PetscInt cdim, N, bs;
 
     PetscCall(DMGetCoordinateDim(*dm, &cdim));
     PetscCall(DMGetCoordinates(*dm, &coordinates));
@@ -333,7 +330,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     PetscCall(VecGetArray(coordinates, &coords));
     PetscCall(PetscBagGetData(user->bag, &param));
     theta = param->theta;
-    for (i = 0; i < N; i += cdim) {
+    for (PetscInt i = 0; i < N; i += cdim) {
       PetscScalar x = coords[i + 0];
       PetscScalar y = coords[i + 1];
 

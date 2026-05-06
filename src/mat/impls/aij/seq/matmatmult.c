@@ -1841,7 +1841,7 @@ PetscErrorCode MatTransColoringApplyDenToSp_SeqAIJ(MatTransposeColoring matcolor
 
 PetscErrorCode MatTransposeColoringCreate_SeqAIJ(Mat mat, ISColoring iscoloring, MatTransposeColoring c)
 {
-  PetscInt        i, n, nrows, Nbs, j, k, m, ncols, col, cm;
+  PetscInt n, nrows, Nbs, m, ncols, col, cm;
   const PetscInt *is, *ci, *cj, *row_idx;
   PetscInt        nis = iscoloring->n, *rowhit, bs = 1;
   IS             *isa;
@@ -1887,7 +1887,7 @@ PetscErrorCode MatTransposeColoringCreate_SeqAIJ(Mat mat, ISColoring iscoloring,
   cm = c->m;
   PetscCall(PetscMalloc1(cm + 1, &rowhit));
   PetscCall(PetscMalloc1(cm + 1, &idxhit));
-  for (i = 0; i < nis; i++) { /* loop over color */
+  for (PetscInt i = 0; i < nis; i++) { /* loop over color */
     PetscCall(ISGetLocalSize(isa[i], &n));
     PetscCall(ISGetIndices(isa[i], &is));
 
@@ -1899,25 +1899,25 @@ PetscErrorCode MatTransposeColoringCreate_SeqAIJ(Mat mat, ISColoring iscoloring,
     /* fast, crude version requires O(N*N) work */
     PetscCall(PetscArrayzero(rowhit, cm));
 
-    for (j = 0; j < n; j++) { /* loop over columns*/
+    for (PetscInt j = 0; j < n; j++) { /* loop over columns*/
       col     = is[j];
       row_idx = cj + ci[col];
       m       = ci[col + 1] - ci[col];
-      for (k = 0; k < m; k++) { /* loop over columns marking them in rowhit */
+      for (PetscInt k = 0; k < m; k++) { /* loop over columns marking them in rowhit */
         idxhit[*row_idx]   = spidx[ci[col] + k];
         rowhit[*row_idx++] = col + 1;
       }
     }
     /* count the number of hits */
     nrows = 0;
-    for (j = 0; j < cm; j++) {
+    for (PetscInt j = 0; j < cm; j++) {
       if (rowhit[j]) nrows++;
     }
     c->nrows[i]        = nrows;
     colorforrow[i + 1] = colorforrow[i] + nrows;
 
     nrows = 0;
-    for (j = 0; j < cm; j++) { /* loop over rows */
+    for (PetscInt j = 0; j < cm; j++) { /* loop over rows */
       if (rowhit[j]) {
         rows_i[nrows]   = j;
         den2sp_i[nrows] = idxhit[j];

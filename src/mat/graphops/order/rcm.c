@@ -40,7 +40,7 @@ PetscErrorCode SPARSEPACKrcm(const PetscInt *root, const PetscInt *xadj, const P
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt node, fnbr, lnbr, i, j, k, l, lperm, jstop, jstrt;
+  PetscInt node, fnbr, lnbr, k, l, lperm, jstop, jstrt;
   PetscInt lbegin, lvlend, nbr;
 
   /*       FIND THE DEGREES OF THE NODES IN THE                  */
@@ -65,7 +65,7 @@ L100:
   lbegin = lvlend + 1;
   lvlend = lnbr;
   i__1   = lvlend;
-  for (i = lbegin; i <= i__1; ++i) {
+  for (PetscInt i = lbegin; i <= i__1; ++i) {
     /*          FOR EACH NODE IN CURRENT LEVEL ...     */
     node  = perm[i];
     jstrt = xadj[node];
@@ -77,7 +77,7 @@ L100:
     /*          NODE IN PERM. */
     fnbr = lnbr + 1;
     i__2 = jstop;
-    for (j = jstrt; j <= i__2; ++j) {
+    for (PetscInt j = jstrt; j <= i__2; ++j) {
       nbr = adjncy[j];
       if (!mask[nbr]) goto L200;
       ++lnbr;
@@ -113,7 +113,7 @@ L100:
   k    = *ccsize / 2;
   l    = *ccsize;
   i__1 = k;
-  for (i = 1; i <= i__1; ++i) {
+  for (PetscInt i = 1; i <= i__1; ++i) {
     lperm   = perm[l];
     perm[l] = perm[i];
     perm[i] = lperm;

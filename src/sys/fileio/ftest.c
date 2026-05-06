@@ -85,9 +85,7 @@ static PetscErrorCode PetscTestOwnership(const char fname[], char mode, uid_t fu
     wbit = S_IWUSR;
     ebit = S_IXUSR;
   } else {
-    int g;
-
-    for (g = 0; g <= numGroups; g++) {
+    for (int g = 0; g <= numGroups; g++) {
       if (fgid == gid[g]) {
         rbit = S_IRGRP;
         wbit = S_IWGRP;

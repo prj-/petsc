@@ -398,13 +398,12 @@ typedef struct {
 static PetscErrorCode MatMPIAIJ_MPIDenseDestroy(PetscCtxRt ctx)
 {
   MPIAIJ_MPIDense *contents = *(MPIAIJ_MPIDense **)ctx;
-  PetscInt         i;
 
   PetscFunctionBegin;
   PetscCall(MatDestroy(&contents->workB));
   PetscCall(MatDestroy(&contents->workB1));
-  for (i = 0; i < contents->nsends; i++) PetscCallMPI(MPI_Type_free(&contents->stype[i]));
-  for (i = 0; i < contents->nrecvs; i++) PetscCallMPI(MPI_Type_free(&contents->rtype[i]));
+  for (PetscInt i = 0; i < contents->nsends; i++) PetscCallMPI(MPI_Type_free(&contents->stype[i]));
+  for (PetscInt i = 0; i < contents->nrecvs; i++) PetscCallMPI(MPI_Type_free(&contents->rtype[i]));
   PetscCall(PetscFree4(contents->stype, contents->rtype, contents->rwaits, contents->swaits));
   PetscCall(PetscFree(contents));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -667,7 +666,7 @@ PetscErrorCode MatMatMultNumeric_MPIAIJ_MPIAIJ(Mat A, Mat P, Mat C)
   const PetscScalar   *dummy;
   PetscInt            *api, *apj, *apJ, i, j, k, row;
   PetscInt             cstart = C->cmap->rstart;
-  PetscInt             cdnz, conz, k0, k1, nextp;
+  PetscInt cdnz, conz, k0, nextp;
   MPI_Comm             comm;
   PetscMPIInt          size;
 
@@ -776,7 +775,7 @@ PetscErrorCode MatMatMultNumeric_MPIAIJ_MPIAIJ(Mat A, Mat P, Mat C)
 
     /* diagonal part of C */
     ca = cda + cd->i[i];
-    for (k1 = 0; k1 < cdnz; k1++) {
+    for (PetscInt k1 = 0; k1 < cdnz; k1++) {
       ca[k1]        = apa_sparse[k];
       apa_sparse[k] = 0.0;
       k++;

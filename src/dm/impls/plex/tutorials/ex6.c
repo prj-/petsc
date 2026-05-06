@@ -187,7 +187,7 @@ static PetscErrorCode ReadData3D(DM dm, Vec u, AppCtx *user)
 
 static PetscErrorCode SetSymmetries(DM dm, PetscSection s, AppCtx *user)
 {
-  PetscInt dim, f, o, i, j, k, c, d;
+  PetscInt dim, f, i, j, k, d;
   DMLabel  depthLabel;
 
   PetscFunctionBegin;
@@ -208,7 +208,7 @@ static PetscErrorCode SetSymmetries(DM dm, PetscSection s, AppCtx *user)
         PetscInt **perms;
 
         PetscCall(PetscCalloc1(maxOrnt - minOrnt, &perms));
-        for (o = minOrnt; o < maxOrnt; o++) {
+        for (PetscInt o = minOrnt; o < maxOrnt; o++) {
           PetscInt *perm;
 
           if (!o) { /* identity */
@@ -231,7 +231,7 @@ static PetscErrorCode SetSymmetries(DM dm, PetscSection s, AppCtx *user)
         PetscInt **perms;
 
         PetscCall(PetscCalloc1(maxOrnt - minOrnt, &perms));
-        for (o = minOrnt; o < maxOrnt; o++) {
+        for (PetscInt o = minOrnt; o < maxOrnt; o++) {
           PetscInt *perm;
 
           if (!o) continue; /* identity */
@@ -243,49 +243,49 @@ static PetscErrorCode SetSymmetries(DM dm, PetscSection s, AppCtx *user)
           case -2: /* flip along (-1,-1)--( 1, 1), which swaps edges 0 and 3 and edges 1 and 2.  This swaps the i and j variables */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * j + i) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * j + i) * numComp + c;
               }
             }
             break;
           case -1: /* flip along (-1, 0)--( 1, 0), which swaps edges 0 and 2.  This reverses the i variable */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - i) + j) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - i) + j) * numComp + c;
               }
             }
             break;
           case -4: /* flip along ( 1,-1)--(-1, 1), which swaps edges 0 and 1 and edges 2 and 3.  This swaps the i and j variables and reverse both */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - j) + (perEdge - 1 - i)) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - j) + (perEdge - 1 - i)) * numComp + c;
               }
             }
             break;
           case -3: /* flip along ( 0,-1)--( 0, 1), which swaps edges 3 and 1.  This reverses the j variable */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * i + (perEdge - 1 - j)) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * i + (perEdge - 1 - j)) * numComp + c;
               }
             }
             break;
           case 1: /* rotate section edge 1 to local edge 0.  This swaps the i and j variables and then reverses the j variable */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - j) + i) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - j) + i) * numComp + c;
               }
             }
             break;
           case 2: /* rotate section edge 2 to local edge 0.  This reverse both i and j variables */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - i) + (perEdge - 1 - j)) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * (perEdge - 1 - i) + (perEdge - 1 - j)) * numComp + c;
               }
             }
             break;
           case 3: /* rotate section edge 3 to local edge 0.  This swaps the i and j variables and then reverses the i variable */
             for (i = 0, k = 0; i < perEdge; i++) {
               for (j = 0; j < perEdge; j++, k++) {
-                for (c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * j + (perEdge - 1 - i)) * numComp + c;
+                for (PetscInt c = 0; c < numComp; c++) perm[k * numComp + c] = (perEdge * j + (perEdge - 1 - i)) * numComp + c;
               }
             }
             break;

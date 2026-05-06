@@ -2039,7 +2039,7 @@ static PetscErrorCode DumpSolution(Ctx ctx, PetscInt level, Vec x)
   Vec      vec_vel_avg, vec_p, vec_eta_element;
   DM       da_eta_down_left, da_rho_down_left, da_eta_back_left, da_rho_back_left, da_eta_back_down, da_rho_back_down;
   Vec      vec_eta_down_left, vec_rho_down_left, vec_eta_back_left, vec_rho_back_left, vec_eta_back_down, vec_rho_back_down;
-  PetscInt ex, ey, ez, startx, starty, startz, nx, ny, nz;
+  PetscInt startx, starty, startz, nx, ny, nz;
   Vec      stokesLocal;
 
   PetscFunctionBeginUser;
@@ -2062,8 +2062,8 @@ static PetscErrorCode DumpSolution(Ctx ctx, PetscInt level, Vec x)
   PetscCall(DMGlobalToLocal(dm_stokes, x, INSERT_VALUES, stokesLocal));
   PetscCall(DMStagGetCorners(dm_vel_avg, &startx, &starty, &startz, &nx, &ny, &nz, NULL, NULL, NULL));
   if (ctx->dim == 2) {
-    for (ey = starty; ey < starty + ny; ++ey) {
-      for (ex = startx; ex < startx + nx; ++ex) {
+    for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+      for (PetscInt ex = startx; ex < startx + nx; ++ex) {
         DMStagStencil from[4], to[2];
         PetscScalar   valFrom[4], valTo[2];
 
@@ -2098,9 +2098,9 @@ static PetscErrorCode DumpSolution(Ctx ctx, PetscInt level, Vec x)
       }
     }
   } else if (ctx->dim == 3) {
-    for (ez = startz; ez < startz + nz; ++ez) {
-      for (ey = starty; ey < starty + ny; ++ey) {
-        for (ex = startx; ex < startx + nx; ++ex) {
+    for (PetscInt ez = startz; ez < startz + nz; ++ez) {
+      for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+        for (PetscInt ex = startx; ex < startx + nx; ++ex) {
           DMStagStencil from[6], to[3];
           PetscScalar   valFrom[6], valTo[3];
 

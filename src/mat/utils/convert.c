@@ -8,7 +8,7 @@ PetscErrorCode MatConvert_Basic(Mat mat, MatType newtype, MatReuse reuse, Mat *n
 {
   Mat                M;
   const PetscScalar *vwork;
-  PetscInt           i, rstart, rend, nz;
+  PetscInt rstart, rend, nz;
   const PetscInt    *cwork;
   PetscBool          isSBAIJ;
 
@@ -42,7 +42,7 @@ PetscErrorCode MatConvert_Basic(Mat mat, MatType newtype, MatReuse reuse, Mat *n
   }
 
   PetscCall(MatGetOwnershipRange(mat, &rstart, &rend));
-  for (i = rstart; i < rend; i++) {
+  for (PetscInt i = rstart; i < rend; i++) {
     PetscCall(MatGetRow(mat, i, &nz, &cwork, &vwork));
     PetscCall(MatSetValues(M, 1, &i, nz, cwork, vwork, INSERT_VALUES));
     PetscCall(MatRestoreRow(mat, i, &nz, &cwork, &vwork));

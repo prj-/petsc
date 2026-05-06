@@ -62,7 +62,7 @@ static PetscErrorCode SetupAuxDiscretization(DM dm, AppCtx *user)
   DM           dmAux, coordDM;
   PetscSection s;
   Vec          gauge;
-  PetscInt     eStart, eEnd, e;
+  PetscInt eStart, eEnd;
 
   PetscFunctionBegin;
   /* MUST call DMGetCoordinateDM() in order to get p4est setup if present */
@@ -72,7 +72,7 @@ static PetscErrorCode SetupAuxDiscretization(DM dm, AppCtx *user)
   PetscCall(PetscSectionCreate(PETSC_COMM_SELF, &s));
   PetscCall(DMPlexGetDepthStratum(dm, 1, &eStart, &eEnd));
   PetscCall(PetscSectionSetChart(s, eStart, eEnd));
-  for (e = eStart; e < eEnd; ++e) {
+  for (PetscInt e = eStart; e < eEnd; ++e) {
     /* TODO Should we store the whole SU(3) matrix, or the symmetric part? */
     PetscCall(PetscSectionSetDof(s, e, 9));
   }

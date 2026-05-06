@@ -7,7 +7,7 @@ int main(int argc, char **argv)
   DM             dm;
   Vec            vec, vecLocal1, vecLocal2;
   PetscScalar   *a, ****a1, ****a2, expected, sum;
-  PetscInt       startx, starty, startz, nx, ny, nz, i, j, k, d, is, js, ks, dof0, dof1, dof2, dof3, dofTotal, stencilWidth, ngx, ngy, ngz;
+  PetscInt startx, starty, startz, nx, ny, nz, d, dof0, dof1, dof2, dof3, dofTotal, stencilWidth, ngx, ngy, ngz;
   DMBoundaryType boundaryTypex, boundaryTypey, boundaryTypez;
   PetscMPIInt    rank;
 
@@ -31,22 +31,21 @@ int main(int argc, char **argv)
 
   PetscCall(DMCreateGlobalVector(dm, &vec));
   PetscCall(VecSet(vec, 1.0));
-  PetscCall(VecSet(vecLocal1, 0.0));
   PetscCall(DMGlobalToLocalBegin(dm, vec, INSERT_VALUES, vecLocal1));
   PetscCall(DMGlobalToLocalEnd(dm, vec, INSERT_VALUES, vecLocal1));
 
   PetscCall(DMStagGetCorners(dm, &startx, &starty, &startz, &nx, &ny, &nz, NULL, NULL, NULL));
   PetscCall(DMStagVecGetArrayRead(dm, vecLocal1, &a1));
   PetscCall(DMStagVecGetArray(dm, vecLocal2, &a2));
-  for (k = startz; k < startz + nz; ++k) {
-    for (j = starty; j < starty + ny; ++j) {
-      for (i = startx; i < startx + nx; ++i) {
+  for (PetscInt k = startz; k < startz + nz; ++k) {
+    for (PetscInt j = starty; j < starty + ny; ++j) {
+      for (PetscInt i = startx; i < startx + nx; ++i) {
         for (d = 0; d < dofTotal; ++d) {
           if (a1[k][j][i][d] != 1.0) PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%d] Unexpected value %g (expecting %g)\n", rank, (double)PetscRealPart(a1[k][j][i][d]), 1.0));
           a2[k][j][i][d] = 0.0;
-          for (ks = -stencilWidth; ks <= stencilWidth; ++ks) a2[k][j][i][d] += a1[k + ks][j][i][d];
-          for (js = -stencilWidth; js <= stencilWidth; ++js) a2[k][j][i][d] += a1[k][j + js][i][d];
-          for (is = -stencilWidth; is <= stencilWidth; ++is) a2[k][j][i][d] += a1[k][j][i + is][d];
+          for (PetscInt ks = -stencilWidth; ks <= stencilWidth; ++ks) a2[k][j][i][d] += a1[k + ks][j][i][d];
+          for (PetscInt js = -stencilWidth; js <= stencilWidth; ++js) a2[k][j][i][d] += a1[k][j + js][i][d];
+          for (PetscInt is = -stencilWidth; is <= stencilWidth; ++is) a2[k][j][i][d] += a1[k][j][i + is][d];
           a2[k][j][i][d] -= 2.0 * a1[k][j][i][d];
         }
       }
@@ -68,7 +67,7 @@ int main(int argc, char **argv)
 
     PetscCall(VecGetArray(vec, &a));
     expected = 1 + 6 * stencilWidth;
-    for (i = 0; i < nz * ny * nx * dofTotal; ++i) {
+    for (PetscInt i = 0; i < nz * ny * nx * dofTotal; ++i) {
       if (a[i] != expected) PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%d] Unexpected value %g (expecting %g)\n", rank, (double)PetscRealPart(a[i]), (double)PetscRealPart(expected)));
     }
     PetscCall(VecRestoreArray(vec, &a));

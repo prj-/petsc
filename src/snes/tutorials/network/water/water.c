@@ -15,7 +15,7 @@ int main(int argc, char **argv)
   PetscMPIInt         crank;
   DM                  networkdm;
   PetscInt           *edgelist = NULL;
-  PetscInt            nv, ne, i;
+  PetscInt nv, ne;
   const PetscInt     *vtx, *edges;
   Vec                 X, F;
   SNES                snes;
@@ -63,9 +63,9 @@ int main(int argc, char **argv)
   /* ADD VARIABLES AND COMPONENTS FOR THE NETWORK */
   PetscCall(DMNetworkGetSubnetwork(networkdm, 0, &nv, &ne, &vtx, &edges));
 
-  for (i = 0; i < ne; i++) PetscCall(DMNetworkAddComponent(networkdm, edges[i], appctx.compkey_edge, &waterdata->edge[i], 0));
+  for (PetscInt i = 0; i < ne; i++) PetscCall(DMNetworkAddComponent(networkdm, edges[i], appctx.compkey_edge, &waterdata->edge[i], 0));
 
-  for (i = 0; i < nv; i++) PetscCall(DMNetworkAddComponent(networkdm, vtx[i], appctx.compkey_vtx, &waterdata->vertex[i], 1));
+  for (PetscInt i = 0; i < nv; i++) PetscCall(DMNetworkAddComponent(networkdm, vtx[i], appctx.compkey_vtx, &waterdata->vertex[i], 1));
 
   /* Set up DM for use */
   PetscCall(DMSetUp(networkdm));

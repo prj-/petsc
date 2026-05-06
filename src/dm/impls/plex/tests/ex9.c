@@ -63,10 +63,8 @@ static PetscErrorCode ProcessOptions(AppCtx *options)
 
   /* We are specifying the scalar dof, so augment it for multiple components */
   {
-    PetscInt f, d;
-
-    for (f = 0; f < options->numFields; ++f) {
-      for (d = 0; d <= options->dim; ++d) options->numDof[f * (options->dim + 1) + d] *= options->numComponents[f];
+    for (PetscInt f = 0; f < options->numFields; ++f) {
+      for (PetscInt d = 0; d <= options->dim; ++d) options->numDof[f * (options->dim + 1) + d] *= options->numComponents[f];
     }
   }
 
@@ -308,7 +306,7 @@ static PetscErrorCode TestVecClosure(DM dm, PetscBool useIndex, PetscBool useSpe
 {
   PetscSection       s;
   Vec                v;
-  PetscInt           numRuns, cStart, cEnd, c, i;
+  PetscInt numRuns, cStart, cEnd;
   PetscScalar        tmpArray[64];
   PetscScalar       *userArray     = user->reuseArray ? tmpArray : NULL;
   PetscReal          maxTimePerRun = user->maxVecClosureTime;
@@ -348,8 +346,8 @@ static PetscErrorCode TestVecClosure(DM dm, PetscBool useIndex, PetscBool useSpe
   PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
   PetscCall(DMGetLocalVector(dm, &v));
   PetscCall(PetscLogEventBegin(event, 0, 0, 0, 0));
-  for (i = 0; i < user->iterations; ++i) {
-    for (c = cStart; c < cEnd; ++c) {
+  for (PetscInt i = 0; i < user->iterations; ++i) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscScalar *closure     = userArray;
       PetscInt     closureSize = 64;
 

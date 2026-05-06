@@ -587,7 +587,6 @@ PetscErrorCode PetscViewerExodusIIGetZonalVariableNames(PetscViewer viewer, Pets
 PetscErrorCode PetscViewerExodusIIGetNodalVariableNames(PetscViewer viewer, PetscExodusIIInt *numVars, const char *const *varNames[])
 {
   PetscViewer_ExodusII *exo = (PetscViewer_ExodusII *)viewer->data;
-  PetscExodusIIInt      idx;
   char                  tmpName[MAX_NAME_LENGTH + 1];
   PetscExodusIIInt      exoid = -1;
 
@@ -596,7 +595,7 @@ PetscErrorCode PetscViewerExodusIIGetNodalVariableNames(PetscViewer viewer, Pets
   /*
     Cache variable names if necessary
   */
-  for (idx = 0; idx < *numVars; idx++) {
+  for (PetscExodusIIInt idx = 0; idx < *numVars; idx++) {
     if (!exo->nodalVariableNames[idx]) {
       PetscCall(PetscViewerExodusIIGetId(viewer, &exoid));
       PetscCallExternal(ex_get_variable_name, exoid, EX_NODAL, idx + 1, tmpName);
@@ -766,7 +765,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
   DMLabel         csLabel;
   IS              csIS;
   const PetscInt *csIdx;
-  PetscInt        num_cs, cs;
+  PetscInt        num_cs;
   enum ElemType  *type;
   PetscBool       hasLabel;
   /* Coordinate Variables */
@@ -775,7 +774,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
   Vec                coord;
   PetscInt         **nodes;
   PetscInt           depth, d, dim, skipCells = 0;
-  PetscInt           pStart, pEnd, p, cStart, cEnd, numCells, vStart, vEnd, numVertices, eStart, eEnd, numEdges, fStart, fEnd, numFaces, numNodes;
+  PetscInt pStart, pEnd, cStart, cEnd, numCells, vStart, vEnd, numVertices, eStart, eEnd, numEdges, fStart, fEnd, numFaces, numNodes;
   PetscInt           num_vs, num_fs;
   PetscMPIInt        rank, size;
   const char        *dmName;
@@ -867,7 +866,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
     PetscCall(PetscViewerExodusIIGetOrder(viewer, &degree));
     if (degree == 2) numNodes += numEdges;
     cellsNotInConnectivity = numCells;
-    for (cs = 0; cs < num_cs; ++cs) {
+    for (PetscInt cs = 0; cs < num_cs; ++cs) {
       IS              stratumIS;
       const PetscInt *cells;
       PetscScalar    *xyz = NULL;
@@ -931,7 +930,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
     }
     if (num_cs) PetscCallExternal(ex_put_init, exo->exoid, dmName, dim, numNodes, numCells, num_cs, num_vs, num_fs);
     /* --- Connectivity --- */
-    for (cs = 0; cs < num_cs; ++cs) {
+    for (PetscInt cs = 0; cs < num_cs; ++cs) {
       IS              stratumIS;
       const PetscInt *cells;
       PetscInt       *connect, off = 0;
@@ -984,10 +983,10 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
       /* Get connectivity for each cell */
       for (c = 0; c < csSize; ++c) {
         PetscInt *closure = NULL;
-        PetscInt  temp, i;
+        PetscInt  temp;
 
         PetscCall(DMPlexGetTransitiveClosure(dm, cells[c], PETSC_TRUE, &closureSize, &closure));
-        for (i = 0; i < connectSize; ++i) {
+        for (PetscInt i = 0; i < connectSize; ++i) {
           if (i < nodes[cs][0]) { /* Vertices */
             connect[i + off] = closure[(i + edgesInClosure + facesInClosure + 1) * 2] + 1;
             connect[i + off] -= cellsNotInConnectivity;
@@ -1077,18 +1076,18 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
     if (num_cs) {
       for (d = 0; d < depth; ++d) {
         PetscCall(DMPlexGetDepthStratum(dm, d, &pStart, &pEnd));
-        for (p = pStart; p < pEnd; ++p) PetscCall(PetscSectionSetDof(coordSection, p, nodes[0][d] > 0));
+        for (PetscInt p = pStart; p < pEnd; ++p) PetscCall(PetscSectionSetDof(coordSection, p, nodes[0][d] > 0));
       }
     }
-    for (cs = 0; cs < num_cs; ++cs) {
+    for (PetscInt cs = 0; cs < num_cs; ++cs) {
       IS              stratumIS;
       const PetscInt *cells;
-      PetscInt        csSize, c;
+      PetscInt        csSize;
 
       PetscCall(DMLabelGetStratumIS(csLabel, csIdx[cs], &stratumIS));
       PetscCall(ISGetIndices(stratumIS, &cells));
       PetscCall(ISGetSize(stratumIS, &csSize));
-      for (c = 0; c < csSize; ++c) PetscCall(PetscSectionSetDof(coordSection, cells[c], nodes[cs][3] > 0));
+      for (PetscInt c = 0; c < csSize; ++c) PetscCall(PetscSectionSetDof(coordSection, cells[c], nodes[cs][3] > 0));
       PetscCall(ISRestoreIndices(stratumIS, &cells));
       PetscCall(ISDestroy(&stratumIS));
     }
@@ -1108,7 +1107,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
       PetscCall(PetscCalloc3(numNodes * 3, &coords, dim, &cval, 24, &closure));
       PetscCall(DMGetCoordinatesLocalNoncollective(dm, &coord));
       PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
-      for (p = pStart; p < pEnd; ++p) {
+      for (PetscInt p = pStart; p < pEnd; ++p) {
         PetscCall(PetscSectionGetDof(coordSection, p, &hasDof));
         if (hasDof) {
           PetscInt closureSize = 24, j;
@@ -1130,7 +1129,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
     /* --- Node Sets/Vertex Sets --- */
     PetscCall(DMHasLabel(dm, "Vertex Sets", &hasLabel));
     if (hasLabel) {
-      PetscInt        i, vs, vsSize;
+      PetscInt i, vsSize;
       const PetscInt *vsIdx, *vertices;
       PetscInt       *nodeList;
       IS              vsIS, stratumIS;
@@ -1138,7 +1137,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
       PetscCall(DMGetLabel(dm, "Vertex Sets", &vsLabel));
       PetscCall(DMLabelGetValueIS(vsLabel, &vsIS));
       PetscCall(ISGetIndices(vsIS, &vsIdx));
-      for (vs = 0; vs < num_vs; ++vs) {
+      for (PetscInt vs = 0; vs < num_vs; ++vs) {
         PetscCall(DMLabelGetStratumIS(vsLabel, vsIdx[vs], &stratumIS));
         PetscCall(ISGetIndices(stratumIS, &vertices));
         PetscCall(ISGetSize(stratumIS, &vsSize));
@@ -1156,7 +1155,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
     /* --- Side Sets/Face Sets --- */
     PetscCall(DMHasLabel(dm, "Face Sets", &hasLabel));
     if (hasLabel) {
-      PetscInt        i, j, fs, fsSize;
+      PetscInt j, fsSize;
       const PetscInt *fsIdx, *faces;
       IS              fsIS, stratumIS;
       DMLabel         fsLabel;
@@ -1168,7 +1167,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
       /* Compute size of Node List and Element List */
       PetscCall(DMLabelGetValueIS(fsLabel, &fsIS));
       PetscCall(ISGetIndices(fsIS, &fsIdx));
-      for (fs = 0; fs < num_fs; ++fs) {
+      for (PetscInt fs = 0; fs < num_fs; ++fs) {
         PetscCall(DMLabelGetStratumIS(fsLabel, fsIdx[fs], &stratumIS));
         PetscCall(ISGetSize(stratumIS, &fsSize));
         elem_list_size += fsSize;
@@ -1177,7 +1176,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
       if (num_fs) {
         PetscCall(PetscMalloc3(num_fs, &elem_ind, elem_list_size, &elem_list, elem_list_size, &side_list));
         elem_ind[0] = 0;
-        for (fs = 0; fs < num_fs; ++fs) {
+        for (PetscInt fs = 0; fs < num_fs; ++fs) {
           PetscCall(DMLabelGetStratumIS(fsLabel, fsIdx[fs], &stratumIS));
           PetscCall(ISGetIndices(stratumIS, &faces));
           PetscCall(ISGetSize(stratumIS, &fsSize));
@@ -1186,7 +1185,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
           /* Indices */
           if (fs < num_fs - 1) elem_ind[fs + 1] = elem_ind[fs] + fsSize;
 
-          for (i = 0; i < fsSize; ++i) {
+          for (PetscInt i = 0; i < fsSize; ++i) {
             /* Element List */
             points = NULL;
             PetscCall(DMPlexGetTransitiveClosure(dm, faces[i], PETSC_FALSE, &numPoints, &points));
@@ -1230,7 +1229,7 @@ PetscErrorCode DMView_PlexExodusII(DM dm, PetscViewer viewer)
         PetscCall(ISDestroy(&fsIS));
 
         /* Put side sets */
-        for (fs = 0; fs < num_fs; ++fs) PetscCallExternal(ex_put_set, exo->exoid, EX_SIDE_SET, fsIdx[fs], &elem_list[elem_ind[fs]], &side_list[elem_ind[fs]]);
+        for (PetscInt fs = 0; fs < num_fs; ++fs) PetscCallExternal(ex_put_set, exo->exoid, EX_SIDE_SET, fsIdx[fs], &elem_list[elem_ind[fs]], &side_list[elem_ind[fs]]);
         PetscCall(PetscFree3(elem_ind, elem_list, side_list));
       }
     }
@@ -1696,7 +1695,7 @@ PetscErrorCode DMPlexCreateExodus(MPI_Comm comm, PetscExodusIIInt exoid, PetscBo
   /* Read cell sets information */
   if (rank == 0) {
     PetscInt *cone;
-    int       c, cs, ncs, c_loc, v, v_loc;
+    int c, cs, ncs, c_loc, v;
     /* Read from ex_get_elem_blk_ids() */
     int *cs_id, *cs_order;
     /* Read from ex_get_elem_block() */
@@ -1756,7 +1755,7 @@ PetscErrorCode DMPlexCreateExodus(MPI_Comm comm, PetscExodusIIInt exoid, PetscBo
       for (c_loc = 0, v = 0; c_loc < num_cell_in_set; ++c_loc, ++c) {
         DMPolytopeType ct;
 
-        for (v_loc = 0; v_loc < num_vertex_per_cell; ++v_loc, ++v) cone[v_loc] = cs_connect[v] + numCells - 1;
+        for (int v_loc = 0; v_loc < num_vertex_per_cell; ++v_loc, ++v) cone[v_loc] = cs_connect[v] + numCells - 1;
         PetscCall(DMPlexGetCellType(*dm, c, &ct));
         PetscCall(DMPlexInvertCell(ct, cone));
         PetscCall(DMPlexSetCone(*dm, c, cone));
@@ -1787,7 +1786,7 @@ PetscErrorCode DMPlexCreateExodus(MPI_Comm comm, PetscExodusIIInt exoid, PetscBo
 
   /* Create vertex set label */
   if (rank == 0 && (num_vs > 0)) {
-    int vs, v;
+    int v;
     /* Read from ex_get_node_set_ids() */
     int *vs_id;
     /* Read from ex_get_node_set_param() */
@@ -1798,7 +1797,7 @@ PetscErrorCode DMPlexCreateExodus(MPI_Comm comm, PetscExodusIIInt exoid, PetscBo
     /* Get vertex set ids */
     PetscCall(PetscMalloc1(num_vs, &vs_id));
     PetscCallExternal(ex_get_ids, exoid, EX_NODE_SET, vs_id);
-    for (vs = 0; vs < num_vs; ++vs) {
+    for (int vs = 0; vs < num_vs; ++vs) {
       PetscCallExternal(ex_get_set_param, exoid, EX_NODE_SET, vs_id[vs], &num_vertex_in_set, NULL);
       PetscCall(PetscMalloc1(num_vertex_in_set, &vs_vertex_list));
       PetscCallExternal(ex_get_set, exoid, EX_NODE_SET, vs_id[vs], vs_vertex_list, NULL);
@@ -1846,7 +1845,7 @@ PetscErrorCode DMPlexCreateExodus(MPI_Comm comm, PetscExodusIIInt exoid, PetscBo
 
   /* Create side set label */
   if (rank == 0 && interpolate && (num_fs > 0)) {
-    int fs, f, voff;
+    int f, voff;
     /* Read from ex_get_side_set_ids() */
     int *fs_id;
     /* Read from ex_get_side_set_param() */
@@ -1861,7 +1860,7 @@ PetscErrorCode DMPlexCreateExodus(MPI_Comm comm, PetscExodusIIInt exoid, PetscBo
     PetscCall(PetscMalloc1(num_fs, &fs_id));
     PetscCallExternal(ex_get_ids, exoid, EX_SIDE_SET, fs_id);
     // Ids 1 and 2 are reserved by ExodusII for indicating things in 3D
-    for (fs = 0; fs < num_fs; ++fs) {
+    for (int fs = 0; fs < num_fs; ++fs) {
       PetscCallExternal(ex_get_set_param, exoid, EX_SIDE_SET, fs_id[fs], &num_side_in_set, NULL);
       PetscCall(PetscMalloc3(num_side_in_set, &fs_vertex_count_list, num_side_in_set * 4, &fs_vertex_list, num_side_in_set, &fs_side_list));
       PetscCallExternal(ex_get_side_set_node_list, exoid, fs_id[fs], fs_vertex_count_list, fs_vertex_list);

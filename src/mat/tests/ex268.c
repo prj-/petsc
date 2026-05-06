@@ -4,14 +4,13 @@ static char help[] = "Tests MATFACTORHTOOL\n\n";
 
 static PetscErrorCode GenEntries(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *J, const PetscInt *K, PetscScalar *ptr, PetscCtx ctx)
 {
-  PetscInt  d, j, k;
   PetscReal diff = 0.0, *coords = (PetscReal *)(ctx);
 
   PetscFunctionBeginUser;
-  for (j = 0; j < M; j++) {
-    for (k = 0; k < N; k++) {
+  for (PetscInt j = 0; j < M; j++) {
+    for (PetscInt k = 0; k < N; k++) {
       diff = 0.0;
-      for (d = 0; d < sdim; d++) diff += (coords[J[j] * sdim + d] - coords[K[k] * sdim + d]) * (coords[J[j] * sdim + d] - coords[K[k] * sdim + d]);
+      for (PetscInt d = 0; d < sdim; d++) diff += (coords[J[j] * sdim + d] - coords[K[k] * sdim + d]) * (coords[J[j] * sdim + d] - coords[K[k] * sdim + d]);
       ptr[j + M * k] = 1.0 / (1.0e-1 + PetscSqrtReal(diff));
     }
   }

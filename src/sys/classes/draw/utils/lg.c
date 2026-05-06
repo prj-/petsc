@@ -129,7 +129,7 @@ PetscErrorCode PetscDrawLGAddPoint(PetscDrawLG lg, const PetscReal *x, const Pet
 @*/
 PetscErrorCode PetscDrawLGAddPoints(PetscDrawLG lg, PetscInt n, PetscReal *xx[], PetscReal *yy[])
 {
-  PetscInt   i, j, k;
+  PetscInt k;
   PetscReal *x, *y;
   int        in;
 
@@ -150,11 +150,11 @@ PetscErrorCode PetscDrawLGAddPoints(PetscDrawLG lg, PetscInt n, PetscReal *xx[],
     lg->y = tmpy;
     lg->len += lg->dim * chunk;
   }
-  for (j = 0; j < lg->dim; j++) {
+  for (PetscInt j = 0; j < lg->dim; j++) {
     x = xx[j];
     y = yy[j];
     k = lg->loc + j;
-    for (i = 0; i < n; i++) {
+    for (PetscInt i = 0; i < n; i++) {
       if (x[i] > lg->xmax) lg->xmax = x[i];
       if (x[i] < lg->xmin) lg->xmin = x[i];
       if (y[i] > lg->ymax) lg->ymax = y[i];

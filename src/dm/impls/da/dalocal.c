@@ -339,7 +339,7 @@ PetscErrorCode DMDASetVertexCoordinates(DM dm, PetscReal xl, PetscReal xu, Petsc
   PetscSection section;
   PetscScalar *coords;
   PetscReal    h[3];
-  PetscInt     dim, size, M, N, P, nVx, nVy, nVz, nV, vStart, vEnd, v, i, j, k;
+  PetscInt dim, size, M, N, P, nVx, nVy, nVz, nV, vStart, vEnd, i, j;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecificType(dm, DM_CLASSID, 1, DMDA);
@@ -354,13 +354,13 @@ PetscErrorCode DMDASetVertexCoordinates(DM dm, PetscReal xl, PetscReal xu, Petsc
   PetscCall(PetscSectionSetNumFields(section, 1));
   PetscCall(PetscSectionSetFieldComponents(section, 0, dim));
   PetscCall(PetscSectionSetChart(section, vStart, vEnd));
-  for (v = vStart; v < vEnd; ++v) PetscCall(PetscSectionSetDof(section, v, dim));
+  for (PetscInt v = vStart; v < vEnd; ++v) PetscCall(PetscSectionSetDof(section, v, dim));
   PetscCall(PetscSectionSetUp(section));
   PetscCall(PetscSectionGetStorageSize(section, &size));
   PetscCall(VecCreateSeq(PETSC_COMM_SELF, size, &coordinates));
   PetscCall(PetscObjectSetName((PetscObject)coordinates, "coordinates"));
   PetscCall(VecGetArray(coordinates, &coords));
-  for (k = 0; k < nVz; ++k) {
+  for (PetscInt k = 0; k < nVz; ++k) {
     PetscInt ind[3], d, off;
 
     ind[0] = 0;
@@ -407,7 +407,7 @@ PetscErrorCode DMDASetVertexCoordinates(DM dm, PetscReal xl, PetscReal xu, Petsc
 @*/
 PetscErrorCode DMDAGetArray(DM da, PetscBool ghosted, void *vptr)
 {
-  PetscInt j, i, xs, ys, xm, ym, zs, zm;
+  PetscInt i, xs, ys, xm, ym, zs, zm;
   char    *iarray_start;
   void   **iptr = (void **)vptr;
   DM_DA   *dd   = (DM_DA *)da->data;
@@ -466,7 +466,7 @@ PetscErrorCode DMDAGetArray(DM da, PetscBool ghosted, void *vptr)
     PetscCall(PetscMalloc((ym + 1) * sizeof(void *) + xm * ym * sizeof(PetscScalar), &iarray_start));
 
     ptr = (void **)(iarray_start + xm * ym * sizeof(PetscScalar) - ys * sizeof(void *));
-    for (j = ys; j < ys + ym; j++) ptr[j] = iarray_start + sizeof(PetscScalar) * (xm * (j - ys) - xs);
+    for (PetscInt j = ys; j < ys + ym; j++) ptr[j] = iarray_start + sizeof(PetscScalar) * (xm * (j - ys) - xs);
     *iptr = (void *)ptr;
     break;
   }
@@ -479,7 +479,7 @@ PetscErrorCode DMDAGetArray(DM da, PetscBool ghosted, void *vptr)
     bptr = (void **)(iarray_start + xm * ym * zm * sizeof(PetscScalar) + zm * sizeof(void **));
     for (i = zs; i < zs + zm; i++) ptr[i] = bptr + ((i - zs) * ym - ys);
     for (i = zs; i < zs + zm; i++) {
-      for (j = ys; j < ys + ym; j++) ptr[i][j] = iarray_start + sizeof(PetscScalar) * (xm * ym * (i - zs) + xm * (j - ys) - xs);
+      for (PetscInt j = ys; j < ys + ym; j++) ptr[i][j] = iarray_start + sizeof(PetscScalar) * (xm * ym * (i - zs) + xm * (j - ys) - xs);
     }
     *iptr = (void *)ptr;
     break;
@@ -524,14 +524,13 @@ done:
 @*/
 PetscErrorCode DMDARestoreArray(DM da, PetscBool ghosted, void *vptr)
 {
-  PetscInt i;
-  void   **iptr = (void **)vptr, *iarray_start = NULL;
-  DM_DA   *dd = (DM_DA *)da->data;
+  void **iptr = (void **)vptr, *iarray_start = NULL;
+  DM_DA *dd = (DM_DA *)da->data;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecificType(da, DM_CLASSID, 1, DMDA);
   if (ghosted) {
-    for (i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
+    for (PetscInt i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
       if (dd->arrayghostedout[i] == *iptr) {
         iarray_start           = dd->startghostedout[i];
         dd->arrayghostedout[i] = NULL;
@@ -539,7 +538,7 @@ PetscErrorCode DMDARestoreArray(DM da, PetscBool ghosted, void *vptr)
         break;
       }
     }
-    for (i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
+    for (PetscInt i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
       if (!dd->arrayghostedin[i]) {
         dd->arrayghostedin[i] = *iptr;
         dd->startghostedin[i] = iarray_start;
@@ -547,7 +546,7 @@ PetscErrorCode DMDARestoreArray(DM da, PetscBool ghosted, void *vptr)
       }
     }
   } else {
-    for (i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
+    for (PetscInt i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
       if (dd->arrayout[i] == *iptr) {
         iarray_start    = dd->startout[i];
         dd->arrayout[i] = NULL;
@@ -555,7 +554,7 @@ PetscErrorCode DMDARestoreArray(DM da, PetscBool ghosted, void *vptr)
         break;
       }
     }
-    for (i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
+    for (PetscInt i = 0; i < DMDA_MAX_WORK_ARRAYS; i++) {
       if (!dd->arrayin[i]) {
         dd->arrayin[i] = *iptr;
         dd->startin[i] = iarray_start;

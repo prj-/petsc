@@ -5,7 +5,7 @@ static const char help[] = "Tests MatCreateSubMatrix with MatSubMatrix versus Ma
 static PetscErrorCode AssembleMatrix(MPI_Comm comm, Mat *A)
 {
   Mat      B;
-  PetscInt i, ms, me;
+  PetscInt ms, me;
 
   PetscFunctionBegin;
   PetscCall(MatCreate(comm, &B));
@@ -13,7 +13,7 @@ static PetscErrorCode AssembleMatrix(MPI_Comm comm, Mat *A)
   PetscCall(MatSetFromOptions(B));
   PetscCall(MatSetUp(B));
   PetscCall(MatGetOwnershipRange(B, &ms, &me));
-  for (i = ms; i < me; i++) PetscCall(MatSetValue(B, i, i, 1.0 * i, INSERT_VALUES));
+  for (PetscInt i = ms; i < me; i++) PetscCall(MatSetValue(B, i, i, 1.0 * i, INSERT_VALUES));
   PetscCall(MatSetValue(B, me - 1, me - 1, me * me, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(B, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(B, MAT_FINAL_ASSEMBLY));

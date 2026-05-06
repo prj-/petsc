@@ -115,7 +115,7 @@ PetscErrorCode TSMonitorLGCtxNetworkSolution(TS ts, PetscInt step, PetscReal pti
   TSMonitorLGCtxNetwork ctx = (TSMonitorLGCtxNetwork)dctx;
   const PetscScalar    *xv;
   PetscScalar          *yv;
-  PetscInt              i, v, Start, End, offset, nvar, e;
+  PetscInt i, Start, End, offset, nvar;
   TSConvergedReason     reason;
   DM                    dm;
   Vec                   uv;
@@ -133,13 +133,13 @@ PetscErrorCode TSMonitorLGCtxNetworkSolution(TS ts, PetscInt step, PetscReal pti
   }
 
   if (ctx->semilogy) {
-    PetscInt n, j;
+    PetscInt n;
 
     PetscCall(VecDuplicate(u, &uv));
     PetscCall(VecCopy(u, uv));
     PetscCall(VecGetArray(uv, &yv));
     PetscCall(VecGetLocalSize(uv, &n));
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       if (PetscRealPart(yv[j]) <= 0.0) yv[j] = -12;
       else yv[j] = PetscLog10Real(PetscRealPart(yv[j]));
     }
@@ -151,7 +151,7 @@ PetscErrorCode TSMonitorLGCtxNetworkSolution(TS ts, PetscInt step, PetscReal pti
   PetscCall(TSGetDM(ts, &dm));
   i = 0;
   PetscCall(DMNetworkGetEdgeRange(dm, &Start, &End));
-  for (e = Start; e < End; e++) {
+  for (PetscInt e = Start; e < End; e++) {
     PetscCall(DMNetworkGetComponent(dm, e, ALL_COMPONENTS, NULL, NULL, &nvar));
     if (!nvar) continue;
 
@@ -162,7 +162,7 @@ PetscErrorCode TSMonitorLGCtxNetworkSolution(TS ts, PetscInt step, PetscReal pti
 
   /* iterate over vertices */
   PetscCall(DMNetworkGetVertexRange(dm, &Start, &End));
-  for (v = Start; v < End; v++) {
+  for (PetscInt v = Start; v < End; v++) {
     PetscCall(DMNetworkGetComponent(dm, v, ALL_COMPONENTS, NULL, NULL, &nvar));
     if (!nvar) continue;
 

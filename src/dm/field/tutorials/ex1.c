@@ -160,7 +160,7 @@ static PetscErrorCode TestShellEvaluate(DMField field, Vec points, PetscDataType
   const PetscScalar *mult;
   PetscInt           dim;
   const PetscScalar *x;
-  PetscInt           Nc, n, i, j, k, l;
+  PetscInt Nc, n, i, k;
 
   PetscFunctionBegin;
   PetscCall(DMFieldGetNumComponents(field, &Nc));
@@ -173,8 +173,8 @@ static PetscErrorCode TestShellEvaluate(DMField field, Vec points, PetscDataType
   for (i = 0; i < n; i++) {
     PetscReal r2 = 0.;
 
-    for (j = 0; j < dim; j++) r2 += PetscSqr(PetscRealPart(x[i * dim + j]));
-    for (j = 0; j < Nc; j++) {
+    for (PetscInt j = 0; j < dim; j++) r2 += PetscSqr(PetscRealPart(x[i * dim + j]));
+    for (PetscInt j = 0; j < Nc; j++) {
       PetscReal m = PetscRealPart(mult[j]);
       if (B) {
         if (type == PETSC_SCALAR) {
@@ -193,10 +193,10 @@ static PetscErrorCode TestShellEvaluate(DMField field, Vec points, PetscDataType
       if (H) {
         if (type == PETSC_SCALAR) {
           for (k = 0; k < dim; k++)
-            for (l = 0; l < dim; l++) ((PetscScalar *)H)[((i * Nc + j) * dim + k) * dim + l] = (k == l) ? 2. * m : 0.;
+            for (PetscInt l = 0; l < dim; l++) ((PetscScalar *)H)[((i * Nc + j) * dim + k) * dim + l] = (k == l) ? 2. * m : 0.;
         } else {
           for (k = 0; k < dim; k++)
-            for (l = 0; l < dim; l++) ((PetscReal *)H)[((i * Nc + j) * dim + k) * dim + l] = (k == l) ? 2. * m : 0.;
+            for (PetscInt l = 0; l < dim; l++) ((PetscReal *)H)[((i * Nc + j) * dim + k) * dim + l] = (k == l) ? 2. * m : 0.;
         }
       }
     }
@@ -277,13 +277,12 @@ int main(int argc, char **argv)
     PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
     if (testShell) {
       Vec          ctxVec;
-      PetscInt     i;
       PetscScalar *array;
 
       PetscCall(VecCreateSeq(PETSC_COMM_SELF, nc, &ctxVec));
       PetscCall(VecSetUp(ctxVec));
       PetscCall(VecGetArray(ctxVec, &array));
-      for (i = 0; i < nc; i++) array[i] = i + 1.;
+      for (PetscInt i = 0; i < nc; i++) array[i] = i + 1.;
       PetscCall(VecRestoreArray(ctxVec, &array));
       PetscCall(DMFieldCreateShell(dm, nc, DMFIELD_VERTEX, (void *)ctxVec, &field));
       PetscCall(DMFieldShellSetEvaluate(field, TestShellEvaluate));
@@ -308,7 +307,6 @@ int main(int argc, char **argv)
       PetscCall(VecDestroy(&fieldvec));
     }
   } else if (isda) {
-    PetscInt     i;
     PetscScalar *cv;
 
     switch (dim) {
@@ -325,7 +323,7 @@ int main(int argc, char **argv)
     PetscCall(DMSetUp(dm));
     PetscCall(DMDAGetHeightStratum(dm, 0, &cStart, &cEnd));
     PetscCall(PetscMalloc1(nc * (1 << dim), &cv));
-    for (i = 0; i < nc * (1 << dim); i++) {
+    for (PetscInt i = 0; i < nc * (1 << dim); i++) {
       PetscReal rv;
 
       PetscCall(PetscRandomGetValueReal(rand, &rv));

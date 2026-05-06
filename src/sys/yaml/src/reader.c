@@ -192,7 +192,6 @@ yaml_parser_update_buffer(yaml_parser_t *parser, size_t length)
             unsigned char octet;
             unsigned int width = 0;
             int low, high;
-            size_t k;
             size_t raw_unread = parser->raw_buffer.last - parser->raw_buffer.pointer;
 
             /* Decode the next character. */
@@ -257,7 +256,7 @@ yaml_parser_update_buffer(yaml_parser_t *parser, size_t length)
 
                     /* Check and decode the trailing octets. */
 
-                    for (k = 1; k < width; k ++)
+                    for (size_t k = 1; k < width; k ++)
                     {
                         octet = parser->raw_buffer.pointer[k];
 

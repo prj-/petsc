@@ -13,7 +13,7 @@ int main(int argc, char **argv)
   PetscViewer  viewer;
   PetscReal    diff;
   PetscInt     min_refine = 2, overlap = 0;
-  PetscInt     vStart, vEnd, v;
+  PetscInt vStart, vEnd;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
   PetscCall(DMDestroy(&plex));
   PetscCall(PetscSectionCreate(PetscObjectComm((PetscObject)forest), &s));
   PetscCall(PetscSectionSetChart(s, vStart, vEnd));
-  for (v = vStart; v < vEnd; ++v) PetscCall(PetscSectionSetDof(s, v, 1));
+  for (PetscInt v = vStart; v < vEnd; ++v) PetscCall(PetscSectionSetDof(s, v, 1));
   PetscCall(PetscSectionSetUp(s));
   PetscCall(DMSetLocalSection(forest, s));
   PetscCall(PetscSectionDestroy(&s));

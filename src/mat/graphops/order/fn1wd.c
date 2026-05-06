@@ -34,7 +34,7 @@ PetscErrorCode SPARSEPACKfn1wd(PetscInt *root, const PetscInt *inxadj, const Pet
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt  node, i, j, k;
+  PetscInt node, i;
   PetscReal width, fnlvl;
   PetscInt  kstop, kstrt, lp1beg, lp1end;
   PetscReal deltp1;
@@ -79,7 +79,7 @@ L400:
   lvlend = lp1beg - 1;
   lp1end = xls[lvl + 2] - 1;
   i__1   = lp1end;
-  for (j = lp1beg; j <= i__1; ++j) {
+  for (PetscInt j = lp1beg; j <= i__1; ++j) {
     node       = ls[j];
     xadj[node] = -xadj[node];
   }
@@ -87,13 +87,13 @@ L400:
   /*          INCLUDE ONLY THOSE WITH NEIGHBORS IN LVL+1 LEVEL. */
   /*          XADJ IS USED TEMPORARILY TO MARK NODES IN LVL+1.  */
   i__1 = lvlend;
-  for (j = lvlbeg; j <= i__1; ++j) {
+  for (PetscInt j = lvlbeg; j <= i__1; ++j) {
     node  = ls[j];
     kstrt = xadj[node];
     i__2  = xadj[node + 1];
     kstop = PetscAbsInt(i__2) - 1;
     i__2  = kstop;
-    for (k = kstrt; k <= i__2; ++k) {
+    for (PetscInt k = kstrt; k <= i__2; ++k) {
       nbr = adjncy[k];
       if (xadj[nbr] > 0) goto L600;
       ++(*nsep);
@@ -105,7 +105,7 @@ L400:
   L700:;
   }
   i__1 = lp1end;
-  for (j = lp1beg; j <= i__1; ++j) {
+  for (PetscInt j = lp1beg; j <= i__1; ++j) {
     node       = ls[j];
     xadj[node] = -xadj[node];
   }

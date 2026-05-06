@@ -34,7 +34,7 @@ int main(int argc, char **args)
 {
   Mat         A;
   PetscInt    M = 24, N = 48, bs = 2;
-  PetscInt    rstart, rend, i, j;
+  PetscInt rstart, rend;
   PetscViewer view;
 
   PetscFunctionBeginUser;
@@ -49,8 +49,8 @@ int main(int argc, char **args)
   */
   PetscCall(MatGetSize(A, &M, &N));
   PetscCall(MatGetOwnershipRange(A, &rstart, &rend));
-  for (i = rstart; i < rend; i++) {
-    for (j = 0; j < N; j++) {
+  for (PetscInt i = rstart; i < rend; i++) {
+    for (PetscInt j = 0; j < N; j++) {
       PetscReal v = MakeValue(i, j, M);
       if (PetscAbsReal(v) > 0) PetscCall(MatSetValue(A, i, j, v, INSERT_VALUES));
     }
@@ -63,7 +63,7 @@ int main(int argc, char **args)
       Store the binary matrix to a file
   */
   PetscCall(PetscViewerBinaryOpen(PETSC_COMM_WORLD, "matrix.dat", FILE_MODE_WRITE, &view));
-  for (i = 0; i < 3; i++) PetscCall(MatView(A, view));
+  for (PetscInt i = 0; i < 3; i++) PetscCall(MatView(A, view));
   PetscCall(PetscViewerDestroy(&view));
   PetscCall(MatDestroy(&A));
 
@@ -73,7 +73,7 @@ int main(int argc, char **args)
   PetscCall(PetscViewerBinaryOpen(PETSC_COMM_WORLD, "matrix.dat", FILE_MODE_READ, &view));
   PetscCall(MatCreate(PETSC_COMM_WORLD, &A));
   PetscCall(MatSetType(A, MATBAIJ));
-  for (i = 0; i < 3; i++) {
+  for (PetscInt i = 0; i < 3; i++) {
     if (i > 0) PetscCall(MatZeroEntries(A));
     PetscCall(MatLoad(A, view));
     PetscCall(CheckValuesAIJ(A));
@@ -88,7 +88,7 @@ int main(int argc, char **args)
   PetscCall(PetscViewerBinaryOpen(PETSC_COMM_SELF, "matrix.dat", FILE_MODE_READ, &view));
   PetscCall(MatCreate(PETSC_COMM_SELF, &A));
   PetscCall(MatSetType(A, MATSEQBAIJ));
-  for (i = 0; i < 3; i++) {
+  for (PetscInt i = 0; i < 3; i++) {
     if (i > 0) PetscCall(MatZeroEntries(A));
     PetscCall(MatLoad(A, view));
     PetscCall(CheckValuesAIJ(A));
@@ -102,7 +102,7 @@ int main(int argc, char **args)
   PetscCall(PetscViewerBinaryOpen(PETSC_COMM_WORLD, "matrix.dat", FILE_MODE_READ, &view));
   PetscCall(MatCreate(PETSC_COMM_WORLD, &A));
   PetscCall(MatSetType(A, MATMPIBAIJ));
-  for (i = 0; i < 3; i++) {
+  for (PetscInt i = 0; i < 3; i++) {
     if (i > 0) PetscCall(MatZeroEntries(A));
     PetscCall(MatLoad(A, view));
     PetscCall(CheckValuesAIJ(A));

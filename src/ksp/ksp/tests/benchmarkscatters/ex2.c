@@ -11,7 +11,7 @@ int main(int argc, char **args)
 {
   PetscCommShared scomm;
   MPI_Comm        comm;
-  PetscMPIInt     lrank, rank, size, i;
+  PetscMPIInt lrank, rank, size;
   Vec             x, y;
   VecScatter      vscat;
   IS              isstride, isblock;
@@ -26,7 +26,7 @@ int main(int argc, char **args)
   PetscCall(PetscCommDuplicate(PETSC_COMM_WORLD, &comm, NULL));
   PetscCall(PetscCommSharedGet(comm, &scomm));
 
-  for (i = 0; i < size; i++) {
+  for (PetscMPIInt i = 0; i < size; i++) {
     PetscCall(PetscCommSharedGlobalToLocal(scomm, i, &lrank));
     PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "[%d] Global rank %d shared memory comm rank %d\n", rank, i, lrank));
   }

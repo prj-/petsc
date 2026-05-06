@@ -184,7 +184,7 @@ PetscErrorCode MatBackwardSolve_SeqBAIJ_2_NaturalOrdering(Mat A, Vec bb, Vec xx)
 {
   Mat_SeqBAIJ       *a = (Mat_SeqBAIJ *)A->data;
   const PetscInt     n = a->mbs, *vi, *aj = a->j, *adiag = a->diag;
-  PetscInt           i, k, nz, idx, idt;
+  PetscInt nz, idx, idt;
   const MatScalar   *aa = a->a, *v;
   PetscScalar       *x, s1, s2, x1, x2;
   const PetscScalar *b;
@@ -194,7 +194,7 @@ PetscErrorCode MatBackwardSolve_SeqBAIJ_2_NaturalOrdering(Mat A, Vec bb, Vec xx)
   PetscCall(VecGetArray(xx, &x));
 
   /* backward solve the upper triangular */
-  for (i = n - 1; i >= 0; i--) {
+  for (PetscInt i = n - 1; i >= 0; i--) {
     v   = aa + 4 * (adiag[i + 1] + 1);
     vi  = aj + adiag[i + 1] + 1;
     nz  = adiag[i] - adiag[i + 1] - 1;
@@ -203,7 +203,7 @@ PetscErrorCode MatBackwardSolve_SeqBAIJ_2_NaturalOrdering(Mat A, Vec bb, Vec xx)
     s2  = b[1 + idt];
     PetscPrefetchBlock(vi + nz, nz, 0, PETSC_PREFETCH_HINT_NTA);
     PetscPrefetchBlock(v + 4 * nz, 4 * nz, 0, PETSC_PREFETCH_HINT_NTA);
-    for (k = 0; k < nz; k++) {
+    for (PetscInt k = 0; k < nz; k++) {
       idx = 2 * vi[k];
       x1  = x[idx];
       x2  = x[1 + idx];

@@ -82,7 +82,7 @@ PetscErrorCode SNESDiffParameterCompute_More(SNES snes, void *nePv, Vec x, Vec p
   PetscScalar   alpha;
   PetscScalar   fval[7], tab[7][7], eps[7], f = -1;
   double        rerrf = -1., fder2;
-  PetscInt      iter, k, i, j, info;
+  PetscInt i, info;
   PetscInt      nf = 7; /* number of function evaluations */
   PetscInt      fcount;
   MPI_Comm      comm;
@@ -110,12 +110,12 @@ PetscErrorCode SNESDiffParameterCompute_More(SNES snes, void *nePv, Vec x, Vec p
   /* We have 5 tries to attempt to compute a good hopt value */
   PetscCall(SNESGetIterationNumber(snes, &i));
   PetscCall(PetscFPrintf(comm, fp, "\n ------- SNES iteration %" PetscInt_FMT " ---------\n", i));
-  for (iter = 0; iter < 5; iter++) {
+  for (PetscInt iter = 0; iter < 5; iter++) {
     neP->h_first_try = h;
 
     /* Compute the nf function values needed to estimate the noise from
        the difference table */
-    for (k = 0; k < nf; k++) {
+    for (PetscInt k = 0; k < nf; k++) {
       alpha = h * (k + 1 - (nf + 1) / 2);
       PetscCall(VecWAXPY(xp, alpha, p, x));
       PetscCall(SNESComputeFunction(snes, xp, fvec));
@@ -127,14 +127,14 @@ PetscErrorCode SNESDiffParameterCompute_More(SNES snes, void *nePv, Vec x, Vec p
     /* Construct the difference table */
     for (i = 0; i < nf; i++) tab[i][0] = fval[i];
 
-    for (j = 0; j < nf - 1; j++) {
+    for (PetscInt j = 0; j < nf - 1; j++) {
       for (i = 0; i < nf - j - 1; i++) tab[i][j + 1] = tab[i + 1][j] - tab[i][j];
     }
 
     /* Print the difference table */
     PetscCall(PetscFPrintf(comm, fp, "Difference Table: iter = %" PetscInt_FMT "\n", iter));
     for (i = 0; i < nf; i++) {
-      for (j = 0; j < nf - i; j++) PetscCall(PetscFPrintf(comm, fp, " %10.2e ", tab[i][j]));
+      for (PetscInt j = 0; j < nf - i; j++) PetscCall(PetscFPrintf(comm, fp, " %10.2e ", tab[i][j]));
       PetscCall(PetscFPrintf(comm, fp, "\n"));
     }
 
@@ -215,7 +215,6 @@ static PetscErrorCode JacMatMultCompare(SNES snes, Vec x, Vec p, double hopt)
   Vec         f;
   PetscScalar alpha;
   PetscReal   yy1n, yy2n, enorm;
-  PetscInt    i;
   PetscBool   printv = PETSC_FALSE;
   char        filename[32];
   MPI_Comm    comm;
@@ -249,7 +248,7 @@ static PetscErrorCode JacMatMultCompare(SNES snes, Vec x, Vec p, double hopt)
   /* Test Jacobian-vector product computation */
   alpha = -1.0;
   h     = 0.01 * hopt;
-  for (i = 0; i < 5; i++) {
+  for (PetscInt i = 0; i < 5; i++) {
     /* Set differencing parameter for matrix-free multiplication */
     PetscCall(MatSNESMFMoreSetParameters(Jmf, PETSC_DEFAULT, PETSC_DEFAULT, h));
 

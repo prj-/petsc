@@ -66,7 +66,7 @@ typedef struct {
 static PetscErrorCode BuildCSRGraph(DomainData dd, PetscInt **xadj, PetscInt **adjncy)
 {
   PetscInt *xadj_temp, *adjncy_temp;
-  PetscInt  i, j, k, ii, jj, kk, iindex, count_adj;
+  PetscInt i, j, k, ii, jj, iindex, count_adj;
   PetscInt  istart_csr, iend_csr, jstart_csr, jend_csr, kstart_csr, kend_csr;
   PetscBool internal_node;
 
@@ -106,7 +106,7 @@ static PetscErrorCode BuildCSRGraph(DomainData dd, PetscInt **xadj, PetscInt **a
           kstart_csr = k;
           kend_csr   = k + 1;
         }
-        for (kk = kstart_csr; kk < kend_csr; kk++) {
+        for (PetscInt kk = kstart_csr; kk < kend_csr; kk++) {
           for (jj = jstart_csr; jj < jend_csr; jj++) {
             for (ii = istart_csr; ii < iend_csr; ii++) count_adj = count_adj + 1;
           }
@@ -154,7 +154,7 @@ static PetscErrorCode BuildCSRGraph(DomainData dd, PetscInt **xadj, PetscInt **a
           kstart_csr = k;
           kend_csr   = k + 1;
         }
-        for (kk = kstart_csr; kk < kend_csr; kk++) {
+        for (PetscInt kk = kstart_csr; kk < kend_csr; kk++) {
           for (jj = jstart_csr; jj < jend_csr; jj++) {
             for (ii = istart_csr; ii < iend_csr; ii++) {
               iindex = kk * dd.xm_l * dd.ym_l + jj * dd.xm_l + ii;
@@ -331,7 +331,7 @@ static PetscErrorCode ComputeMapping(DomainData dd, ISLocalToGlobalMapping *isg2
 static PetscErrorCode ComputeSubdomainMatrix(DomainData dd, GLLData glldata, Mat *local_mat)
 {
   PetscInt     localsize, zloc, yloc, xloc, auxnex, auxney, auxnez;
-  PetscInt     ie, je, ke, i, j, k, ig, jg, kg, ii, ming;
+  PetscInt i, j, k, ig, jg, kg, ii, ming;
   PetscInt    *indexg, *cols, *colsg;
   PetscScalar *vals;
   Mat          temp_local_mat, elem_mat_DBC = 0, *usedmat;
@@ -394,9 +394,9 @@ static PetscErrorCode ComputeSubdomainMatrix(DomainData dd, GLLData glldata, Mat
   if (dd.dim < 3) auxnez = 1;
   if (dd.dim < 2) auxney = 1;
 
-  for (ke = 0; ke < auxnez; ke++) {
-    for (je = 0; je < auxney; je++) {
-      for (ie = 0; ie < auxnex; ie++) {
+  for (PetscInt ke = 0; ke < auxnez; ke++) {
+    for (PetscInt je = 0; je < auxney; je++) {
+      for (PetscInt ie = 0; ie < auxnex; ie++) {
         /* customize element accounting for BC */
         xloc    = dd.p + 1;
         ming    = 0;
@@ -635,7 +635,7 @@ static PetscErrorCode GLLStuffs(DomainData dd, GLLData *glldata)
 static PetscErrorCode DomainDecomposition(DomainData *dd)
 {
   PetscMPIInt rank;
-  PetscInt    i, j, k;
+  PetscInt j, k;
 
   PetscFunctionBeginUser;
   /* Subdomain index in cartesian coordinates */
@@ -675,7 +675,7 @@ static PetscErrorCode DomainDecomposition(DomainData *dd)
   /* starting global index for local dofs (simple lexicographic order) */
   dd->startx = 0;
   j          = dd->nex / dd->npx;
-  for (i = 0; i < dd->ipx; i++) {
+  for (PetscInt i = 0; i < dd->ipx; i++) {
     k = j;
     if (i < dd->nex % dd->npx) k++;
     dd->startx = dd->startx + k * dd->p;
@@ -685,7 +685,7 @@ static PetscErrorCode DomainDecomposition(DomainData *dd)
   dd->starty = 0;
   if (dd->dim > 1) {
     j = dd->ney / dd->npy;
-    for (i = 0; i < dd->ipy; i++) {
+    for (PetscInt i = 0; i < dd->ipy; i++) {
       k = j;
       if (i < dd->ney % dd->npy) k++;
       dd->starty = dd->starty + k * dd->p;
@@ -694,7 +694,7 @@ static PetscErrorCode DomainDecomposition(DomainData *dd)
   dd->startz = 0;
   if (dd->dim > 2) {
     j = dd->nez / dd->npz;
-    for (i = 0; i < dd->ipz; i++) {
+    for (PetscInt i = 0; i < dd->ipz; i++) {
       k = j;
       if (i < dd->nez % dd->npz) k++;
       dd->startz = dd->startz + k * dd->p;
@@ -1075,7 +1075,6 @@ int main(int argc, char **args)
       PetscCall(KSPGetOperators(KSPwithFETIDP, &F, NULL));
       PetscCall(MatCreateVecs(F, &fetidp_solution, &fetidp_rhs));
       PetscCall(PCBDDCMatFETIDPGetRHS(F, bddc_rhs, fetidp_rhs));
-      PetscCall(VecSet(fetidp_solution, 0.0));
       /* test ksp with FETIDP */
       PetscCall(KSPSolve(KSPwithFETIDP, fetidp_rhs, fetidp_solution));
       /* assemble fetidp solution on physical domain */

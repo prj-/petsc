@@ -161,7 +161,7 @@ int main(int argc, char **argv)
           PetscCall(VecGetLocalSize(coords, &n));
           if (dimC > dim) { /* reembed in higher dimension */
             PetscSection sec, newSec;
-            PetscInt     pStart, pEnd, p, i, newN;
+            PetscInt pStart, pEnd, newN;
             Vec          newVec;
             DM           coordDM;
             PetscScalar *newCoordArray;
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
             PetscCall(PetscSectionSetNumFields(newSec, 1));
             PetscCall(PetscSectionGetChart(sec, &pStart, &pEnd));
             PetscCall(PetscSectionSetChart(newSec, pStart, pEnd));
-            for (p = pStart; p < pEnd; p++) {
+            for (PetscInt p = pStart; p < pEnd; p++) {
               PetscInt nDof;
 
               PetscCall(PetscSectionGetDof(sec, p, &nDof));
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
             PetscCall(VecCreateSeq(PETSC_COMM_SELF, newN, &newVec));
             PetscCall(VecGetArray(newVec, &newCoordArray));
             PetscCall(VecGetArray(coords, &coordArray));
-            for (i = 0; i < n / dim; i++) {
+            for (PetscInt i = 0; i < n / dim; i++) {
               PetscInt j;
 
               for (j = 0; j < dim; j++) newCoordArray[i * dimC + j] = coordArray[i * dim + j];
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
             PetscCall(VecGetLocalSize(coords, &n));
           }
           PetscCall(VecGetArray(coords, &coordArray));
-          for (i = 0; i < n; i++) {
+          for (PetscInt i = 0; i < n; i++) {
             PetscCall(PetscRandomGetValueReal(randCtx, &noise));
             coordArray[i] += noise * perturb;
           }

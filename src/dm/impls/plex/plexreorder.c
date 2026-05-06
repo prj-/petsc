@@ -274,11 +274,11 @@ PetscErrorCode DMPlexPermute(DM dm, IS perm, DM *pdm)
   /* Ignore globalVertexNumbers, globalCellNumbers */
   /* Reorder labels */
   {
-    PetscInt numLabels, l;
+    PetscInt numLabels;
     DMLabel  label, labelNew;
 
     PetscCall(DMGetNumLabels(dm, &numLabels));
-    for (l = 0; l < numLabels; ++l) {
+    for (PetscInt l = 0; l < numLabels; ++l) {
       PetscCall(DMGetLabelByNum(dm, l, &label));
       PetscCall(DMLabelPermute(label, perm, &labelNew));
       PetscCall(DMAddLabel(*pdm, labelNew));
@@ -323,12 +323,12 @@ PetscErrorCode DMPlexPermute(DM dm, IS perm, DM *pdm)
     PetscCall(PetscMalloc1(n, &plexNew->supports));
     PetscCall(PetscSectionGetChart(plex->supportSection, &pStart, &pEnd));
     for (p = pStart; p < pEnd; ++p) {
-      PetscInt dof, off, offNew, d;
+      PetscInt dof, off, offNew;
 
       PetscCall(PetscSectionGetDof(plexNew->supportSection, pperm[p], &dof));
       PetscCall(PetscSectionGetOffset(plex->supportSection, p, &off));
       PetscCall(PetscSectionGetOffset(plexNew->supportSection, pperm[p], &offNew));
-      for (d = 0; d < dof; ++d) plexNew->supports[offNew + d] = pperm[plex->supports[off + d]];
+      for (PetscInt d = 0; d < dof; ++d) plexNew->supports[offNew + d] = pperm[plex->supports[off + d]];
     }
     PetscCall(ISRestoreIndices(perm, &pperm));
   }

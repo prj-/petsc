@@ -1465,7 +1465,7 @@ PetscErrorCode DMPlexMetricAverage3(DM dm, Vec metric1, Vec metric2, Vec metric3
 
 static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar M1[], PetscScalar M2[])
 {
-  PetscInt     i, j, k, l, m;
+  PetscInt i, m;
   PetscReal   *evals;
   PetscScalar *evecs, *sqrtM1, *isqrtM1;
 
@@ -1479,7 +1479,7 @@ static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar
   /* Anisotropic case */
   PetscCall(PetscMalloc4(dim * dim, &evecs, dim * dim, &sqrtM1, dim * dim, &isqrtM1, dim, &evals));
   for (i = 0; i < dim; ++i) {
-    for (j = 0; j < dim; ++j) evecs[i * dim + j] = M1[i * dim + j];
+    for (PetscInt j = 0; j < dim; ++j) evecs[i * dim + j] = M1[i * dim + j];
   }
   {
     PetscScalar *work;
@@ -1512,10 +1512,10 @@ static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar
 
       /* Compute square root and the reciprocal thereof */
       for (i = 0; i < dim; ++i) {
-        for (k = 0; k < dim; ++k) {
+        for (PetscInt k = 0; k < dim; ++k) {
           sqrtM1[i * dim + k]  = 0.0;
           isqrtM1[i * dim + k] = 0.0;
-          for (j = 0; j < dim; ++j) {
+          for (PetscInt j = 0; j < dim; ++j) {
             sqrtj = PetscSqrtReal(evals[j]);
             sqrtM1[i * dim + k] += evecs[j * dim + i] * sqrtj * evecs[j * dim + k];
             isqrtM1[i * dim + k] += evecs[j * dim + i] * (1.0 / sqrtj) * evecs[j * dim + k];
@@ -1525,10 +1525,10 @@ static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar
 
       /* Map M2 into the space spanned by the eigenvectors of M1 */
       for (i = 0; i < dim; ++i) {
-        for (l = 0; l < dim; ++l) {
+        for (PetscInt l = 0; l < dim; ++l) {
           evecs[i * dim + l] = 0.0;
-          for (j = 0; j < dim; ++j) {
-            for (k = 0; k < dim; ++k) evecs[i * dim + l] += isqrtM1[j * dim + i] * M2[j * dim + k] * isqrtM1[k * dim + l];
+          for (PetscInt j = 0; j < dim; ++j) {
+            for (PetscInt k = 0; k < dim; ++k) evecs[i * dim + l] += isqrtM1[j * dim + i] * M2[j * dim + k] * isqrtM1[k * dim + l];
           }
         }
       }
@@ -1547,10 +1547,10 @@ static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar
 #endif
       if (lierr) {
         for (i = 0; i < dim; ++i) {
-          for (l = 0; l < dim; ++l) {
+          for (PetscInt l = 0; l < dim; ++l) {
             evecs[i * dim + l] = 0.0;
-            for (j = 0; j < dim; ++j) {
-              for (k = 0; k < dim; ++k) evecs[i * dim + l] += isqrtM1[j * dim + i] * M2[j * dim + k] * isqrtM1[k * dim + l];
+            for (PetscInt j = 0; j < dim; ++j) {
+              for (PetscInt k = 0; k < dim; ++k) evecs[i * dim + l] += isqrtM1[j * dim + i] * M2[j * dim + k] * isqrtM1[k * dim + l];
             }
           }
         }
@@ -1566,9 +1566,9 @@ static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar
       for (i = 0; i < dim; ++i) {
         for (m = 0; m < dim; ++m) {
           M2[i * dim + m] = 0.0;
-          for (j = 0; j < dim; ++j) {
-            for (k = 0; k < dim; ++k) {
-              for (l = 0; l < dim; ++l) M2[i * dim + m] += sqrtM1[j * dim + i] * evecs[k * dim + j] * evals[k] * evecs[k * dim + l] * sqrtM1[l * dim + m];
+          for (PetscInt j = 0; j < dim; ++j) {
+            for (PetscInt k = 0; k < dim; ++k) {
+              for (PetscInt l = 0; l < dim; ++l) M2[i * dim + m] += sqrtM1[j * dim + i] * evecs[k * dim + j] * evals[k] * evecs[k * dim + l] * sqrtM1[l * dim + m];
             }
           }
         }
@@ -1603,7 +1603,7 @@ static PetscErrorCode DMPlexMetricIntersection_Private(PetscInt dim, PetscScalar
 PetscErrorCode DMPlexMetricIntersection(DM dm, PetscInt numMetrics, Vec metrics[], Vec metricInt)
 {
   PetscBool    isotropic, uniform;
-  PetscInt     v, i, m, n;
+  PetscInt m, n;
   PetscScalar *met, *meti;
 
   PetscFunctionBegin;
@@ -1614,7 +1614,7 @@ PetscErrorCode DMPlexMetricIntersection(DM dm, PetscInt numMetrics, Vec metrics[
   PetscCall(VecCopy(metrics[0], metricInt));
   if (numMetrics == 1) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(VecGetSize(metricInt, &m));
-  for (i = 0; i < numMetrics; ++i) {
+  for (PetscInt i = 0; i < numMetrics; ++i) {
     PetscCall(VecGetSize(metrics[i], &n));
     PetscCheck(m == n, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Intersecting different metric types not implemented");
   }
@@ -1625,7 +1625,7 @@ PetscErrorCode DMPlexMetricIntersection(DM dm, PetscInt numMetrics, Vec metrics[
   if (uniform) {
     /* Uniform case */
     PetscCall(VecGetArray(metricInt, &met));
-    for (i = 1; i < numMetrics; ++i) {
+    for (PetscInt i = 1; i < numMetrics; ++i) {
       PetscCall(VecGetArray(metrics[i], &meti));
       PetscCall(DMPlexMetricIntersection_Private(1, meti, met));
       PetscCall(VecRestoreArray(metrics[i], &meti));
@@ -1641,9 +1641,9 @@ PetscErrorCode DMPlexMetricIntersection(DM dm, PetscInt numMetrics, Vec metrics[
     else nrow = dim;
     PetscCall(DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd));
     PetscCall(VecGetArray(metricInt, &met));
-    for (i = 1; i < numMetrics; ++i) {
+    for (PetscInt i = 1; i < numMetrics; ++i) {
       PetscCall(VecGetArray(metrics[i], &meti));
-      for (v = vStart; v < vEnd; ++v) {
+      for (PetscInt v = vStart; v < vEnd; ++v) {
         PetscCall(DMPlexPointLocalRef(dm, v, met, &M));
         PetscCall(DMPlexPointLocalRef(dm, v, meti, &Mi));
         PetscCall(DMPlexMetricIntersection_Private(nrow, Mi, M));

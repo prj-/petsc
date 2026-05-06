@@ -186,7 +186,7 @@ PetscErrorCode FormInitialGuess(DM da, AppCtx *ctx, Vec X)
 
 PetscErrorCode FormIFunctionLocal(DMDALocalInfo *info, PetscScalar ptime, Field **x, Field **xt, Field **f, AppCtx *ctx)
 {
-  PetscInt    i, j, l, m;
+  PetscInt i, j, l;
   PetscReal   hx, hy, dhx, dhy, hxdhy, hydhx, scale;
   PetscScalar u, uxx, uyy;
   PetscScalar vx, vy, sxp, syp, sxm, sym, avx, vxp, vxm, avy, vyp, vym, f_advect;
@@ -261,7 +261,7 @@ PetscErrorCode FormIFunctionLocal(DMDALocalInfo *info, PetscScalar ptime, Field 
       }
       /* reaction */
       if (i != 0) {
-        for (m = 0; m < N_REACTIONS; m++) {
+        for (PetscInt m = 0; m < N_REACTIONS; m++) {
           rate = ctx->rate_constant[m];
           for (l = 0; l < N_SPECIES; l++) {
             if (stoich(m, l) < 0) {
@@ -284,7 +284,7 @@ PetscErrorCode FormIFunctionLocal(DMDALocalInfo *info, PetscScalar ptime, Field 
 
 PetscErrorCode ReactingFlowPostCheck(SNESLineSearch linesearch, Vec X, Vec Y, Vec W, PetscBool *changed_y, PetscBool *changed_w, void *vctx)
 {
-  PetscInt    i, j, l, Mx, My, xs, ys, xm, ym;
+  PetscInt Mx, My, xs, ys, xm, ym;
   Field     **x;
   SNES        snes;
   DM          da;
@@ -301,9 +301,9 @@ PetscErrorCode ReactingFlowPostCheck(SNESLineSearch linesearch, Vec X, Vec Y, Ve
   PetscCall(DMDAGetInfo(da, PETSC_IGNORE, &Mx, &My, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE));
   PetscCall(DMDAVecGetArray(da, W, &x));
   PetscCall(DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL));
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) {
-      for (l = 0; l < N_SPECIES; l++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
+      for (PetscInt l = 0; l < N_SPECIES; l++) {
         if (x[j][i].sp[l] < 0.) x[j][i].sp[l] = 0.;
       }
     }

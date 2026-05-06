@@ -113,7 +113,7 @@ PetscErrorCode test_3d_compat(const char filename[], PetscInt dof, PetscBool nam
   PetscViewer       view;
   DMDALocalInfo     info;
   PetscScalar    ***va, ****vVectora;
-  PetscInt          i, j, k, c;
+  PetscInt i, j, c;
 
   PetscCall(DMDACreate3d(comm, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE, DMDA_STENCIL_STAR, M, N, P, PETSC_DECIDE, PETSC_DECIDE, PETSC_DECIDE, /* dof:*/ 1, sw, NULL, NULL, NULL, &da));
   PetscCall(DMSetFromOptions(da));
@@ -128,7 +128,7 @@ PetscErrorCode test_3d_compat(const char filename[], PetscInt dof, PetscBool nam
   PetscCall(DMCreateGlobalVector(daVector, &vVector));
   PetscCall(DMDAVecGetArray(da, v, &va));
   PetscCall(DMDAVecGetArrayDOF(daVector, vVector, &vVectora));
-  for (k = info.zs; k < info.zs + info.zm; k++) {
+  for (PetscInt k = info.zs; k < info.zs + info.zm; k++) {
     for (j = info.ys; j < info.ys + info.ym; j++) {
       for (i = info.xs; i < info.xs + info.xm; i++) {
         const PetscScalar x = (Lx * i) / M;
@@ -165,8 +165,6 @@ PetscErrorCode test_2d_compat(const char filename[], PetscInt dof, PetscBool nam
   PetscViewer       view;
   DMDALocalInfo     info;
   PetscScalar     **va, ***vVectora;
-  PetscInt          i, j, c;
-
   PetscCall(DMDACreate2d(comm, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE, DMDA_STENCIL_STAR, M, N, PETSC_DECIDE, PETSC_DECIDE, /* dof:*/ 1, sw, NULL, NULL, &da));
   PetscCall(DMSetFromOptions(da));
   PetscCall(DMSetUp(da));
@@ -179,12 +177,12 @@ PetscErrorCode test_2d_compat(const char filename[], PetscInt dof, PetscBool nam
   PetscCall(DMCreateGlobalVector(daVector, &vVector));
   PetscCall(DMDAVecGetArray(da, v, &va));
   PetscCall(DMDAVecGetArrayDOF(daVector, vVector, &vVectora));
-  for (j = info.ys; j < info.ys + info.ym; j++) {
-    for (i = info.xs; i < info.xs + info.xm; i++) {
+  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {
+    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {
       const PetscScalar x = (Lx * i) / M;
       const PetscScalar y = (Ly * j) / N;
       va[j][i]            = PetscPowScalarInt(x - 0.5 * Lx, 2) + PetscPowScalarInt(y - 0.5 * Ly, 2);
-      for (c = 0; c < dof; ++c) vVectora[j][i][c] = PetscPowScalarInt(x - 0.5 * Lx, 2) + PetscPowScalarInt(y - 0.5 * Ly, 2) + 10.0 * c;
+      for (PetscInt c = 0; c < dof; ++c) vVectora[j][i][c] = PetscPowScalarInt(x - 0.5 * Lx, 2) + PetscPowScalarInt(y - 0.5 * Ly, 2) + 10.0 * c;
     }
   }
   PetscCall(DMDAVecRestoreArray(da, v, &va));

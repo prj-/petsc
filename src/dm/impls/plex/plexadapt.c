@@ -81,13 +81,13 @@ static PetscErrorCode DMPlexLabelToMetricConstraint(DM dm, DMLabel adaptLabel, P
     PetscScalar       *cellCoords = NULL;
     PetscReal          e[3], vol;
     const PetscInt    *cone;
-    PetscInt           coneSize, cl, i, j, d, r;
+    PetscInt coneSize, i, r;
 
     PetscCall(DMPlexVecGetClosure(dm, coordSection, coordinates, c, NULL, &cellCoords));
     /* Only works for simplices */
     for (i = 0, r = 0; i < dim + 1; ++i) {
-      for (j = 0; j < i; ++j, ++r) {
-        for (d = 0; d < dim; ++d) e[d] = PetscRealPart(cellCoords[i * dim + d] - cellCoords[j * dim + d]);
+      for (PetscInt j = 0; j < i; ++j, ++r) {
+        for (PetscInt d = 0; d < dim; ++d) e[d] = PetscRealPart(cellCoords[i * dim + d] - cellCoords[j * dim + d]);
         /* FORTRAN ORDERING */
         switch (dim) {
         case 2:
@@ -114,7 +114,7 @@ static PetscErrorCode DMPlexLabelToMetricConstraint(DM dm, DMLabel adaptLabel, P
     PetscCall(DMPlexComputeCellGeometryFVM(dm, c, &vol, NULL, NULL));
     PetscCall(DMPlexGetCone(udm, c, &cone));
     PetscCall(DMPlexGetConeSize(udm, c, &coneSize));
-    for (cl = 0; cl < coneSize; ++cl) {
+    for (PetscInt cl = 0; cl < coneSize; ++cl) {
       const PetscInt v = cone[cl] - vStart;
 
       if (dim == 2) {
@@ -138,16 +138,16 @@ static PetscErrorCode DMPlexLabelToMetricConstraint(DM dm, DMLabel adaptLabel, P
   }
   for (v = 0; v < Nv; ++v) {
     const PetscInt *support;
-    PetscInt        supportSize, s;
+    PetscInt        supportSize;
     PetscReal       vol, totVol = 0.0;
 
     PetscCall(DMPlexGetSupport(udm, v + vStart, &support));
     PetscCall(DMPlexGetSupportSize(udm, v + vStart, &supportSize));
-    for (s = 0; s < supportSize; ++s) {
+    for (PetscInt s = 0; s < supportSize; ++s) {
       PetscCall(DMPlexComputeCellGeometryFVM(dm, support[s], &vol, NULL, NULL));
       totVol += vol;
     }
-    for (s = 0; s < PetscSqr(dim); ++s) metric[v * PetscSqr(dim) + s] /= totVol;
+    for (PetscInt s = 0; s < PetscSqr(dim); ++s) metric[v * PetscSqr(dim) + s] /= totVol;
   }
   PetscCall(PetscFree(eqns));
   PetscCall(VecRestoreArray(*metricVec, &metric));
@@ -170,7 +170,7 @@ PetscErrorCode DMPlexRefine_Internal(DM dm, PETSC_UNUSED Vec metric, DMLabel ada
   char       genname[PETSC_MAX_PATH_LEN], *name = NULL;
   PetscReal  refinementLimit;
   PetscReal *maxVolumes;
-  PetscInt   dim, cStart, cEnd, c;
+  PetscInt dim, cStart, cEnd;
   PetscBool  flg, flg2, localized;
 
   PetscFunctionBegin;
@@ -222,14 +222,14 @@ gotit:
       if (adaptLabel) {
         PetscCall(DMPlexLabelToVolumeConstraint(dm, adaptLabel, cStart, cEnd, PETSC_DEFAULT, maxVolumes));
       } else if (refinementFunc) {
-        for (c = cStart; c < cEnd; ++c) {
+        for (PetscInt c = cStart; c < cEnd; ++c) {
           PetscReal vol, centroid[3];
 
           PetscCall(DMPlexComputeCellGeometryFVM(dm, c, &vol, centroid, NULL));
           PetscCall((*refinementFunc)(centroid, &maxVolumes[c - cStart]));
         }
       } else {
-        for (c = 0; c < cEnd - cStart; ++c) maxVolumes[c] = refinementLimit;
+        for (PetscInt c = 0; c < cEnd - cStart; ++c) maxVolumes[c] = refinementLimit;
       }
       PetscCall((*refine)(dm, maxVolumes, dmRefined));
       PetscCall(PetscFree(maxVolumes));
@@ -273,7 +273,7 @@ PetscErrorCode DMAdaptLabel_Plex(DM dm, PETSC_UNUSED Vec metric, DMLabel adaptLa
 {
   IS              flagIS;
   const PetscInt *flags;
-  PetscInt        defFlag, minFlag, maxFlag, numFlags, f;
+  PetscInt defFlag, minFlag, maxFlag, numFlags;
 
   PetscFunctionBegin;
   PetscCall(DMLabelGetDefaultValue(adaptLabel, &defFlag));
@@ -282,7 +282,7 @@ PetscErrorCode DMAdaptLabel_Plex(DM dm, PETSC_UNUSED Vec metric, DMLabel adaptLa
   PetscCall(DMLabelGetValueIS(adaptLabel, &flagIS));
   PetscCall(ISGetLocalSize(flagIS, &numFlags));
   PetscCall(ISGetIndices(flagIS, &flags));
-  for (f = 0; f < numFlags; ++f) {
+  for (PetscInt f = 0; f < numFlags; ++f) {
     const PetscInt flag = flags[f];
 
     minFlag = PetscMin(minFlag, flag);

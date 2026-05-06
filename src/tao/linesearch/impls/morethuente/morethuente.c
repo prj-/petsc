@@ -37,7 +37,7 @@ static PetscErrorCode TaoLineSearchApply_MT(TaoLineSearch ls, Vec x, PetscReal *
   PetscReal         finit, width, width1, dginit, fm, fxm, fym, dgm, dgxm, dgym;
   PetscReal         dgx, dgy, dg, dg2, fx, fy, stx, sty, dgtest;
   PetscReal         ftest1 = 0.0, ftest2 = 0.0;
-  PetscInt          i, stage1, n1, n2, nn1, nn2;
+  PetscInt stage1, n1, n2, nn1, nn2;
   PetscReal         bstepmin1, bstepmin2, bstepmax, ostepmin, ostepmax;
   PetscBool         g_computed = PETSC_FALSE; /* to prevent extra gradient computation */
 
@@ -110,7 +110,7 @@ static PetscErrorCode TaoLineSearchApply_MT(TaoLineSearch ls, Vec x, PetscReal *
   dgy = dginit;
 
   ls->step = ls->initstep;
-  for (i = 0; i < ls->max_funcs; i++) {
+  for (PetscInt i = 0; i < ls->max_funcs; i++) {
     /* Set min and max steps to correspond to the interval of uncertainty */
     if (mt->bracket) {
       ls->stepmin = PetscMin(stx, sty);

@@ -6,13 +6,13 @@ PetscErrorCode CheckMesh(DM dm)
 {
   PetscReal detJ, J[9];
   PetscReal vol;
-  PetscInt  dim, depth, cStart, cEnd, c;
+  PetscInt dim, depth, cStart, cEnd;
 
   PetscFunctionBegin;
   PetscCall(DMGetDimension(dm, &dim));
   PetscCall(DMPlexGetDepth(dm, &depth));
   PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
-  for (c = cStart; c < cEnd; ++c) {
+  for (PetscInt c = cStart; c < cEnd; ++c) {
     PetscCall(DMPlexComputeCellGeometryFEM(dm, c, NULL, NULL, J, NULL, &detJ));
     PetscCheck(detJ > 0.0, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Mesh cell %" PetscInt_FMT " is inverted, |J| = %g", c, (double)detJ);
     if (depth > 1) {

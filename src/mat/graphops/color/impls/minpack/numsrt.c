@@ -8,7 +8,7 @@ PetscErrorCode MINPACKnumsrt(PetscInt *n, PetscInt *nmax, PetscInt *num, PetscIn
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt jinc, i, j, k, l, jl, ju;
+  PetscInt jinc, i, k, l, jl, ju;
 
   /*     Given a sequence of integers, this subroutine groups */
   /*     together those indices with the same sequence value */
@@ -84,7 +84,7 @@ PetscErrorCode MINPACKnumsrt(PetscInt *n, PetscInt *nmax, PetscInt *num, PetscIn
   }
   i__1 = ju;
   i__2 = jinc;
-  for (j = jl; i__2 < 0 ? j >= i__1 : j <= i__1; j += i__2) {
+  for (PetscInt j = jl; i__2 < 0 ? j >= i__1 : j <= i__1; j += i__2) {
     k = last[j];
   L30:
     if (!k) goto L40;

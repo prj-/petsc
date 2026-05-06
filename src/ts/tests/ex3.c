@@ -416,7 +416,7 @@ PetscErrorCode femBg(PetscScalar btri[][3], PetscScalar *f, PetscInt nz, PetscSc
 
 PetscErrorCode femA(AppCtx *obj, PetscInt nz, PetscScalar *z)
 {
-  PetscInt    i, j, il, ip, ipp, ipq, iq, iquad, iqq;
+  PetscInt i, j, ip, ipp, ipq;
   PetscInt    nli[num_z][2], indx[num_z];
   PetscScalar dd, dl, zip, zipq, zz, bb, bbb, aij;
   PetscScalar rquad[num_z][3], dlen[num_z], qdwt[3], add_term;
@@ -446,7 +446,7 @@ PetscErrorCode femA(AppCtx *obj, PetscInt nz, PetscScalar *z)
 
   ipq = 0;
 
-  for (il = 0; il < nz - 1; il++) {
+  for (PetscInt il = 0; il < nz - 1; il++) {
     ip           = ipq;
     ipq          = ip + 1;
     zip          = z[ip];
@@ -460,17 +460,17 @@ PetscErrorCode femA(AppCtx *obj, PetscInt nz, PetscScalar *z)
     nli[il][1]   = ipq;
   } /*end for (il)*/
 
-  for (il = 0; il < nz - 1; il++) {
-    for (iquad = 0; iquad < 3; iquad++) {
+  for (PetscInt il = 0; il < nz - 1; il++) {
+    for (PetscInt iquad = 0; iquad < 3; iquad++) {
       dd = (dlen[il]) * (qdwt[iquad]);
       zz = rquad[il][iquad];
 
-      for (iq = 0; iq < 2; iq++) {
+      for (PetscInt iq = 0; iq < 2; iq++) {
         ip = nli[il][iq];
         bb = bspl(z, zz, il, iq, nli, 1);
         i  = indx[ip];
         if (i > -1) {
-          for (iqq = 0; iqq < 2; iqq++) {
+          for (PetscInt iqq = 0; iqq < 2; iqq++) {
             ipp = nli[il][iqq];
             bbb = bspl(z, zz, il, iqq, nli, 1);
             j   = indx[ipp];
@@ -495,7 +495,7 @@ PetscErrorCode femA(AppCtx *obj, PetscInt nz, PetscScalar *z)
 ---------------------------------------------------------*/
 PetscErrorCode rhs(AppCtx *obj, PetscScalar *y, PetscInt nz, PetscScalar *z, PetscReal t)
 {
-  PetscInt    i, j, js, je, jj;
+  PetscInt i, j, js, je;
   PetscScalar val, g[num_z], btri[num_z][3], add_term;
 
   PetscFunctionBeginUser;
@@ -515,7 +515,7 @@ PetscErrorCode rhs(AppCtx *obj, PetscScalar *y, PetscInt nz, PetscScalar *z, Pet
     je = 2;
     if (i == nz - 2) je = 1;
 
-    for (jj = js; jj <= je; jj++) {
+    for (PetscInt jj = js; jj <= je; jj++) {
       j = i + jj - 1;
       val += (btri[i][jj]) * (y[j]);
     }

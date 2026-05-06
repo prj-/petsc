@@ -4,7 +4,7 @@
 PETSC_EXTERN PetscErrorCode MatColoringCreateBipartiteGraph(MatColoring mc, PetscSF *etoc, PetscSF *etor)
 {
   PetscInt           nentries, ncolentries, idx;
-  PetscInt           i, j, rs, re, cs, ce, cn;
+  PetscInt rs, re, cs, ce, cn;
   PetscInt          *rowleaf, *colleaf, *rowdata;
   PetscInt           ncol;
   const PetscScalar *vcol;
@@ -17,17 +17,17 @@ PETSC_EXTERN PetscErrorCode MatColoringCreateBipartiteGraph(MatColoring mc, Pets
   PetscCall(MatGetOwnershipRangeColumn(m, &cs, &ce));
   cn       = ce - cs;
   nentries = 0;
-  for (i = rs; i < re; i++) {
+  for (PetscInt i = rs; i < re; i++) {
     PetscCall(MatGetRow(m, i, &ncol, NULL, &vcol));
-    for (j = 0; j < ncol; j++) nentries++;
+    for (PetscInt j = 0; j < ncol; j++) nentries++;
     PetscCall(MatRestoreRow(m, i, &ncol, NULL, &vcol));
   }
   PetscCall(PetscMalloc1(nentries, &rowleaf));
   PetscCall(PetscMalloc1(nentries, &rowdata));
   idx = 0;
-  for (i = rs; i < re; i++) {
+  for (PetscInt i = rs; i < re; i++) {
     PetscCall(MatGetRow(m, i, &ncol, &icol, &vcol));
-    for (j = 0; j < ncol; j++) {
+    for (PetscInt j = 0; j < ncol; j++) {
       rowleaf[idx] = icol[j];
       rowdata[idx] = i;
       idx++;
@@ -47,7 +47,7 @@ PETSC_EXTERN PetscErrorCode MatColoringCreateBipartiteGraph(MatColoring mc, Pets
   PetscCall(PetscSFComputeDegreeEnd(*etoc, &coldegrees));
   PetscCall(PetscLogEventEnd(MATCOLORING_Comm, *etoc, 0, 0, 0));
   ncolentries = 0;
-  for (i = 0; i < cn; i++) ncolentries += coldegrees[i];
+  for (PetscInt i = 0; i < cn; i++) ncolentries += coldegrees[i];
   PetscCall(PetscMalloc1(ncolentries, &colleaf));
 
   /* create the one going the other way by building the leaf set */

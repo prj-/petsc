@@ -911,7 +911,7 @@ static PetscErrorCode DMCreateInterpolation_DA_3D_Q1(DM dac, DM daf, Mat *A)
 
   } else {
     PetscScalar *xi, *eta, *zeta;
-    PetscInt     li, nxi, lj, neta, lk, nzeta, n;
+    PetscInt li, nxi, lj, neta, lk, nzeta;
     PetscScalar  Ni[8];
 
     /* compute local coordinate arrays */
@@ -983,7 +983,7 @@ static PetscErrorCode DMCreateInterpolation_DA_3D_Q1(DM dac, DM daf, Mat *A)
           Ni[6] = 0.125 * (1.0 - xi[li]) * (1.0 + eta[lj]) * (1.0 + zeta[lk]);
           Ni[7] = 0.125 * (1.0 + xi[li]) * (1.0 + eta[lj]) * (1.0 + zeta[lk]);
 
-          for (n = 0; n < 8; n++) {
+          for (PetscInt n = 0; n < 8; n++) {
             if (PetscAbsScalar(Ni[n]) < 1.0e-32) cols[n] = -1;
           }
           PetscCall(MatSetValues(mat, 1, &row, 8, cols, Ni, INSERT_VALUES));
@@ -1173,7 +1173,7 @@ static PetscErrorCode DMCreateInjection_DA_2D(DM dac, DM daf, VecScatter *inject
 
 static PetscErrorCode DMCreateInjection_DA_3D(DM dac, DM daf, VecScatter *inject)
 {
-  PetscInt               i, j, k, i_start, j_start, k_start, m_f, n_f, p_f, Mx, My, Mz;
+  PetscInt i, j, i_start, j_start, k_start, m_f, n_f, p_f, Mx, My, Mz;
   PetscInt               m_ghost, n_ghost, p_ghost, m_ghost_c, n_ghost_c, p_ghost_c;
   PetscInt               i_start_ghost, j_start_ghost, k_start_ghost;
   PetscInt               mx, my, mz, ratioi, ratioj, ratiok;
@@ -1227,7 +1227,7 @@ static PetscErrorCode DMCreateInjection_DA_3D(DM dac, DM daf, VecScatter *inject
   /* loop over local fine grid nodes setting interpolation for those*/
   nc = 0;
   PetscCall(PetscMalloc1(n_f * m_f * p_f, &cols));
-  for (k = k_start_c; k < k_start_c + p_c; k++) {
+  for (PetscInt k = k_start_c; k < k_start_c + p_c; k++) {
     for (j = j_start_c; j < j_start_c + n_c; j++) {
       for (i = i_start_c; i < i_start_c + m_c; i++) {
         PetscInt i_f = i * ratioi, j_f = j * ratioj, k_f = k * ratiok;
@@ -1335,15 +1335,13 @@ PetscErrorCode DMDACreateAggregates(DM dac, DM daf, Mat *rest)
   PetscInt               dimf, Mf, Nf, Pf, mf, nf, pf, doff, sf;
   DMBoundaryType         bxc, byc, bzc, bxf, byf, bzf;
   DMDAStencilType        stc, stf;
-  PetscInt               i, j, l;
+  PetscInt i, j;
   PetscInt               i_start, j_start, l_start, m_f, n_f, p_f;
   PetscInt               i_start_ghost, j_start_ghost, l_start_ghost, m_ghost, n_ghost, p_ghost;
   const PetscInt        *idx_f;
-  PetscInt               i_c, j_c, l_c;
   PetscInt               i_start_c, j_start_c, l_start_c, m_c, n_c, p_c;
   PetscInt               i_start_ghost_c, j_start_ghost_c, l_start_ghost_c, m_ghost_c, n_ghost_c, p_ghost_c;
   const PetscInt        *idx_c;
-  PetscInt               d;
   PetscInt               a;
   PetscInt               max_agg_size;
   PetscInt              *fine_nodes;
@@ -1403,10 +1401,10 @@ PetscErrorCode DMDACreateAggregates(DM dac, DM daf, Mat *rest)
   for (i = 0; i < max_agg_size; i++) one_vec[i] = 1.0;
 
   /* loop over all coarse nodes */
-  for (l_c = l_start_c; l_c < l_start_c + p_c; l_c++) {
-    for (j_c = j_start_c; j_c < j_start_c + n_c; j_c++) {
-      for (i_c = i_start_c; i_c < i_start_c + m_c; i_c++) {
-        for (d = 0; d < dofc; d++) {
+  for (PetscInt l_c = l_start_c; l_c < l_start_c + p_c; l_c++) {
+    for (PetscInt j_c = j_start_c; j_c < j_start_c + n_c; j_c++) {
+      for (PetscInt i_c = i_start_c; i_c < i_start_c + m_c; i_c++) {
+        for (PetscInt d = 0; d < dofc; d++) {
           /* convert to local "natural" numbering and then to PETSc global numbering */
           a = idx_c[dofc * (m_ghost_c * n_ghost_c * (l_c - l_start_ghost_c) + m_ghost_c * (j_c - j_start_ghost_c) + (i_c - i_start_ghost_c))] + d;
 
@@ -1415,7 +1413,7 @@ PetscErrorCode DMDACreateAggregates(DM dac, DM daf, Mat *rest)
              i_c*Mf/Mc <= i_f < (i_c+1)*Mf/Mc
              (same for other dimensions)
           */
-          for (l = l_c * Pf / Pc; l < PetscMin((l_c + 1) * Pf / Pc, Pf); l++) {
+          for (PetscInt l = l_c * Pf / Pc; l < PetscMin((l_c + 1) * Pf / Pc, Pf); l++) {
             for (j = j_c * Nf / Nc; j < PetscMin((j_c + 1) * Nf / Nc, Nf); j++) {
               for (i = i_c * Mf / Mc; i < PetscMin((i_c + 1) * Mf / Mc, Mf); i++) {
                 fine_nodes[fn_idx] = idx_f[doff * (m_ghost * n_ghost * (l - l_start_ghost) + m_ghost * (j - j_start_ghost) + (i - i_start_ghost))] + d;

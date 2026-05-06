@@ -659,7 +659,6 @@ PetscErrorCode PetscOptionsInsertFile(MPI_Comm comm, PetscOptions options, const
 @*/
 PetscErrorCode PetscOptionsInsertArgs(PetscOptions options, int argc, const char *const args[])
 {
-  MPI_Comm           comm  = PETSC_COMM_WORLD;
   int                left  = PetscMax(argc, 0);
   const char *const *eargs = args;
 
@@ -677,12 +676,12 @@ PetscErrorCode PetscOptionsInsertArgs(PetscOptions options, int argc, const char
       left--;
     } else if (isfile) {
       PetscCheck(left > 1 && eargs[1][0] != '-', PETSC_COMM_SELF, PETSC_ERR_USER, "Missing filename for -options_file filename option");
-      PetscCall(PetscOptionsInsertFile(comm, options, eargs[1], PETSC_TRUE));
+      PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, options, eargs[1], PETSC_TRUE));
       eargs += 2;
       left -= 2;
     } else if (isfileyaml) {
       PetscCheck(left > 1 && eargs[1][0] != '-', PETSC_COMM_SELF, PETSC_ERR_USER, "Missing filename for -options_file_yaml filename option");
-      PetscCall(PetscOptionsInsertFileYAML(comm, options, eargs[1], PETSC_TRUE));
+      PetscCall(PetscOptionsInsertFileYAML(PETSC_COMM_WORLD, options, eargs[1], PETSC_TRUE));
       eargs += 2;
       left -= 2;
     } else if (isstringyaml) {
@@ -730,7 +729,6 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
 {
   const char *const *opt = precedentOptions;
   const size_t       n   = PO_NUM;
-  size_t             o;
   int                a;
   const char       **val;
   char             **cval;
@@ -741,7 +739,7 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
   val = (const char **)cval;
 
   /* Look for options possibly set using PetscOptionsSetValue beforehand */
-  for (o = 0; o < n; o++) PetscCall(PetscOptionsFindPair(options, NULL, opt[o], &val[o], &set[o]));
+  for (size_t o = 0; o < n; o++) PetscCall(PetscOptionsFindPair(options, NULL, opt[o], &val[o], &set[o]));
 
   /* Loop through all args to collect last occurring value of each option */
   for (a = 1; a < argc; a++) {
@@ -749,7 +747,7 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
 
     PetscCall(PetscOptionsValidKey(args[a], &valid));
     if (!valid) continue;
-    for (o = 0; o < n; o++) {
+    for (size_t o = 0; o < n; o++) {
       PetscCall(PetscStrcasecmp(args[a], opt[o], &eq));
       if (eq) {
         set[o] = PETSC_TRUE;
@@ -773,7 +771,7 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
   *skip_petscrc_set = set[PO_SKIP_PETSCRC];
 
   /* Store precedent options in database and mark them as used */
-  for (o = 1; o < n; o++) {
+  for (size_t o = 1; o < n; o++) {
     if (set[o]) {
       PetscCall(PetscOptionsSetValue_Private(options, opt[o], val[o], &a, PETSC_OPT_COMMAND_LINE));
       options->used[a] = PETSC_TRUE;
@@ -834,7 +832,6 @@ static inline PetscErrorCode PetscOptionsSkipPrecedent(PetscOptions options, con
 @*/
 PetscErrorCode PetscOptionsInsert(PetscOptions options, int *argc, char ***args, const char file[]) PeNS
 {
-  MPI_Comm    comm = PETSC_COMM_WORLD;
   PetscMPIInt rank;
   PetscBool   hasArgs     = (argc && *argc) ? PETSC_TRUE : PETSC_FALSE;
   PetscBool   skipPetscrc = PETSC_FALSE, skipPetscrcSet = PETSC_FALSE;
@@ -842,8 +839,8 @@ PetscErrorCode PetscOptionsInsert(PetscOptions options, int *argc, char ***args,
   size_t      len      = 0;
 
   PetscFunctionBegin;
-  PetscCheck(!hasArgs || (args && *args), comm, PETSC_ERR_ARG_NULL, "*argc > 1 but *args not given");
-  PetscCallMPI(MPI_Comm_rank(comm, &rank));
+  PetscCheck(!hasArgs || (args && *args), PETSC_COMM_WORLD, PETSC_ERR_ARG_NULL, "*argc > 1 but *args not given");
+  PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
 
   if (!options) {
     PetscCall(PetscOptionsCreateDefault());
@@ -855,7 +852,7 @@ PetscErrorCode PetscOptionsInsert(PetscOptions options, int *argc, char ***args,
     PetscCall(PetscOptionsGetBool(NULL, NULL, "-petsc_ci", &PetscCIEnabled, NULL));
   }
   if (file && file[0]) {
-    PetscCall(PetscOptionsInsertFile(comm, options, file, PETSC_TRUE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, options, file, PETSC_TRUE));
     /* if -skip_petscrc has not been set from command line, check whether it has been set in the file */
     if (!skipPetscrcSet) PetscCall(PetscOptionsGetBool(options, NULL, "-skip_petscrc", &skipPetscrc, NULL));
   }
@@ -863,11 +860,11 @@ PetscErrorCode PetscOptionsInsert(PetscOptions options, int *argc, char ***args,
     char filename[PETSC_MAX_PATH_LEN];
 
     PetscCall(PetscGetHomeDirectory(filename, sizeof(filename)));
-    PetscCallMPI(MPI_Bcast(filename, (int)sizeof(filename), MPI_CHAR, 0, comm));
+    PetscCallMPI(MPI_Bcast(filename, (int)sizeof(filename), MPI_CHAR, 0, PETSC_COMM_WORLD));
     if (filename[0]) PetscCall(PetscStrlcat(filename, "/.petscrc", sizeof(filename)));
-    PetscCall(PetscOptionsInsertFile(comm, options, filename, PETSC_FALSE));
-    PetscCall(PetscOptionsInsertFile(comm, options, ".petscrc", PETSC_FALSE));
-    PetscCall(PetscOptionsInsertFile(comm, options, "petscrc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, options, filename, PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, options, ".petscrc", PETSC_FALSE));
+    PetscCall(PetscOptionsInsertFile(PETSC_COMM_WORLD, options, "petscrc", PETSC_FALSE));
   }
 
   /* insert environment options */
@@ -875,10 +872,10 @@ PetscErrorCode PetscOptionsInsert(PetscOptions options, int *argc, char ***args,
     eoptions = getenv("PETSC_OPTIONS");
     PetscCall(PetscStrlen(eoptions, &len));
   }
-  PetscCallMPI(MPI_Bcast(&len, 1, MPIU_SIZE_T, 0, comm));
+  PetscCallMPI(MPI_Bcast(&len, 1, MPIU_SIZE_T, 0, PETSC_COMM_WORLD));
   if (len) {
     if (rank) PetscCall(PetscMalloc1(len + 1, &eoptions));
-    PetscCallMPI(MPI_Bcast(eoptions, (PetscMPIInt)len, MPI_CHAR, 0, comm));
+    PetscCallMPI(MPI_Bcast(eoptions, (PetscMPIInt)len, MPI_CHAR, 0, PETSC_COMM_WORLD));
     if (rank) eoptions[len] = 0;
     PetscCall(PetscOptionsInsertString_Private(options, eoptions, PETSC_OPT_ENVIRONMENT));
     if (rank) PetscCall(PetscFree(eoptions));
@@ -889,10 +886,10 @@ PetscErrorCode PetscOptionsInsert(PetscOptions options, int *argc, char ***args,
     eoptions = getenv("PETSC_OPTIONS_YAML");
     PetscCall(PetscStrlen(eoptions, &len));
   }
-  PetscCallMPI(MPI_Bcast(&len, 1, MPIU_SIZE_T, 0, comm));
+  PetscCallMPI(MPI_Bcast(&len, 1, MPIU_SIZE_T, 0, PETSC_COMM_WORLD));
   if (len) {
     if (rank) PetscCall(PetscMalloc1(len + 1, &eoptions));
-    PetscCallMPI(MPI_Bcast(eoptions, (PetscMPIInt)len, MPI_CHAR, 0, comm));
+    PetscCallMPI(MPI_Bcast(eoptions, (PetscMPIInt)len, MPI_CHAR, 0, PETSC_COMM_WORLD));
     if (rank) eoptions[len] = 0;
     PetscCall(PetscOptionsInsertStringYAML_Private(options, eoptions, PETSC_OPT_ENVIRONMENT));
     if (rank) PetscCall(PetscFree(eoptions));
@@ -1923,13 +1920,12 @@ PetscErrorCode PetscOptionsAllUsed(PetscOptions options, PetscInt *N)
 @*/
 PetscErrorCode PetscOptionsLeft(PetscOptions options)
 {
-  PetscInt     i;
   PetscInt     cnt = 0;
   PetscOptions toptions;
 
   PetscFunctionBegin;
   toptions = options ? options : defaultoptions;
-  for (i = 0; i < toptions->N; i++) {
+  for (PetscInt i = 0; i < toptions->N; i++) {
     if (!toptions->used[i]) {
       if (PetscCIOption(toptions->names[i])) continue;
       if (toptions->values[i]) {
@@ -1975,7 +1971,7 @@ PetscErrorCode PetscOptionsLeft(PetscOptions options)
 @*/
 PetscErrorCode PetscOptionsLeftGet(PetscOptions options, PetscInt *N, char **names[], char **values[])
 {
-  PetscInt i, n;
+  PetscInt n;
 
   PetscFunctionBegin;
   if (N) PetscAssertPointer(N, 2);
@@ -1985,7 +1981,7 @@ PetscErrorCode PetscOptionsLeftGet(PetscOptions options, PetscInt *N, char **nam
 
   /* The number of unused PETSc options */
   n = 0;
-  for (i = 0; i < options->N; i++) {
+  for (PetscInt i = 0; i < options->N; i++) {
     if (PetscCIOption(options->names[i])) continue;
     if (!options->used[i]) n++;
   }
@@ -1995,7 +1991,7 @@ PetscErrorCode PetscOptionsLeftGet(PetscOptions options, PetscInt *N, char **nam
 
   n = 0;
   if (names || values) {
-    for (i = 0; i < options->N; i++) {
+    for (PetscInt i = 0; i < options->N; i++) {
       if (!options->used[i]) {
         if (PetscCIOption(options->names[i])) continue;
         if (names) (*names)[n] = options->names[i];
@@ -2075,13 +2071,12 @@ PetscErrorCode PetscOptionsMonitorDefault(const char name[], const char value[],
       PetscCall(PetscViewerASCIIPrintf(viewer, "Setting option: %s = %s (source: %s)\n", name, value, PetscOptionSources[source]));
     }
   } else {
-    MPI_Comm comm = PETSC_COMM_WORLD;
     if (!value) {
-      PetscCall(PetscPrintf(comm, "Removing option: %s\n", name));
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Removing option: %s\n", name));
     } else if (!value[0]) {
-      PetscCall(PetscPrintf(comm, "Setting option: %s (no value) (source: %s)\n", name, PetscOptionSources[source]));
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Setting option: %s (no value) (source: %s)\n", name, PetscOptionSources[source]));
     } else {
-      PetscCall(PetscPrintf(comm, "Setting option: %s = %s (source: %s)\n", name, value, PetscOptionSources[source]));
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Setting option: %s = %s (source: %s)\n", name, value, PetscOptionSources[source]));
     }
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -2518,11 +2513,10 @@ PetscErrorCode PetscOptionsGetEList(PetscOptions options, const char pre[], cons
   size_t    alen, len = 0, tlen = 0;
   char     *svalue;
   PetscBool aset, flg = PETSC_FALSE;
-  PetscInt  i;
 
   PetscFunctionBegin;
   PetscAssertPointer(opt, 3);
-  for (i = 0; i < ntext; i++) {
+  for (PetscInt i = 0; i < ntext; i++) {
     PetscCall(PetscStrlen(list[i], &alen));
     if (alen > len) len = alen;
     tlen += len + 1;
@@ -2537,7 +2531,7 @@ PetscErrorCode PetscOptionsGetEList(PetscOptions options, const char pre[], cons
 
       PetscCall(PetscMalloc1(tlen, &avail));
       avail[0] = '\0';
-      for (i = 0; i < ntext; i++) {
+      for (PetscInt i = 0; i < ntext; i++) {
         PetscCall(PetscStrlcat(avail, list[i], tlen));
         PetscCall(PetscStrlcat(avail, " ", tlen));
       }

@@ -404,7 +404,7 @@ static PetscErrorCode PCSetCoordinates_ML(PC pc, PetscInt ndm, PetscInt a_nloc, 
 {
   PC_MG   *mg    = (PC_MG *)pc->data;
   PC_ML   *pc_ml = (PC_ML *)mg->innerctx;
-  PetscInt arrsz, oldarrsz, bs, my0, kk, ii, nloc, Iend, aloc;
+  PetscInt arrsz, oldarrsz, bs, my0, nloc, Iend, aloc;
   Mat      Amat = pc->pmat;
 
   /* this function copied and modified from PCSetCoordinates_GEO -TGI */
@@ -428,15 +428,15 @@ static PetscErrorCode PCSetCoordinates_ML(PC pc, PetscInt ndm, PetscInt a_nloc, 
     PetscCall(PetscFree(pc_ml->coords));
     PetscCall(PetscMalloc1(arrsz, &pc_ml->coords));
   }
-  for (kk = 0; kk < arrsz; kk++) pc_ml->coords[kk] = -999.;
+  for (PetscInt kk = 0; kk < arrsz; kk++) pc_ml->coords[kk] = -999.;
   /* copy data in - column-oriented */
   if (nloc == a_nloc) {
-    for (kk = 0; kk < nloc; kk++) {
-      for (ii = 0; ii < ndm; ii++) pc_ml->coords[ii * nloc + kk] = coords[kk * ndm + ii];
+    for (PetscInt kk = 0; kk < nloc; kk++) {
+      for (PetscInt ii = 0; ii < ndm; ii++) pc_ml->coords[ii * nloc + kk] = coords[kk * ndm + ii];
     }
   } else { /* assumes the coordinates are blocked */
-    for (kk = 0; kk < nloc; kk++) {
-      for (ii = 0; ii < ndm; ii++) pc_ml->coords[ii * nloc + kk] = coords[bs * kk * ndm + ii];
+    for (PetscInt kk = 0; kk < nloc; kk++) {
+      for (PetscInt ii = 0; ii < ndm; ii++) pc_ml->coords[ii * nloc + kk] = coords[bs * kk * ndm + ii];
     }
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -509,7 +509,7 @@ static PetscErrorCode PCSetUp_ML(PC pc)
   ML              *ml_object;
   ML_Aggregate    *agg_object;
   ML_Operator     *mlmat;
-  PetscInt         nlocal_allcols, Nlevels, mllevel, level, level1, m, fine_level, bs;
+  PetscInt nlocal_allcols, Nlevels, level, level1, m, fine_level, bs;
   Mat              A, Aloc;
   GridCtx         *gridctx;
   PC_MG           *mg    = (PC_MG *)pc->data;
@@ -572,13 +572,13 @@ static PetscErrorCode PCSetUp_ML(PC pc)
 
       level = fine_level - 1;
       if (size == 1) { /* convert ML P, R and A into seqaij format */
-        for (mllevel = 1; mllevel < Nlevels; mllevel++) {
+        for (PetscInt mllevel = 1; mllevel < Nlevels; mllevel++) {
           mlmat = &ml_object->Amat[mllevel];
           PetscCall(MatWrapML_SeqAIJ(mlmat, MAT_REUSE_MATRIX, &gridctx[level].A));
           level--;
         }
       } else { /* convert ML P and R into shell format, ML A into mpiaij format */
-        for (mllevel = 1; mllevel < Nlevels; mllevel++) {
+        for (PetscInt mllevel = 1; mllevel < Nlevels; mllevel++) {
           mlmat = &ml_object->Amat[mllevel];
           PetscCall(MatWrapML_MPIAIJ(mlmat, MAT_REUSE_MATRIX, &gridctx[level].A));
           level--;
@@ -674,7 +674,7 @@ static PetscErrorCode PCSetUp_ML(PC pc)
       PetscScalar       *nullvec;
       const PetscScalar *v;
       PetscBool          has_const;
-      PetscInt           i, j, mlocal, nvec, M;
+      PetscInt mlocal, nvec, M;
       const Vec         *vecs;
 
       PetscCheck(mnull, PetscObjectComm((PetscObject)pc), PETSC_ERR_USER, "Must provide explicit null space using MatSetNearNullSpace() to use user-specified null space");
@@ -683,10 +683,10 @@ static PetscErrorCode PCSetUp_ML(PC pc)
       PetscCall(MatNullSpaceGetVecs(mnull, &has_const, &nvec, &vecs));
       PetscCall(PetscMalloc1((nvec + !!has_const) * mlocal, &nullvec));
       if (has_const)
-        for (i = 0; i < mlocal; i++) nullvec[i] = 1.0 / M;
-      for (i = 0; i < nvec; i++) {
+        for (PetscInt i = 0; i < mlocal; i++) nullvec[i] = 1.0 / M;
+      for (PetscInt i = 0; i < nvec; i++) {
         PetscCall(VecGetArrayRead(vecs[i], &v));
-        for (j = 0; j < mlocal; j++) nullvec[(i + !!has_const) * mlocal + j] = v[j];
+        for (PetscInt j = 0; j < mlocal; j++) nullvec[(i + !!has_const) * mlocal + j] = v[j];
         PetscCall(VecRestoreArrayRead(vecs[i], &v));
       }
       PetscCallExternalVoid("ML_Aggregate_Set_NullSpace", ML_Aggregate_Set_NullSpace(agg_object, bs, nvec + !!has_const, nullvec, mlocal));
@@ -781,13 +781,11 @@ static PetscErrorCode PCSetUp_ML(PC pc)
 #endif
 
     if (!pc_ml->RepartitionType) {
-      PetscInt i;
-
       PetscCheck(pc_ml->dim, PetscObjectComm((PetscObject)pc), PETSC_ERR_USER, "ML Zoltan repartitioning requires coordinates");
       PetscCallExternalVoid("ML_Repartition_Set_Partitioner", ML_Repartition_Set_Partitioner(ml_object, ML_USEZOLTAN));
       PetscCallExternalVoid("ML_Aggregate_Set_Dimensions", ML_Aggregate_Set_Dimensions(agg_object, pc_ml->dim));
 
-      for (i = 0; i < ml_object->ML_num_levels; i++) {
+      for (PetscInt i = 0; i < ml_object->ML_num_levels; i++) {
         ML_Aggregate_Viz_Stats *grid_info = (ML_Aggregate_Viz_Stats *)ml_object->Grid[i].Grid;
         grid_info->zoltan_type            = pc_ml->ZoltanScheme + 1; /* ml numbers options 1, 2, 3 */
         /* defaults from ml_agg_info.c */
@@ -832,7 +830,7 @@ static PetscErrorCode PCSetUp_ML(PC pc)
   level = fine_level - 1;
   /* TODO: support for GPUs */
   if (size == 1) { /* convert ML P, R and A into seqaij format */
-    for (mllevel = 1; mllevel < Nlevels; mllevel++) {
+    for (PetscInt mllevel = 1; mllevel < Nlevels; mllevel++) {
       mlmat = &ml_object->Pmat[mllevel];
       PetscCall(MatWrapML_SeqAIJ(mlmat, MAT_INITIAL_MATRIX, &gridctx[level].P));
       mlmat = &ml_object->Rmat[mllevel - 1];
@@ -843,7 +841,7 @@ static PetscErrorCode PCSetUp_ML(PC pc)
       level--;
     }
   } else { /* convert ML P and R into shell format, ML A into mpiaij format */
-    for (mllevel = 1; mllevel < Nlevels; mllevel++) {
+    for (PetscInt mllevel = 1; mllevel < Nlevels; mllevel++) {
       mlmat = &ml_object->Pmat[mllevel];
       PetscCall(MatWrapML_SHELL(mlmat, MAT_INITIAL_MATRIX, &gridctx[level].P));
       mlmat = &ml_object->Rmat[mllevel - 1];
@@ -893,7 +891,7 @@ static PetscErrorCode PCSetUp_ML(PC pc)
     PetscReal *array;
 
     level = fine_level;
-    for (mllevel = 0; mllevel < Nlevels; mllevel++) {
+    for (PetscInt mllevel = 0; mllevel < Nlevels; mllevel++) {
       ML_Aggregate_Viz_Stats *grid_info = (ML_Aggregate_Viz_Stats *)ml_object->Amat[mllevel].to->Grid->Grid;
       MPI_Comm                comm      = ((PetscObject)gridctx[level].A)->comm;
 

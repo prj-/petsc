@@ -458,7 +458,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, void *ptr)
   UserCtx     *ctx = (UserCtx *)ptr;
   PetscDrawLG  lg;
   PetscScalar *u, l, r, c;
-  PetscInt     Mx, i, xs, xm, cnt;
+  PetscInt Mx, xs, xm, cnt;
   PetscReal    x, y, hx, pause, sx, len, max, xx[4], yy[4], xx_netforce, yy_netforce, yup, ydown, y2, len2;
   PetscDraw    draw;
   Vec          localU;
@@ -507,7 +507,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, void *ptr)
   PetscCall(PetscDrawLGSetColors(lg, colors + 1));
   PetscCall(PetscDrawViewPortsSet(ports, 2));
   x = hx * xs;
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xx[0] = xx[1] = xx[2] = x;
     if (ctx->degenerate) yy[0] = PetscRealPart(.25 * (1. - u[i] * u[i]) * ctx->kappa * (u[i - 1] - u[i + 1]) * (u[i - 1] - u[i + 1]) * sx);
     else yy[0] = PetscRealPart(.25 * ctx->kappa * (u[i - 1] - u[i + 1]) * (u[i - 1] - u[i + 1]) * sx);
@@ -554,7 +554,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, void *ptr)
   PetscCall(PetscDrawLGReset(lg));
   x   = xs * hx;
   max = 0.;
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xx[0] = xx[1] = xx[2] = xx[3] = x;
     xx_netforce                   = x;
     if (ctx->degenerate) {
@@ -640,7 +640,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, void *ptr)
   x = hx * xs;
   PetscCall(PetscDrawLGSetLimits(lg, x, x + (xm - 1) * hx, -1.1, 1.1));
   PetscCall(PetscDrawLGSetColors(lg, colors));
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xx[0] = x;
     yy[0] = PetscRealPart(u[i]);
     PetscCall(PetscDrawLGAddPoint(lg, xx, yy));
@@ -656,7 +656,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, void *ptr)
   cnt = xm / 60;
   cnt = (!cnt) ? 1 : cnt;
 
-  for (i = xs; i < xs + xm; i += cnt) {
+  for (PetscInt i = xs; i < xs + xm; i += cnt) {
     y = yup = ydown = PetscRealPart(u[i]);
     c               = (u[i - 1] + u[i + 1] - 2.0 * u[i]) * sx;
     r               = (u[i] + u[i + 2] - 2.0 * u[i + 1]) * sx;

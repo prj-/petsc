@@ -82,7 +82,7 @@ int main(int argc, char **args)
  */
 PetscErrorCode GetElasticityMatrix(PetscInt m, Mat *newmat)
 {
-  PetscInt    i, j, k, i1, i2, j_1, j2, k1, k2, h1, h2, shiftx, shifty, shiftz;
+  PetscInt i, j, k, h1, h2, shiftx, shifty, shiftz;
   PetscInt    ict, nz, base, r1, r2, N, *rowkeep, nstart;
   IS          iskeep;
   PetscReal **K, norm;
@@ -108,14 +108,14 @@ PetscErrorCode GetElasticityMatrix(PetscInt m, Mat *newmat)
       for (i = 0; i < m; i++) {
         h1   = 0;
         base = 2 * k * shiftz + 2 * j * shifty + 2 * i * shiftx;
-        for (k1 = 0; k1 < 3; k1++) {
-          for (j_1 = 0; j_1 < 3; j_1++) {
-            for (i1 = 0; i1 < 3; i1++) {
+        for (PetscInt k1 = 0; k1 < 3; k1++) {
+          for (PetscInt j_1 = 0; j_1 < 3; j_1++) {
+            for (PetscInt i1 = 0; i1 < 3; i1++) {
               h2 = 0;
               r1 = base + i1 * shiftx + j_1 * shifty + k1 * shiftz;
-              for (k2 = 0; k2 < 3; k2++) {
-                for (j2 = 0; j2 < 3; j2++) {
-                  for (i2 = 0; i2 < 3; i2++) {
+              for (PetscInt k2 = 0; k2 < 3; k2++) {
+                for (PetscInt j2 = 0; j2 < 3; j2++) {
+                  for (PetscInt i2 = 0; i2 < 3; i2++) {
                     r2 = base + i2 * shiftx + j2 * shifty + k2 * shiftz;
                     PetscCall(AddElement(mat, r1, r2, K, h1, h2));
                     h2 += 3;
@@ -168,10 +168,10 @@ PetscErrorCode GetElasticityMatrix(PetscInt m, Mat *newmat)
 PetscErrorCode AddElement(Mat mat, PetscInt r1, PetscInt r2, PetscReal **K, PetscInt h1, PetscInt h2)
 {
   PetscScalar val;
-  PetscInt    l1, l2, row, col;
+  PetscInt row, col;
 
-  for (l1 = 0; l1 < 3; l1++) {
-    for (l2 = 0; l2 < 3; l2++) {
+  for (PetscInt l1 = 0; l1 < 3; l1++) {
+    for (PetscInt l2 = 0; l2 < 3; l2++) {
       /*
    NOTE you should never do this! Inserting values 1 at a time is
    just too expensive!
@@ -209,7 +209,7 @@ PetscInt  rmap[20] = {0, 1, 2, 3, 5, 6, 7, 8, 9, 11, 15, 17, 18, 19, 20, 21, 23,
 PetscErrorCode Elastic20Stiff(PetscReal **Ke)
 {
   PetscReal K[60][60], x, y, z, dx, dy, dz;
-  PetscInt  i, j, k, l, Ii, J;
+  PetscInt i, j, k, Ii, J;
 
   PetscCall(paulsetup20());
 
@@ -290,7 +290,7 @@ PetscErrorCode Elastic20Stiff(PetscReal **Ke)
     J = 0;
     for (j = 0; j < 20; j++) {
       for (k = 0; k < 3; k++) {
-        for (l = 0; l < 3; l++) Ke[3 * rmap[i] + k][3 * rmap[j] + l] = K[Ii + k][J + l];
+        for (PetscInt l = 0; l < 3; l++) Ke[3 * rmap[i] + k][3 * rmap[j] + l] = K[Ii + k][J + l];
       }
       J += 3;
     }
@@ -402,20 +402,18 @@ PetscErrorCode paulintegrate20(PetscReal K[60][60])
   PetscReal det_jac, jac[3][3], inv_jac[3][3];
   PetscReal B[6][60], B_temp[6][60], C[6][6];
   PetscReal temp;
-  PetscInt  i, j, k, step;
-
   /* Zero out K, since we will accumulate the result here */
-  for (i = 0; i < 60; i++) {
-    for (j = 0; j < 60; j++) K[i][j] = 0.0;
+  for (PetscInt i = 0; i < 60; i++) {
+    for (PetscInt j = 0; j < 60; j++) K[i][j] = 0.0;
   }
 
   /* Loop over integration points ... */
-  for (step = 0; step < N_int; step++) {
+  for (PetscInt step = 0; step < N_int; step++) {
     /* Compute the Jacobian, its determinant, and inverse. */
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
+    for (PetscInt i = 0; i < 3; i++) {
+      for (PetscInt j = 0; j < 3; j++) {
         jac[i][j] = 0;
-        for (k = 0; k < 20; k++) jac[i][j] += part_N[i][k][step] * xyz[k][j];
+        for (PetscInt k = 0; k < 20; k++) jac[i][j] += part_N[i][k][step] * xyz[k][j];
       }
     }
     det_jac       = jac[0][0] * (jac[1][1] * jac[2][2] - jac[1][2] * jac[2][1]) + jac[0][1] * (jac[1][2] * jac[2][0] - jac[1][0] * jac[2][2]) + jac[0][2] * (jac[1][0] * jac[2][1] - jac[1][1] * jac[2][0]);
@@ -430,18 +428,18 @@ PetscErrorCode paulintegrate20(PetscReal K[60][60])
     inv_jac[2][2] = (jac[0][0] * jac[1][1] - jac[1][0] * jac[0][1]) / det_jac;
 
     /* Compute the B matrix. */
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 20; j++) {
+    for (PetscInt i = 0; i < 3; i++) {
+      for (PetscInt j = 0; j < 20; j++) {
         B_temp[i][j] = 0.0;
-        for (k = 0; k < 3; k++) B_temp[i][j] += inv_jac[i][k] * part_N[k][j][step];
+        for (PetscInt k = 0; k < 3; k++) B_temp[i][j] += inv_jac[i][k] * part_N[k][j][step];
       }
     }
-    for (i = 0; i < 6; i++) {
-      for (j = 0; j < 60; j++) B[i][j] = 0.0;
+    for (PetscInt i = 0; i < 6; i++) {
+      for (PetscInt j = 0; j < 60; j++) B[i][j] = 0.0;
     }
 
     /* Put values in correct places in B. */
-    for (k = 0; k < 20; k++) {
+    for (PetscInt k = 0; k < 20; k++) {
       B[0][3 * k]     = B_temp[0][k];
       B[1][3 * k + 1] = B_temp[1][k];
       B[2][3 * k + 2] = B_temp[2][k];
@@ -454,8 +452,8 @@ PetscErrorCode paulintegrate20(PetscReal K[60][60])
     }
 
     /* Construct the C matrix, uses the constants "nu" and "E". */
-    for (i = 0; i < 6; i++) {
-      for (j = 0; j < 6; j++) C[i][j] = 0.0;
+    for (PetscInt i = 0; i < 6; i++) {
+      for (PetscInt j = 0; j < 6; j++) C[i][j] = 0.0;
     }
     temp    = (1.0 + nu) * (1.0 - 2.0 * nu);
     temp    = E / temp;
@@ -472,19 +470,19 @@ PetscErrorCode paulintegrate20(PetscReal K[60][60])
     C[2][0] = C[0][1];
     C[2][1] = C[0][1];
 
-    for (i = 0; i < 6; i++) {
-      for (j = 0; j < 60; j++) {
+    for (PetscInt i = 0; i < 6; i++) {
+      for (PetscInt j = 0; j < 60; j++) {
         B_temp[i][j] = 0.0;
-        for (k = 0; k < 6; k++) B_temp[i][j] += C[i][k] * B[k][j];
+        for (PetscInt k = 0; k < 6; k++) B_temp[i][j] += C[i][k] * B[k][j];
         B_temp[i][j] *= det_jac;
       }
     }
 
     /* Accumulate B'*C*B*det(J)*weight, as a function of (r,s,t), in K. */
-    for (i = 0; i < 60; i++) {
-      for (j = 0; j < 60; j++) {
+    for (PetscInt i = 0; i < 60; i++) {
+      for (PetscInt j = 0; j < 60; j++) {
         temp = 0.0;
-        for (k = 0; k < 6; k++) temp += B[k][i] * B_temp[k][j];
+        for (PetscInt k = 0; k < 6; k++) temp += B[k][i] * B_temp[k][j];
         K[i][j] += temp * weight[step];
       }
     }

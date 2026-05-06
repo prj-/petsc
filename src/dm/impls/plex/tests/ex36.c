@@ -11,7 +11,7 @@ static PetscErrorCode redistribute_vec(DM dist_dm, PetscSF sf, Vec *v)
   DM           dm, dist_v_dm;
   PetscSection section, dist_section;
   Vec          dist_v;
-  PetscMPIInt  rank, size, p;
+  PetscMPIInt rank, size;
 
   PetscFunctionBegin;
   PetscCall(VecGetDM(*v, &dm));
@@ -28,13 +28,13 @@ static PetscErrorCode redistribute_vec(DM dist_dm, PetscSF sf, Vec *v)
   PetscCall(PetscObjectViewFromOptions((PetscObject)section, NULL, "-rd_section_view"));
   PetscCallMPI(MPI_Comm_rank(PetscObjectComm((PetscObject)dm), &rank));
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)dm), &size));
-  for (p = 0; p < size; ++p) {
+  for (PetscMPIInt p = 0; p < size; ++p) {
     if (p == rank) PetscCall(PetscObjectViewFromOptions((PetscObject)*v, NULL, "-rd_vec_view"));
     PetscCall(PetscBarrier((PetscObject)dm));
     PetscCall(PetscViewerFlush(PETSC_VIEWER_STDOUT_WORLD));
   }
   PetscCall(DMPlexDistributeField(dm, sf, section, *v, dist_section, dist_v));
-  for (p = 0; p < size; ++p) {
+  for (PetscMPIInt p = 0; p < size; ++p) {
     if (p == rank) {
       PetscCall(PetscObjectViewFromOptions((PetscObject)dist_section, NULL, "-rd2_section_view"));
       PetscCall(PetscObjectViewFromOptions((PetscObject)dist_v, NULL, "-rd2_vec_view"));
@@ -57,8 +57,8 @@ static PetscErrorCode dm_view_geometry(DM dm, Vec cell_geom, Vec face_geom)
   PetscSection       cell_section, face_section;
   const PetscScalar *cell_array, *face_array;
   const PetscInt    *cells;
-  PetscInt           c, start_cell, end_cell;
-  PetscInt           f, start_face, end_face;
+  PetscInt start_cell, end_cell;
+  PetscInt start_face, end_face;
   PetscInt           supportSize, offset;
   PetscMPIInt        rank;
 
@@ -71,7 +71,7 @@ static PetscErrorCode dm_view_geometry(DM dm, Vec cell_geom, Vec face_geom)
   PetscCall(DMGetLocalSection(cell_dm, &cell_section));
   PetscCall(VecGetArrayRead(cell_geom, &cell_array));
 
-  for (c = start_cell; c < end_cell; ++c) {
+  for (PetscInt c = start_cell; c < end_cell; ++c) {
     const PetscFVCellGeom *geom;
     PetscCall(PetscSectionGetOffset(cell_section, c, &offset));
     geom = (PetscFVCellGeom *)&cell_array[offset];
@@ -85,7 +85,7 @@ static PetscErrorCode dm_view_geometry(DM dm, Vec cell_geom, Vec face_geom)
   PetscCall(VecGetDM(face_geom, &face_dm));
   PetscCall(DMGetLocalSection(face_dm, &face_section));
   PetscCall(VecGetArrayRead(face_geom, &face_array));
-  for (f = start_face; f < end_face; ++f) {
+  for (PetscInt f = start_face; f < end_face; ++f) {
     PetscCall(DMPlexGetSupport(dm, f, &cells));
     PetscCall(DMPlexGetSupportSize(dm, f, &supportSize));
     if (supportSize > 1) {

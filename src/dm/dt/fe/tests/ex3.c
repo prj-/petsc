@@ -203,14 +203,14 @@ static PetscErrorCode DistortMesh(DM dm, AppCtx *user)
 {
   Vec          coordinates;
   PetscScalar *ca;
-  PetscInt     dE, n, i;
+  PetscInt dE, n;
 
   PetscFunctionBeginUser;
   PetscCall(DMGetCoordinateDim(dm, &dE));
   PetscCall(DMGetCoordinates(dm, &coordinates));
   PetscCall(VecGetLocalSize(coordinates, &n));
   PetscCall(VecGetArray(coordinates, &ca));
-  for (i = 0; i < (n / dE); ++i) {
+  for (PetscInt i = 0; i < (n / dE); ++i) {
     ca[i * dE + 0] += user->shear * ca[i * dE + 0];
     ca[i * dE + 1] *= user->flatten;
   }

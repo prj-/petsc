@@ -29,7 +29,7 @@ PetscErrorCode DMPlexSNESComputeResidualCEED(DM dm, Vec locX, Vec locF, PetscCtx
     if (mesh->printFEM) {
       PetscSection section;
       Vec          locFbc;
-      PetscInt     pStart, pEnd, p, maxDof;
+      PetscInt pStart, pEnd, maxDof;
       PetscScalar *zeroes;
 
       PetscCall(DMGetLocalSection(dm, &section));
@@ -38,7 +38,7 @@ PetscErrorCode DMPlexSNESComputeResidualCEED(DM dm, Vec locX, Vec locF, PetscCtx
       PetscCall(PetscSectionGetChart(section, &pStart, &pEnd));
       PetscCall(PetscSectionGetMaxDof(section, &maxDof));
       PetscCall(PetscCalloc1(maxDof, &zeroes));
-      for (p = pStart; p < pEnd; ++p) PetscCall(VecSetValuesSection(locFbc, section, p, zeroes, INSERT_BC_VALUES));
+      for (PetscInt p = pStart; p < pEnd; ++p) PetscCall(VecSetValuesSection(locFbc, section, p, zeroes, INSERT_BC_VALUES));
       PetscCall(PetscFree(zeroes));
       PetscCall(DMPrintLocalVec(dm, "Residual", mesh->printTol, locFbc));
       PetscCall(VecDestroy(&locFbc));

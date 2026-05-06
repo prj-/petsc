@@ -280,7 +280,7 @@ PetscErrorCode MatAXPY_Basic(Mat Y, PetscScalar a, Mat X, MatStructure str)
 
 PetscErrorCode MatAXPY_BasicWithPreallocation(Mat B, Mat Y, PetscScalar a, Mat X, MatStructure str)
 {
-  PetscInt           i, start, end, j, ncols, m, n;
+  PetscInt i, start, end, ncols, m, n;
   const PetscInt    *row;
   PetscScalar       *val;
   const PetscScalar *vals;
@@ -315,7 +315,7 @@ PetscErrorCode MatAXPY_BasicWithPreallocation(Mat B, Mat Y, PetscScalar a, Mat X
         vs = PetscMin(2 * ncols, n);
         PetscCall(PetscRealloc(vs * sizeof(*val), &val));
       }
-      for (j = 0; j < ncols; j++) val[j] = a * vals[j];
+      for (PetscInt j = 0; j < ncols; j++) val[j] = a * vals[j];
       PetscCall(MatSetValues(B, 1, &i, ncols, row, val, ADD_VALUES));
       PetscCall(MatRestoreRow(X, i, &ncols, &row, &vals));
     }

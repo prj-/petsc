@@ -253,7 +253,7 @@ static PetscErrorCode PolyEval(PetscInt nroots, const PetscReal *r, const PetscR
 PetscErrorCode KSPPlotEigenContours_Private(KSP ksp, PetscInt neig, const PetscReal *r, const PetscReal *c)
 {
   PetscReal     xmin, xmax, ymin, ymax, *xloc, *yloc, *value, px0, py0, rscale, iscale;
-  int           M, N, i, j;
+  int M, N;
   PetscMPIInt   rank;
   PetscViewer   viewer;
   PetscDraw     draw;
@@ -268,20 +268,20 @@ PetscErrorCode KSPPlotEigenContours_Private(KSP ksp, PetscInt neig, const PetscR
   xmax = r[0];
   ymin = c[0];
   ymax = c[0];
-  for (i = 1; i < neig; i++) {
+  for (int i = 1; i < neig; i++) {
     xmin = PetscMin(xmin, r[i]);
     xmax = PetscMax(xmax, r[i]);
     ymin = PetscMin(ymin, c[i]);
     ymax = PetscMax(ymax, c[i]);
   }
   PetscCall(PetscMalloc3(M, &xloc, N, &yloc, M * N, &value));
-  for (i = 0; i < M; i++) xloc[i] = xmin - 0.1 * (xmax - xmin) + 1.2 * (xmax - xmin) * i / (M - 1);
-  for (i = 0; i < N; i++) yloc[i] = ymin - 0.1 * (ymax - ymin) + 1.2 * (ymax - ymin) * i / (N - 1);
+  for (int i = 0; i < M; i++) xloc[i] = xmin - 0.1 * (xmax - xmin) + 1.2 * (xmax - xmin) * i / (M - 1);
+  for (int i = 0; i < N; i++) yloc[i] = ymin - 0.1 * (ymax - ymin) + 1.2 * (ymax - ymin) * i / (N - 1);
   PetscCall(PolyEval(neig, r, c, 0, 0, &px0, &py0));
   rscale = px0 / (PetscSqr(px0) + PetscSqr(py0));
   iscale = -py0 / (PetscSqr(px0) + PetscSqr(py0));
-  for (j = 0; j < N; j++) {
-    for (i = 0; i < M; i++) {
+  for (int j = 0; j < N; j++) {
+    for (int i = 0; i < M; i++) {
       PetscReal px, py, tx, ty, tmod;
       PetscCall(PolyEval(neig, r, c, xloc[i], yloc[j], &px, &py));
       tx   = px * rscale - py * iscale;

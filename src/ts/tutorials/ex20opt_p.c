@@ -307,7 +307,7 @@ static PetscErrorCode IHessianProductPU(TS ts, PetscReal t, Vec U, Vec *Vl, Vec 
   const PetscScalar *vl, *vr, *u;
   PetscScalar       *vhv;
   PetscScalar        dJdU[2][1][2] = {{{0}}};
-  PetscInt           i, j, k;
+  PetscInt k;
 
   PetscFunctionBeginUser;
   PetscCall(VecGetArrayRead(U, &u));
@@ -317,10 +317,10 @@ static PetscErrorCode IHessianProductPU(TS ts, PetscReal t, Vec U, Vec *Vl, Vec 
 
   dJdU[1][0][0] = 1. + 2. * u[1] * u[0];
   dJdU[1][0][1] = u[0] * u[0] - 1.;
-  for (j = 0; j < 1; j++) {
+  for (PetscInt j = 0; j < 1; j++) {
     vhv[j] = 0;
     for (k = 0; k < 2; k++)
-      for (i = 0; i < 2; i++) vhv[j] += vl[i] * dJdU[i][j][k] * vr[k];
+      for (PetscInt i = 0; i < 2; i++) vhv[j] += vl[i] * dJdU[i][j][k] * vr[k];
   }
 
   PetscCall(VecRestoreArrayRead(U, &u));

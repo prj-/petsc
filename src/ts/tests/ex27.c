@@ -314,15 +314,14 @@ static PetscErrorCode ComputeGradS(PetscInt dim, PetscInt Np, const PetscReal vp
 static PetscErrorCode QCompute(PetscInt dim, const PetscReal vp[], const PetscReal vq[], PetscReal Q[])
 {
   PetscReal xi[3], xi2, xi3, mag;
-  PetscInt  d, e;
 
   PetscFunctionBeginHot;
   DMPlex_WaxpyD_Internal(dim, -1.0, vq, vp, xi);
   xi2 = DMPlex_DotD_Internal(dim, xi, xi);
   mag = PetscSqrtReal(xi2);
   xi3 = xi2 * mag;
-  for (d = 0; d < dim; ++d) {
-    for (e = 0; e < dim; ++e) Q[d * dim + e] = -xi[d] * xi[e] / xi3;
+  for (PetscInt d = 0; d < dim; ++d) {
+    for (PetscInt e = 0; e < dim; ++e) Q[d * dim + e] = -xi[d] * xi[e] / xi3;
     Q[d * dim + d] += 1. / mag;
   }
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -337,7 +336,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
   const PetscScalar *u;   /* input solution vector */
   PetscScalar       *r;
   PetscReal         *velocity;
-  PetscInt           dim, Np, p, q;
+  PetscInt dim, Np;
 
   PetscFunctionBeginUser;
   PetscCall(VecZeroEntries(R));
@@ -350,11 +349,11 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
   PetscCall(VecGetArrayRead(U, &u));
   Np /= dim;
   if (dbg) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Part  ppr     x        y\n"));
-  for (p = 0; p < Np; ++p) {
+  for (PetscInt p = 0; p < Np; ++p) {
     PetscReal gradS_p[3] = {0., 0., 0.};
 
     PetscCall(ComputeGradS(dim, Np, &velocity[p * dim], velocity, gradS_p, user));
-    for (q = 0; q < Np; ++q) {
+    for (PetscInt q = 0; q < Np; ++q) {
       PetscReal gradS_q[3] = {0., 0., 0.}, GammaS[3] = {0., 0., 0.}, Q[9];
 
       if (q == p) continue;
@@ -388,7 +387,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
 */
 static PetscErrorCode UpdateSwarm(TS ts)
 {
-  PetscInt           idx, n;
+  PetscInt           n;
   const PetscScalar *u;
   PetscScalar       *velocity;
   DM                 sw;
@@ -400,7 +399,7 @@ static PetscErrorCode UpdateSwarm(TS ts)
   PetscCall(TSGetSolution(ts, &sol));
   PetscCall(VecGetArrayRead(sol, &u));
   PetscCall(VecGetLocalSize(sol, &n));
-  for (idx = 0; idx < n; ++idx) velocity[idx] = u[idx];
+  for (PetscInt idx = 0; idx < n; ++idx) velocity[idx] = u[idx];
   PetscCall(VecRestoreArrayRead(sol, &u));
   PetscCall(DMSwarmRestoreField(sw, "velocity", NULL, NULL, (void **)&velocity));
   PetscFunctionReturn(PETSC_SUCCESS);

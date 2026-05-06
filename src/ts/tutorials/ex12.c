@@ -199,7 +199,7 @@ PetscErrorCode FormFunction(TS ts, PetscReal ftime, Vec X, Vec F, void *ptr)
 /* ------------------------------------------------------------------- */
 PetscErrorCode FormInitialSolution(DM da, Vec U)
 {
-  PetscInt       i, j, xs, ys, xm, ym, Mx, My;
+  PetscInt xs, ys, xm, ym, Mx, My;
   PetscScalar ***u;
   PetscReal      hx, hy, x, y, r;
 
@@ -222,9 +222,9 @@ PetscErrorCode FormInitialSolution(DM da, Vec U)
   /*
      Compute function over the locally owned part of the grid
   */
-  for (j = ys; j < ys + ym; j++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
     y = j * hy;
-    for (i = xs; i < xs + xm; i++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       x = i * hx;
       r = PetscSqrtReal((x - .5) * (x - .5) + (y - .5) * (y - .5));
       if (r < .125) {

@@ -600,7 +600,7 @@ static PetscErrorCode SolutionStatsView(DM da, Vec X, PetscViewer viewer)
   PetscReal          xmin, xmax;
   PetscScalar        sum, tvsum, tvgsum;
   const PetscScalar *x;
-  PetscInt           imin, imax, Mx, i, j, xs, xm, dof;
+  PetscInt imin, imax, Mx, i, xs, xm, dof;
   Vec                Xloc;
   PetscBool          isascii;
 
@@ -616,7 +616,7 @@ static PetscErrorCode SolutionStatsView(DM da, Vec X, PetscViewer viewer)
   PetscCall(DMDAGetInfo(da, 0, &Mx, 0, 0, 0, 0, 0, &dof, 0, 0, 0, 0, 0));
   tvsum = 0;
   for (i = xs; i < xs + xm; i++) {
-    for (j = 0; j < dof; j++) tvsum += PetscAbsScalar(x[i * dof + j] - x[(i - 1) * dof + j]);
+    for (PetscInt j = 0; j < dof; j++) tvsum += PetscAbsScalar(x[i * dof + j] - x[(i - 1) * dof + j]);
   }
   PetscCallMPI(MPIU_Allreduce(&tvsum, &tvgsum, 1, MPIU_SCALAR, MPIU_SUM, PetscObjectComm((PetscObject)da)));
   PetscCall(DMDAVecRestoreArrayRead(da, Xloc, (void *)&x));

@@ -4,20 +4,20 @@
 static PetscErrorCode estsv(PetscInt n, PetscReal *r, PetscInt ldr, PetscReal *svmin, PetscReal *z)
 {
   PetscBLASInt blas1 = 1, blasn, blasnmi, blasj, blasldr;
-  PetscInt     i, j;
+  PetscInt     j;
   PetscReal    e, temp, w, wm, ynorm, znorm, s, sm;
 
   PetscFunctionBegin;
   PetscCall(PetscBLASIntCast(n, &blasn));
   PetscCall(PetscBLASIntCast(ldr, &blasldr));
-  for (i = 0; i < n; i++) z[i] = 0.0;
+  for (PetscInt i = 0; i < n; i++) z[i] = 0.0;
   e = PetscAbs(r[0]);
   if (e == 0.0) {
     *svmin = 0.0;
     z[0]   = 1.0;
   } else {
     /* Solve R'*y = e */
-    for (i = 0; i < n; i++) {
+    for (PetscInt i = 0; i < n; i++) {
       /* Scale y. The scaling factor (0.01) reduces the number of scalings */
       if (z[i] >= 0.0) e = -PetscAbs(e);
       else e = PetscAbs(e);
@@ -214,7 +214,7 @@ c     ***********
 PetscErrorCode gqt(PetscInt n, PetscReal *a, PetscInt lda, PetscReal *b, PetscReal delta, PetscReal rtol, PetscReal atol, PetscInt itmax, PetscReal *retpar, PetscReal *retf, PetscReal *x, PetscInt *retinfo, PetscInt *retits, PetscReal *z, PetscReal *wa1, PetscReal *wa2)
 {
   PetscReal    f = 0.0, p001 = 0.001, p5 = 0.5, minusone = -1, delta2 = delta * delta;
-  PetscInt     iter, j, rednc, info;
+  PetscInt iter, rednc, info;
   PetscBLASInt indef;
   PetscBLASInt blas1 = 1, blasn, iblas, blaslda, blasldap1, blasinfo;
   PetscReal    alpha, anorm, bnorm, parc, parf, parl, pars, par = *retpar, paru, prod, rxnorm, rznorm = 0.0, temp, xnorm;
@@ -227,14 +227,14 @@ PetscErrorCode gqt(PetscInt n, PetscReal *a, PetscInt lda, PetscReal *b, PetscRe
   xnorm  = 0.0;
   rxnorm = 0.0;
   rednc  = 0;
-  for (j = 0; j < n; j++) {
+  for (PetscInt j = 0; j < n; j++) {
     x[j] = 0.0;
     z[j] = 0.0;
   }
 
   /* Copy the diagonal and save A in its lower triangle */
   PetscCallBLAS("BLAScopy", BLAScopy_(&blasn, a, &blasldap1, wa1, &blas1));
-  for (j = 0; j < n - 1; j++) {
+  for (PetscInt j = 0; j < n - 1; j++) {
     PetscCall(PetscBLASIntCast(n - j - 1, &iblas));
     PetscCallBLAS("BLAScopy", BLAScopy_(&iblas, &a[j + lda * (j + 1)], &blaslda, &a[j + 1 + lda * j], &blas1));
   }
@@ -242,19 +242,19 @@ PetscErrorCode gqt(PetscInt n, PetscReal *a, PetscInt lda, PetscReal *b, PetscRe
   /* Calculate the l1-norm of A, the Gershgorin row sums, and the
    l2-norm of b */
   anorm = 0.0;
-  for (j = 0; j < n; j++) {
+  for (PetscInt j = 0; j < n; j++) {
     PetscCallBLAS("BLASasum", wa2[j] = BLASasum_(&blasn, &a[0 + lda * j], &blas1));
     CHKMEMQ;
     anorm = PetscMax(anorm, wa2[j]);
   }
-  for (j = 0; j < n; j++) wa2[j] = wa2[j] - PetscAbs(wa1[j]);
+  for (PetscInt j = 0; j < n; j++) wa2[j] = wa2[j] - PetscAbs(wa1[j]);
   PetscCallBLAS("BLASnrm2", bnorm = BLASnrm2_(&blasn, b, &blas1));
   CHKMEMQ;
   /* Calculate a lower bound, pars, for the domain of the problem.
    Also calculate an upper bound, paru, and a lower bound, parl,
    for the Lagrange multiplier. */
   pars = parl = paru = -anorm;
-  for (j = 0; j < n; j++) {
+  for (PetscInt j = 0; j < n; j++) {
     pars = PetscMax(pars, -wa1[j]);
     parl = PetscMax(parl, wa1[j] + wa2[j]);
     paru = PetscMax(paru, -wa1[j] + wa2[j]);
@@ -281,11 +281,11 @@ PetscErrorCode gqt(PetscInt n, PetscReal *a, PetscInt lda, PetscReal *b, PetscRe
 
     /* Copy the lower triangle of A into its upper triangle and  compute A + par*I */
 
-    for (j = 0; j < n - 1; j++) {
+    for (PetscInt j = 0; j < n - 1; j++) {
       PetscCall(PetscBLASIntCast(n - j - 1, &iblas));
       PetscCallBLAS("BLAScopy", BLAScopy_(&iblas, &a[j + 1 + j * lda], &blas1, &a[j + (j + 1) * lda], &blaslda));
     }
-    for (j = 0; j < n; j++) a[j + j * lda] = wa1[j] + par;
+    for (PetscInt j = 0; j < n; j++) a[j + j * lda] = wa1[j] + par;
 
     /* Attempt the Cholesky factorization of A without referencing the lower triangular part. */
     PetscCallBLAS("LAPACKpotrf", LAPACKpotrf_("U", &blasn, a, &blaslda, &indef));
@@ -414,7 +414,7 @@ PetscErrorCode gqt(PetscInt n, PetscReal *a, PetscInt lda, PetscReal *b, PetscRe
         PetscCallBLAS("BLASaxpy", BLASaxpy_(&blasn, &alpha, z, &blas1, x, &blas1));
       }
       /* Restore the upper triangle of A */
-      for (j = 0; j < n; j++) {
+      for (PetscInt j = 0; j < n; j++) {
         PetscCall(PetscBLASIntCast(n - j - 1, &iblas));
         PetscCallBLAS("BLAScopy", BLAScopy_(&iblas, &a[j + 1 + j * lda], &blas1, &a[j + (j + 1) * lda], &blaslda));
       }

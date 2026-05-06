@@ -371,7 +371,7 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
   Field       **x, **b;
   Vec           localX, localB;
   DM            da;
-  PetscInt      xints, xinte, yints, yinte, i, j, k, l;
+  PetscInt xints, xinte, yints, yinte, i, j;
   PetscInt      max_its, tot_its;
   PetscInt      sweeps;
   PetscReal     rtol, atol, stol;
@@ -494,7 +494,7 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
     }
   }
 
-  for (k = 0; k < sweeps; k++) {
+  for (PetscInt k = 0; k < sweeps; k++) {
     for (j = info.ys; j < info.ys + info.ym; j++) {
       for (i = info.xs; i < info.xs + info.xm; i++) {
         ptconverged = PETSC_FALSE;
@@ -504,7 +504,7 @@ PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
         fomega      = 0.0;
         ftemp       = 0.0;
         /*  Run Newton's method on a single grid point */
-        for (l = 0; l < max_its && !ptconverged; l++) {
+        for (PetscInt l = 0; l < max_its && !ptconverged; l++) {
           if (B) {
             bjiu     = b[j][i].u;
             bjiv     = b[j][i].v;

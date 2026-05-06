@@ -76,7 +76,7 @@ PetscErrorCode LoadTestMatrices(Mat *_A, Vec *_x, Vec *_b, IS *_isu, IS *_isp)
   Vec         f, h, x, b, bX[2];
   Mat         A, Auu, Aup, Apu, App, bA[2][2];
   IS          is_u, is_p, bis[2];
-  PetscInt    lnu, lnp, nu, np, i, start_u, end_u, start_p, end_p;
+  PetscInt lnu, lnp, nu, np, start_u, end_u, start_p, end_p;
   VecScatter *vscat;
   PetscMPIInt rank;
 
@@ -120,7 +120,7 @@ PetscErrorCode LoadTestMatrices(Mat *_A, Vec *_x, Vec *_b, IS *_isu, IS *_isp)
   bX[0] = f;
   bX[1] = h;
   PetscCall(PetscMalloc1(2, &vscat));
-  for (i = 0; i < 2; i++) {
+  for (PetscInt i = 0; i < 2; i++) {
     PetscCall(VecScatterCreate(b, bis[i], bX[i], NULL, &vscat[i]));
     PetscCall(VecScatterBegin(vscat[i], bX[i], b, INSERT_VALUES, SCATTER_REVERSE));
     PetscCall(VecScatterEnd(vscat[i], bX[i], b, INSERT_VALUES, SCATTER_REVERSE));

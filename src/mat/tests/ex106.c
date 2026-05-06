@@ -9,7 +9,7 @@ int main(int argc, char **args)
   Vec           x, u, b; /* approx solution, RHS, exact solution */
   PetscReal     norm;    /* norm of solution error */
   PetscScalar   v, none = -1.0;
-  PetscInt      I, J, ldim, low, high, iglobal, Istart, Iend;
+  PetscInt J, ldim, low, high, iglobal, Istart, Iend;
   PetscInt      i, j, m = 3, n = 2, its;
   PetscMPIInt   size, rank;
   PetscBool     mat_nonsymmetric;
@@ -47,7 +47,7 @@ int main(int argc, char **args)
         appropriate processor during matrix assembly).
       - Always specify global row and columns of matrix entries.
   */
-  for (I = Istart; I < Iend; I++) {
+  for (PetscInt I = Istart; I < Iend; I++) {
     v = -1.0;
     i = I / n;
     j = I - i * n;
@@ -75,7 +75,7 @@ int main(int argc, char **args)
      Make the matrix nonsymmetric if desired
   */
   if (mat_nonsymmetric) {
-    for (I = Istart; I < Iend; I++) {
+    for (PetscInt I = Istart; I < Iend; I++) {
       v = -1.5;
       i = I / n;
       if (i > 1) {

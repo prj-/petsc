@@ -64,7 +64,7 @@ static PetscErrorCode PetscSFLinkFinishCommunication_Default(PetscSF sf, PetscSF
 PetscErrorCode PetscSFLinkCreate_MPI(PetscSF sf, MPI_Datatype unit, PetscMemType xrootmtype, const void *rootdata, PetscMemType xleafmtype, const void *leafdata, MPI_Op op, PetscSFOperation sfop, PetscSFLink *mylink)
 {
   PetscSF_Basic   *bas = (PetscSF_Basic *)sf->data;
-  PetscInt         i, j, k, nrootreqs, nleafreqs, nreqs;
+  PetscInt nrootreqs, nleafreqs, nreqs;
   PetscSFLink     *p, link;
   PetscSFDirection direction;
   MPI_Request     *reqs = NULL;
@@ -76,7 +76,7 @@ PetscErrorCode PetscSFLinkCreate_MPI(PetscSF sf, MPI_Datatype unit, PetscMemType
 
   PetscFunctionBegin;
   /* Can we directly use root/leafdirect with the given sf, sfop and op? */
-  for (i = PETSCSF_LOCAL; i <= PETSCSF_REMOTE; i++) {
+  for (PetscInt i = PETSCSF_LOCAL; i <= PETSCSF_REMOTE; i++) {
     if (sfop == PETSCSF_BCAST) {
       rootdirect[i] = bas->rootcontig[i];                                                  /* Pack roots */
       leafdirect[i] = (sf->leafcontig[i] && op == MPI_REPLACE) ? PETSC_TRUE : PETSC_FALSE; /* Unpack leaves */
@@ -124,14 +124,14 @@ PetscErrorCode PetscSFLinkCreate_MPI(PetscSF sf, MPI_Datatype unit, PetscMemType
         */
         if (rootdirect_mpi && sf->persistent && link->rootreqsinited[direction][rootmtype][1] && link->rootdatadirect[direction][rootmtype] != rootdata) {
           reqs = link->rootreqs[direction][rootmtype][1]; /* Here, rootmtype = rootmtype_mpi */
-          for (i = 0; i < nrootreqs; i++) {
+          for (PetscInt i = 0; i < nrootreqs; i++) {
             if (reqs[i] != MPI_REQUEST_NULL) PetscCallMPI(MPI_Request_free(&reqs[i]));
           }
           link->rootreqsinited[direction][rootmtype][1] = PETSC_FALSE;
         }
         if (leafdirect_mpi && sf->persistent && link->leafreqsinited[direction][leafmtype][1] && link->leafdatadirect[direction][leafmtype] != leafdata) {
           reqs = link->leafreqs[direction][leafmtype][1];
-          for (i = 0; i < nleafreqs; i++) {
+          for (PetscInt i = 0; i < nleafreqs; i++) {
             if (reqs[i] != MPI_REQUEST_NULL) PetscCallMPI(MPI_Request_free(&reqs[i]));
           }
           link->leafreqsinited[direction][leafmtype][1] = PETSC_FALSE;
@@ -148,12 +148,12 @@ PetscErrorCode PetscSFLinkCreate_MPI(PetscSF sf, MPI_Datatype unit, PetscMemType
 
   nreqs = (nrootreqs + nleafreqs) * 8;
   PetscCall(PetscMalloc1(nreqs, &link->reqs));
-  for (i = 0; i < nreqs; i++) link->reqs[i] = MPI_REQUEST_NULL; /* Initialized to NULL so that we know which need to be freed in Destroy */
+  for (PetscInt i = 0; i < nreqs; i++) link->reqs[i] = MPI_REQUEST_NULL; /* Initialized to NULL so that we know which need to be freed in Destroy */
 
   if (nreqs)
-    for (i = 0; i < 2; i++) {     /* Two communication directions */
-      for (j = 0; j < 2; j++) {   /* Two memory types */
-        for (k = 0; k < 2; k++) { /* root/leafdirect 0 or 1 */
+    for (PetscInt i = 0; i < 2; i++) {     /* Two communication directions */
+      for (PetscInt j = 0; j < 2; j++) {   /* Two memory types */
+        for (PetscInt k = 0; k < 2; k++) { /* root/leafdirect 0 or 1 */
           link->rootreqs[i][j][k] = link->reqs + nrootreqs * (4 * i + 2 * j + k);
           link->leafreqs[i][j][k] = link->reqs + nrootreqs * 8 + nleafreqs * (4 * i + 2 * j + k);
         }
@@ -182,7 +182,7 @@ found:
 #endif
 
   /* Allocate buffers along root/leafdata */
-  for (i = PETSCSF_LOCAL; i <= PETSCSF_REMOTE; i++) {
+  for (PetscInt i = PETSCSF_LOCAL; i <= PETSCSF_REMOTE; i++) {
     /* For local communication, buffers are only needed when roots and leaves have different mtypes */
     if (i == PETSCSF_LOCAL && rootmtype == leafmtype) continue;
     if (bas->rootbuflen[i]) {
@@ -224,7 +224,7 @@ found:
 
   link->rootdata = rootdata; /* root/leafdata are keys to look up links in PetscSFXxxEnd */
   link->leafdata = leafdata;
-  for (i = PETSCSF_LOCAL; i <= PETSCSF_REMOTE; i++) {
+  for (PetscInt i = PETSCSF_LOCAL; i <= PETSCSF_REMOTE; i++) {
     link->rootdirect[i] = rootdirect[i];
     link->leafdirect[i] = leafdirect[i];
   }

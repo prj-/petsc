@@ -14,7 +14,7 @@
 
 PetscErrorCode PetscLINPACKgefa(MatScalar *a, PetscInt n, PetscInt *ipvt, PetscBool allowzeropivot, PetscBool *zeropivotdetected)
 {
-  PetscInt  i__2, i__3, kp1, nm1, j, k, l, ll, kn, knp1, jn1;
+  PetscInt i__2, i__3, kp1, nm1, l, kn, knp1, jn1;
   MatScalar t, *ax, *ay, *aa;
   MatReal   tmp, max;
 
@@ -27,7 +27,7 @@ PetscErrorCode PetscLINPACKgefa(MatScalar *a, PetscInt n, PetscInt *ipvt, PetscB
 
   /* Function Body */
   nm1 = n - 1;
-  for (k = 1; k <= nm1; ++k) {
+  for (PetscInt k = 1; k <= nm1; ++k) {
     kp1  = k + 1;
     kn   = k * n;
     knp1 = k * n + k;
@@ -38,7 +38,7 @@ PetscErrorCode PetscLINPACKgefa(MatScalar *a, PetscInt n, PetscInt *ipvt, PetscB
     aa   = &a[knp1];
     max  = PetscAbsScalar(aa[0]);
     l    = 1;
-    for (ll = 1; ll < i__2; ll++) {
+    for (PetscInt ll = 1; ll < i__2; ll++) {
       tmp = PetscAbsScalar(aa[ll]);
       if (tmp > max) {
         max = tmp;
@@ -65,11 +65,11 @@ PetscErrorCode PetscLINPACKgefa(MatScalar *a, PetscInt n, PetscInt *ipvt, PetscB
     t    = -1. / a[knp1];
     i__2 = n - k;
     aa   = &a[1 + knp1];
-    for (ll = 0; ll < i__2; ll++) aa[ll] *= t;
+    for (PetscInt ll = 0; ll < i__2; ll++) aa[ll] *= t;
 
     /* row elimination with column indexing */
     ax = aa;
-    for (j = kp1; j <= n; ++j) {
+    for (PetscInt j = kp1; j <= n; ++j) {
       jn1 = j * n;
       t   = a[l + jn1];
       if (l != k) {
@@ -79,7 +79,7 @@ PetscErrorCode PetscLINPACKgefa(MatScalar *a, PetscInt n, PetscInt *ipvt, PetscB
 
       i__3 = n - k;
       ay   = &a[1 + k + jn1];
-      for (ll = 0; ll < i__3; ll++) ay[ll] += t * ax[ll];
+      for (PetscInt ll = 0; ll < i__3; ll++) ay[ll] += t * ax[ll];
     }
   }
   ipvt[n] = n;

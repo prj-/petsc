@@ -326,9 +326,9 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_3d(DM dm)
   for (i = 0; i < dim; ++i) stag->n[i] = stag->l[i][stag->rank[i]];
   if (PetscDefined(USE_DEBUG)) {
     for (i = 0; i < dim; ++i) {
-      PetscInt Ncheck, j;
+      PetscInt Ncheck;
       Ncheck = 0;
-      for (j = 0; j < stag->nRanks[i]; ++j) Ncheck += stag->l[i][j];
+      for (PetscInt j = 0; j < stag->nRanks[i]; ++j) Ncheck += stag->l[i][j];
       PetscCheck(Ncheck == stag->N[i], PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Local sizes in dimension %" PetscInt_FMT " don't add up. %" PetscInt_FMT " != %" PetscInt_FMT, i, Ncheck, stag->N[i]);
     }
   }
@@ -336,7 +336,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_3d(DM dm)
   /* Compute starting elements */
   for (i = 0; i < dim; ++i) {
     stag->start[i] = 0;
-    for (j = 0; j < stag->rank[i]; ++j) stag->start[i] += stag->l[i][j];
+    for (PetscInt j = 0; j < stag->rank[i]; ++j) stag->start[i] += stag->l[i][j];
   }
 
   /* Determine ranks of neighbors */
@@ -980,8 +980,7 @@ static PetscErrorCode DMStagSetUpBuildScatter_3d(DM dm, const PetscInt *globalOf
 
   /* Compute numbers of elements on each neighbor */
   {
-    PetscInt i;
-    for (i = 0; i < 27; ++i) {
+    for (PetscInt i = 0; i < 27; ++i) {
       const PetscInt neighborRank = stag->neighbors[i];
       if (neighborRank >= 0) { /* note we copy the values for our own rank (neighbor 13) */
         nNeighbors[i][0] = stag->l[0][neighborRank % stag->nRanks[0]];
@@ -1952,8 +1951,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
             }
           } else {
             /* Right (Middle) Back dummies */
-            PetscInt i;
-            for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+            for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
               for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
             }
           }
@@ -2121,8 +2119,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
           }
         } else {
           /* Up Right Back dummies */
-          PetscInt i;
-          for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+          for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
         }
@@ -2135,8 +2132,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
         }
       } else {
         /* Up Back dummy rows */
-        PetscInt j;
-        for (j = 0; j < ghostOffsetEnd[1]; ++j) {
+        for (PetscInt j = 0; j < ghostOffsetEnd[1]; ++j) {
           for (ighost = 0; ighost < stag->nGhost[0]; ++ighost) {
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
@@ -2227,8 +2223,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
             }
           } else {
             /* Right Down (Middle) dummies */
-            PetscInt i;
-            for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+            for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
               for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
             }
           }
@@ -2380,8 +2375,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
             }
           } else {
             /* Right Up (Middle) dumies */
-            PetscInt i;
-            for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+            for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
               for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
             }
           }
@@ -2640,8 +2634,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
             }
           } else {
             /* Right (Middle) Front dummies */
-            PetscInt i;
-            for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+            for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
               for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
             }
           }
@@ -2809,8 +2802,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
           }
         } else {
           /* Right Up Front dummies */
-          PetscInt i;
-          for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+          for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
         }
@@ -2823,8 +2815,7 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
         }
       } else {
         /* Up Front dummies */
-        PetscInt j;
-        for (j = 0; j < ghostOffsetEnd[1]; ++j) {
+        for (PetscInt j = 0; j < ghostOffsetEnd[1]; ++j) {
           for (ighost = 0; ighost < stag->nGhost[0]; ++ighost) {
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
@@ -2912,9 +2903,8 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
         } else {
-          PetscInt i;
           /* Right Down Front dummies */
-          for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+          for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
         }
@@ -3086,9 +3076,8 @@ static PetscErrorCode DMStagSetUpBuildL2G_3d(DM dm, const PetscInt *globalOffset
           }
         } else {
           /* Right Up Front dummies */
-          PetscInt i;
           /* Right Down Front dummies */
-          for (i = 0; i < ghostOffsetEnd[0]; ++i) {
+          for (PetscInt i = 0; i < ghostOffsetEnd[0]; ++i) {
             for (d = 0; d < stag->entriesPerElement; ++d, ++count) idxGlobalAll[count] = -1;
           }
         }
@@ -3289,7 +3278,7 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal3d_Internal(DM dm)
   DM_Stag *const stag = (DM_Stag *)dm->data;
   PetscInt      *idxRemap;
   PetscBool      dummyEnd[3];
-  PetscInt       i, j, k, d, count, leftGhostElements, downGhostElements, backGhostElements, iOffset, jOffset, kOffset;
+  PetscInt i, j, k, count, leftGhostElements, downGhostElements, backGhostElements, iOffset, jOffset, kOffset;
   PetscInt       entriesPerRowGhost, entriesPerRowColGhost;
   PetscInt       dOffset[8] = {0};
 
@@ -3297,7 +3286,7 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal3d_Internal(DM dm)
   PetscCall(VecScatterCopy(stag->gtol, &stag->ltol));
   PetscCall(PetscMalloc1(stag->entries, &idxRemap));
 
-  for (d = 0; d < 3; ++d) dummyEnd[d] = (PetscBool)(stag->lastRank[d] && stag->boundaryType[d] != DM_BOUNDARY_PERIODIC);
+  for (PetscInt d = 0; d < 3; ++d) dummyEnd[d] = (PetscBool)(stag->lastRank[d] && stag->boundaryType[d] != DM_BOUNDARY_PERIODIC);
   leftGhostElements     = stag->start[0] - stag->startGhost[0];
   downGhostElements     = stag->start[1] - stag->startGhost[1];
   backGhostElements     = stag->start[2] - stag->startGhost[2];
@@ -3319,15 +3308,15 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal3d_Internal(DM dm)
       for (i = 0; i < stag->n[0]; ++i) {
         iOffset = stag->entriesPerElement * (leftGhostElements + i);
         // all
-        for (d = 0; d < stag->entriesPerElement; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + d;
+        for (PetscInt d = 0; d < stag->entriesPerElement; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + d;
       }
       if (dummyEnd[0]) {
         iOffset = stag->entriesPerElement * (leftGhostElements + stag->n[0]);
         // back down left, back left, down left, left
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[2] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[4] + d;
-        for (d = 0; d < stag->dof[2]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[6] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[2] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[4] + d;
+        for (PetscInt d = 0; d < stag->dof[2]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[6] + d;
       }
     }
     if (dummyEnd[1]) {
@@ -3335,16 +3324,16 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal3d_Internal(DM dm)
       for (i = 0; i < stag->n[0]; ++i) {
         iOffset = stag->entriesPerElement * (leftGhostElements + i);
         // back down left, back down, down left, down
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[1] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[4] + d;
-        for (d = 0; d < stag->dof[2]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[5] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[1] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[4] + d;
+        for (PetscInt d = 0; d < stag->dof[2]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[5] + d;
       }
       if (dummyEnd[0]) {
         iOffset = stag->entriesPerElement * (leftGhostElements + stag->n[0]);
         // back down left, down left
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[4] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[4] + d;
       }
     }
   }
@@ -3355,16 +3344,16 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal3d_Internal(DM dm)
       for (i = 0; i < stag->n[0]; ++i) {
         iOffset = stag->entriesPerElement * (leftGhostElements + i);
         // back down left, back down, back left, back
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[1] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[2] + d;
-        for (d = 0; d < stag->dof[2]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[3] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[1] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[2] + d;
+        for (PetscInt d = 0; d < stag->dof[2]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[3] + d;
       }
       if (dummyEnd[0]) {
         iOffset = stag->entriesPerElement * (leftGhostElements + stag->n[0]);
         // back down left, back left
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[2] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[2] + d;
       }
     }
     if (dummyEnd[1]) {
@@ -3372,13 +3361,13 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToLocal3d_Internal(DM dm)
       for (i = 0; i < stag->n[0]; ++i) {
         iOffset = stag->entriesPerElement * (leftGhostElements + i);
         // back down left, back down
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
-        for (d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[1] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[1]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[1] + d;
       }
       if (dummyEnd[0]) {
         iOffset = stag->entriesPerElement * (leftGhostElements + stag->n[0]);
         // back down left
-        for (d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
+        for (PetscInt d = 0; d < stag->dof[0]; ++d) idxRemap[count++] = kOffset + jOffset + iOffset + dOffset[0] + d;
       }
     }
   }

@@ -8,7 +8,7 @@ static PetscErrorCode CheckLocal(Mat A, Mat B, PetscScalar *a, PetscScalar *b)
 {
   PetscBool wA = PETSC_FALSE, wB = PETSC_FALSE;
   PetscBool wAv = PETSC_FALSE, wBv = PETSC_FALSE;
-  PetscInt  lda, i, j, m, n;
+  PetscInt lda, i, m, n;
 
   PetscFunctionBegin;
   if (a) {
@@ -17,7 +17,7 @@ static PetscErrorCode CheckLocal(Mat A, Mat B, PetscScalar *a, PetscScalar *b)
     wA = (PetscBool)(a != Aa);
     PetscCall(MatDenseGetLDA(A, &lda));
     PetscCall(MatGetLocalSize(A, &m, &n));
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       for (i = m; i < lda; i++) {
         if (Aa[j * lda + i] != MAGIC_NUMBER) wAv = PETSC_TRUE;
       }
@@ -30,7 +30,7 @@ static PetscErrorCode CheckLocal(Mat A, Mat B, PetscScalar *a, PetscScalar *b)
     wB = (PetscBool)(b != Bb);
     PetscCall(MatDenseGetLDA(B, &lda));
     PetscCall(MatGetLocalSize(B, &m, &n));
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       for (i = m; i < lda; i++) {
         if (Bb[j * lda + i] != MAGIC_NUMBER) wBv = PETSC_TRUE;
       }
@@ -272,12 +272,10 @@ int main(int argc, char **args)
 
   PetscCall(MatGetLocalSize(A, &m, &n));
   if (local) {
-    PetscInt i;
-
     PetscCall(PetscMalloc1((m + ldx) * K, &dataX));
     PetscCall(PetscMalloc1((n + ldb) * K, &dataB));
-    for (i = 0; i < (m + ldx) * K; i++) dataX[i] = MAGIC_NUMBER;
-    for (i = 0; i < (n + ldb) * K; i++) dataB[i] = MAGIC_NUMBER;
+    for (PetscInt i = 0; i < (m + ldx) * K; i++) dataX[i] = MAGIC_NUMBER;
+    for (PetscInt i = 0; i < (n + ldb) * K; i++) dataB[i] = MAGIC_NUMBER;
   }
   PetscCall(MatCreateDense(PETSC_COMM_WORLD, n, PETSC_DECIDE, N, K, dataB, &B));
   PetscCall(MatCreateDense(PETSC_COMM_WORLD, m, PETSC_DECIDE, M, K, dataX, &X));
@@ -287,10 +285,8 @@ int main(int argc, char **args)
   }
   PetscCall(MatGetLocalSize(B, NULL, &k));
   if (local) {
-    PetscInt i;
-
     PetscCall(PetscMalloc1((k + ldr) * N, &dataBt));
-    for (i = 0; i < (k + ldr) * N; i++) dataBt[i] = MAGIC_NUMBER;
+    for (PetscInt i = 0; i < (k + ldr) * N; i++) dataBt[i] = MAGIC_NUMBER;
   }
   PetscCall(MatCreateDense(PETSC_COMM_WORLD, k, n, K, N, dataBt, &Bt));
   if (local) PetscCall(MatDenseSetLDA(Bt, k + ldr));

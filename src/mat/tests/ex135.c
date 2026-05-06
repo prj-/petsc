@@ -5,7 +5,7 @@ static const char help[] = "Test parallel assembly of SBAIJ matrices\n\n";
 PetscErrorCode Assemble(MPI_Comm comm, PetscInt n, MatType mtype)
 {
   Mat         A;
-  PetscInt    first, last, i;
+  PetscInt first, last;
   PetscMPIInt rank, size;
 
   PetscFunctionBegin;
@@ -23,7 +23,7 @@ PetscErrorCode Assemble(MPI_Comm comm, PetscInt n, MatType mtype)
   PetscCall(MatGetOwnershipRange(A, &first, &last));
   PetscCall(MatSetOption(A, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE));
   last--;
-  for (i = first; i <= last; i++) {
+  for (PetscInt i = first; i <= last; i++) {
     PetscCall(MatSetValue(A, i, i, 2., INSERT_VALUES));
     if (i != n - 1) PetscCall(MatSetValue(A, i, n - 1, -1., INSERT_VALUES));
   }

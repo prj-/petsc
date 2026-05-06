@@ -278,7 +278,7 @@ static PetscErrorCode TSDestroy_Sundials(TS ts)
 static PetscErrorCode TSSetUp_Sundials(TS ts)
 {
   TS_Sundials *cvode = (TS_Sundials *)ts->data;
-  PetscInt     glosize, locsize, i;
+  PetscInt glosize, locsize;
   PetscScalar *y_data, *parray;
   PC           pc;
   PCType       pctype;
@@ -306,7 +306,7 @@ static PetscErrorCode TSSetUp_Sundials(TS ts)
   /* initialize N_Vec y: copy ts->vec_sol to cvode->y */
   PetscCall(VecGetArray(ts->vec_sol, &parray));
   y_data = (PetscScalar *)N_VGetArrayPointer(cvode->y);
-  for (i = 0; i < locsize; i++) y_data[i] = parray[i];
+  for (PetscInt i = 0; i < locsize; i++) y_data[i] = parray[i];
   PetscCall(VecRestoreArray(ts->vec_sol, NULL));
 
   PetscCall(VecDuplicate(ts->vec_sol, &cvode->update));

@@ -110,8 +110,6 @@ PetscErrorCode PetscAGetBase(PetscReal vmin, PetscReal vmax, int num, PetscReal 
 {
   PetscReal        base, ftemp, e10;
   static PetscReal base_try[5] = {10.0, 5.0, 2.0, 1.0, 0.5};
-  int              i;
-
   PetscFunctionBegin;
   /* labels of the form n * BASE */
   /* get an approximate value for BASE */
@@ -129,7 +127,7 @@ PetscErrorCode PetscAGetBase(PetscReal vmin, PetscReal vmax, int num, PetscReal 
   base = base * e10;
   if (base < 1.0) base = 1.0;
   /* now reduce it to one of 1, 2, or 5 */
-  for (i = 1; i < 5; i++) {
+  for (int i = 1; i < 5; i++) {
     if (base >= base_try[i]) {
       PetscCall(PetscExp10((double)*power, &e10));
       base = base_try[i - 1] * e10;

@@ -445,13 +445,13 @@ static PetscErrorCode DMPlexCreateAdjacencySection_Static(DM dm, PetscInt bs, Pe
       PetscCall(PetscSectionGetOffset(leafSectionAdj, d, &aoff));
       for (q = 0; q < numAdj; ++q) {
         const PetscInt padj = tmpAdj[q];
-        PetscInt       ndof, ncdof, ngoff, nd;
+        PetscInt ndof, ncdof, ngoff;
 
         if ((padj < pStart) || (padj >= pEnd)) continue;
         PetscCall(PetscSectionGetDof(section, padj, &ndof));
         PetscCall(PetscSectionGetConstraintDof(section, padj, &ncdof));
         PetscCall(PetscSectionGetOffset(sectionGlobal, padj, &ngoff));
-        for (nd = 0; nd < ndof - ncdof; ++nd) {
+        for (PetscInt nd = 0; nd < ndof - ncdof; ++nd) {
           adj[aoff + i] = (ngoff < 0 ? -(ngoff + 1) : ngoff) + nd;
           ++i;
         }
@@ -482,8 +482,7 @@ static PetscErrorCode DMPlexCreateAdjacencySection_Static(DM dm, PetscInt bs, Pe
     PetscCall(PetscSFGatherBegin(sfAdj, MPIU_INT, adj, remoteadj));
     PetscCall(PetscSFGatherEnd(sfAdj, MPIU_INT, adj, remoteadj));
     for (p = 0, l = 0, r = 0; p < adjSize; ++p, l = PetscMax(p, l + indegree[p - 1])) {
-      PetscInt s;
-      for (s = 0; s < indegree[p]; ++s, ++r) rootAdj[l + s] = remoteadj[r];
+      for (PetscInt s = 0; s < indegree[p]; ++s, ++r) rootAdj[l + s] = remoteadj[r];
     }
     PetscCheck(r == radjsize, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Inconsistency in communication %" PetscInt_FMT " != %" PetscInt_FMT, r, radjsize);
     PetscCheck(l == adjSize, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Inconsistency in communication %" PetscInt_FMT " != %" PetscInt_FMT, l, adjSize);
@@ -520,13 +519,13 @@ static PetscErrorCode DMPlexCreateAdjacencySection_Static(DM dm, PetscInt bs, Pe
       }
       for (q = 0; q < numAdj; ++q) {
         const PetscInt padj = tmpAdj[q];
-        PetscInt       ndof, ncdof, ngoff, nd;
+        PetscInt ndof, ncdof, ngoff;
 
         if ((padj < pStart) || (padj >= pEnd)) continue;
         PetscCall(PetscSectionGetDof(section, padj, &ndof));
         PetscCall(PetscSectionGetConstraintDof(section, padj, &ncdof));
         PetscCall(PetscSectionGetOffset(sectionGlobal, padj, &ngoff));
-        for (nd = 0; nd < ndof - ncdof; ++nd) {
+        for (PetscInt nd = 0; nd < ndof - ncdof; ++nd) {
           rootAdj[aoff + i] = ngoff < 0 ? -(ngoff + 1) + nd : ngoff + nd;
           --i;
         }
@@ -660,7 +659,7 @@ static PetscErrorCode DMPlexCreateAdjacencySection_Static(DM dm, PetscInt bs, Pe
       PetscCall(PetscSectionGetOffset(sectionAdj, d, &aoff));
       for (q = 0; q < numAdj; ++q) {
         const PetscInt padj = tmpAdj[q], *ncind;
-        PetscInt       ndof, ncdof, ngoff, nd, count;
+        PetscInt ndof, ncdof, ngoff, count;
 
         /* Adjacent points may not be in the section chart */
         if ((padj < pStart) || (padj >= pEnd)) continue;
@@ -671,7 +670,7 @@ static PetscErrorCode DMPlexCreateAdjacencySection_Static(DM dm, PetscInt bs, Pe
         // If leaf-root pair are both on this rank, only count root
         PetscCall(PetscFindInt(padj, num_exclude_leaves, exclude_leaves, &count));
         if (count >= 0) continue;
-        for (nd = 0; nd < ndof - ncdof; ++nd, ++i) cols[aoff + i] = ngoff < 0 ? -(ngoff + 1) + nd : ngoff + nd;
+        for (PetscInt nd = 0; nd < ndof - ncdof; ++nd, ++i) cols[aoff + i] = ngoff < 0 ? -(ngoff + 1) + nd : ngoff + nd;
       }
       for (q = 0; q < anDof; q++, i++) cols[aoff + i] = anchorAdj[anOff + q];
       PetscCheck(i == adof, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Invalid number of entries %" PetscInt_FMT " != %" PetscInt_FMT " for dof %" PetscInt_FMT " (point %" PetscInt_FMT ")", i, adof, d, p);
@@ -929,7 +928,7 @@ PetscErrorCode DMPlexPreallocateOperator(DM dm, PetscInt bs, PetscInt dnz[], Pet
 PetscErrorCode DMPlexPreallocateOperator_2(DM dm, PetscInt bs, PetscSection section, PetscSection sectionGlobal, PetscInt dnz[], PetscInt onz[], PetscInt dnzu[], PetscInt onzu[], Mat A, PetscBool fillMatrix)
 {
   PetscInt       *tmpClosure,*tmpAdj,*visits;
-  PetscInt        c,cStart,cEnd,pStart,pEnd;
+  PetscInt cStart, cEnd, pStart, pEnd;
 
   PetscFunctionBegin;
   PetscCall(DMGetDimension(dm, &dim));
@@ -945,7 +944,7 @@ PetscErrorCode DMPlexPreallocateOperator_2(DM dm, PetscInt bs, PetscSection sect
   PetscCall(PetscArrayzero(lvisits,pEnd-pStart));
   PetscCall(PetscArrayzero(visits,pEnd-pStart));
   PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
-  for (c=cStart; c<cEnd; c++) {
+  for (PetscInt c=cStart; c<cEnd; c++) {
     PetscInt *support = tmpClosure;
     PetscCall(DMPlexGetTransitiveClosure(dm, c, PETSC_FALSE, &supportSize, (PetscInt**)&support));
     for (p=0; p<supportSize; p++) lvisits[support[p]]++;
@@ -958,7 +957,7 @@ PetscErrorCode DMPlexPreallocateOperator_2(DM dm, PetscInt bs, PetscSection sect
   PetscCall(PetscSFGetRootRanks());
 
   PetscCall(PetscMalloc2(maxClosureSize*maxClosureSize,&cellmat,npoints,&owner));
-  for (c=cStart; c<cEnd; c++) {
+  for (PetscInt c=cStart; c<cEnd; c++) {
     PetscCall(PetscArrayzero(cellmat,maxClosureSize*maxClosureSize));
     /*
      Depth-first walk of transitive closure.

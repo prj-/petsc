@@ -307,8 +307,6 @@ PetscErrorCode MatNullSpaceCreate(MPI_Comm comm, PetscBool has_cnst, PetscInt n,
 @*/
 PetscErrorCode MatNullSpaceDestroy(MatNullSpace *sp)
 {
-  PetscInt i;
-
   PetscFunctionBegin;
   if (!*sp) PetscFunctionReturn(PETSC_SUCCESS);
   PetscValidHeaderSpecific(*sp, MAT_NULLSPACE_CLASSID, 1);
@@ -317,7 +315,7 @@ PetscErrorCode MatNullSpaceDestroy(MatNullSpace *sp)
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  for (i = 0; i < (*sp)->n; i++) PetscCall(VecLockReadPop((*sp)->vecs[i]));
+  for (PetscInt i = 0; i < (*sp)->n; i++) PetscCall(VecLockReadPop((*sp)->vecs[i]));
 
   PetscCall(VecDestroyVecs((*sp)->n, &(*sp)->vecs));
   PetscCall(PetscFree((*sp)->alpha));
@@ -341,7 +339,7 @@ PetscErrorCode MatNullSpaceDestroy(MatNullSpace *sp)
 PetscErrorCode MatNullSpaceRemove(MatNullSpace sp, Vec vec)
 {
   PetscScalar sum;
-  PetscInt    i, N;
+  PetscInt    N;
 
   PetscFunctionBegin;
   if (!sp) PetscFunctionReturn(PETSC_SUCCESS);
@@ -359,7 +357,7 @@ PetscErrorCode MatNullSpaceRemove(MatNullSpace sp, Vec vec)
 
   if (sp->n) {
     PetscCall(VecMDot(vec, sp->n, sp->vecs, sp->alpha));
-    for (i = 0; i < sp->n; i++) sp->alpha[i] = -sp->alpha[i];
+    for (PetscInt i = 0; i < sp->n; i++) sp->alpha[i] = -sp->alpha[i];
     PetscCall(VecMAXPY(vec, sp->n, sp->alpha, sp->vecs));
   }
 
@@ -387,7 +385,7 @@ PetscErrorCode MatNullSpaceTest(MatNullSpace sp, Mat mat, PetscBool *isNull)
 {
   PetscScalar sum;
   PetscReal   nrm, tol = 10. * PETSC_SQRT_MACHINE_EPSILON;
-  PetscInt    j, n, N;
+  PetscInt n, N;
   Vec         l, r;
   PetscBool   flg1 = PETSC_FALSE, flg2 = PETSC_FALSE, consistent = PETSC_TRUE;
   PetscViewer viewer;
@@ -419,7 +417,7 @@ PetscErrorCode MatNullSpaceTest(MatNullSpace sp, Mat mat, PetscBool *isNull)
     PetscCall(VecDestroy(&r));
   }
 
-  for (j = 0; j < n; j++) {
+  for (PetscInt j = 0; j < n; j++) {
     PetscUseTypeMethod(mat, mult, sp->vecs[j], l);
     PetscCall(VecNorm(l, NORM_2, &nrm));
     if (nrm >= tol) consistent = PETSC_FALSE;

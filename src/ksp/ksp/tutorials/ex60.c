@@ -96,13 +96,13 @@ PetscScalar diagFunc3(PetscInt i, PetscInt n)
 
 static PetscErrorCode AssembleDiagonalMatrix(Mat A, PetscScalar (*diagfunc)(PetscInt, PetscInt))
 {
-  PetscInt    i, rstart, rend, n;
+  PetscInt rstart, rend, n;
   PetscScalar val;
 
   PetscFunctionBeginUser;
   PetscCall(MatGetSize(A, NULL, &n));
   PetscCall(MatGetOwnershipRange(A, &rstart, &rend));
-  for (i = rstart; i < rend; ++i) {
+  for (PetscInt i = rstart; i < rend; ++i) {
     val = diagfunc(i, n);
     PetscCall(MatSetValues(A, 1, &i, 1, &i, &val, INSERT_VALUES));
   }

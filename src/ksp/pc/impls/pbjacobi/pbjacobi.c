@@ -126,7 +126,6 @@ static PetscErrorCode PCApply_PBJacobi(PC pc, Vec x, Vec y)
 static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
 {
   PC_PBJacobi       *jac = (PC_PBJacobi *)pc->data;
-  PetscInt           i, ib, jb;
   const PetscInt     m    = jac->mbs;
   const PetscInt     bs   = jac->bs;
   const MatScalar   *diag = jac->diag;
@@ -138,10 +137,10 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
   PetscCall(VecGetArray(y, &yy));
   switch (bs) {
   case 1:
-    for (i = 0; i < m; i++) yy[i] = diag[i] * xx[i];
+    for (PetscInt i = 0; i < m; i++) yy[i] = diag[i] * xx[i];
     break;
   case 2:
-    for (i = 0; i < m; i++) {
+    for (PetscInt i = 0; i < m; i++) {
       x0            = xx[2 * i];
       x1            = xx[2 * i + 1];
       yy[2 * i]     = diag[0] * x0 + diag[1] * x1;
@@ -150,7 +149,7 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
     }
     break;
   case 3:
-    for (i = 0; i < m; i++) {
+    for (PetscInt i = 0; i < m; i++) {
       x0 = xx[3 * i];
       x1 = xx[3 * i + 1];
       x2 = xx[3 * i + 2];
@@ -162,7 +161,7 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
     }
     break;
   case 4:
-    for (i = 0; i < m; i++) {
+    for (PetscInt i = 0; i < m; i++) {
       x0 = xx[4 * i];
       x1 = xx[4 * i + 1];
       x2 = xx[4 * i + 2];
@@ -176,7 +175,7 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
     }
     break;
   case 5:
-    for (i = 0; i < m; i++) {
+    for (PetscInt i = 0; i < m; i++) {
       x0 = xx[5 * i];
       x1 = xx[5 * i + 1];
       x2 = xx[5 * i + 2];
@@ -192,7 +191,7 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
     }
     break;
   case 6:
-    for (i = 0; i < m; i++) {
+    for (PetscInt i = 0; i < m; i++) {
       x0 = xx[6 * i];
       x1 = xx[6 * i + 1];
       x2 = xx[6 * i + 2];
@@ -210,7 +209,7 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
     }
     break;
   case 7:
-    for (i = 0; i < m; i++) {
+    for (PetscInt i = 0; i < m; i++) {
       x0 = xx[7 * i];
       x1 = xx[7 * i + 1];
       x2 = xx[7 * i + 2];
@@ -230,10 +229,10 @@ static PetscErrorCode PCApplyTranspose_PBJacobi(PC pc, Vec x, Vec y)
     }
     break;
   default:
-    for (i = 0; i < m; i++) {
-      for (ib = 0; ib < bs; ib++) {
+    for (PetscInt i = 0; i < m; i++) {
+      for (PetscInt ib = 0; ib < bs; ib++) {
         PetscScalar rowsum = 0;
-        for (jb = 0; jb < bs; jb++) rowsum += diag[ib * bs + jb] * xx[bs * i + jb];
+        for (PetscInt jb = 0; jb < bs; jb++) rowsum += diag[ib * bs + jb] * xx[bs * i + jb];
         yy[bs * i + ib] = rowsum;
       }
       diag += bs * bs;

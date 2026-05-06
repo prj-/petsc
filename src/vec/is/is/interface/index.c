@@ -298,14 +298,14 @@ PetscErrorCode ISCreateSubIS(IS is, IS comps, IS *subis)
 @*/
 PetscErrorCode ISClearInfoCache(IS is, PetscBool clear_permanent_local)
 {
-  PetscInt i, j;
+  PetscInt i;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(is, IS_CLASSID, 1);
   PetscValidType(is, 1);
   for (i = 0; i < IS_INFO_MAX; i++) {
     if (clear_permanent_local) is->info_permanent[IS_LOCAL][i] = PETSC_FALSE;
-    for (j = 0; j < 2; j++) {
+    for (PetscInt j = 0; j < 2; j++) {
       if (!is->info_permanent[j][i]) is->info[j][i] = IS_INFO_UNKNOWN;
     }
   }
@@ -1298,10 +1298,8 @@ PetscErrorCode ISLocate(IS is, PetscInt key, PetscInt *location)
     if (sorted) {
       PetscCall(PetscFindInt(key, numIdx, idx, location));
     } else {
-      PetscInt i;
-
       *location = -1;
-      for (i = 0; i < numIdx; i++) {
+      for (PetscInt i = 0; i < numIdx; i++) {
         if (idx[i] == key) {
           *location = i;
           break;
@@ -1944,13 +1942,13 @@ PetscErrorCode ISSetBlockSize(IS is, PetscInt bs)
   PetscCheck(bs >= 1, PetscObjectComm((PetscObject)is), PETSC_ERR_ARG_OUTOFRANGE, "Block size %" PetscInt_FMT ", must be positive", bs);
   if (PetscDefined(USE_DEBUG)) {
     const PetscInt *indices;
-    PetscInt        length, i, j;
+    PetscInt length, i;
     PetscCall(ISGetIndices(is, &indices));
     if (indices) {
       PetscCall(ISGetLocalSize(is, &length));
       PetscCheck(length % bs == 0, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Local size %" PetscInt_FMT " not compatible with proposed block size %" PetscInt_FMT, length, bs);
       for (i = 1; i < length / bs; i += bs) {
-        for (j = 1; j < bs - 1; j++) {
+        for (PetscInt j = 1; j < bs - 1; j++) {
           PetscCheck(indices[i * bs + j] == indices[(i - 1) * bs + j] + indices[i * bs] - indices[(i - 1) * bs], PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Proposed block size %" PetscInt_FMT " is incompatible with the indices", bs);
         }
       }
@@ -2034,13 +2032,13 @@ PetscErrorCode ISGetCompressOutput(IS is, PetscBool *compress)
 
 static PetscErrorCode ISGetIndicesCopy_Private(IS is, PetscInt idx[])
 {
-  PetscInt        len, i;
+  PetscInt        len;
   const PetscInt *ptr;
 
   PetscFunctionBegin;
   PetscCall(ISGetLocalSize(is, &len));
   PetscCall(ISGetIndices(is, &ptr));
-  for (i = 0; i < len; i++) idx[i] = ptr[i];
+  for (PetscInt i = 0; i < len; i++) idx[i] = ptr[i];
   PetscCall(ISRestoreIndices(is, &ptr));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

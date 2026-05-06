@@ -281,7 +281,7 @@ static PetscErrorCode RKCreate_Gauss(PetscInt nstages, PetscScalar **gauss_A, Pe
 {
   PetscScalar *A, *G0, *G1;
   PetscReal   *b, *c;
-  PetscInt     i, j;
+  PetscInt     i;
   Mat          G0mat, G1mat, Amat;
 
   PetscFunctionBegin;
@@ -292,7 +292,7 @@ static PetscErrorCode RKCreate_Gauss(PetscInt nstages, PetscScalar **gauss_A, Pe
 
   /* A^T = G0^{-1} G1 */
   for (i = 0; i < nstages; i++) {
-    for (j = 0; j < nstages; j++) {
+    for (PetscInt j = 0; j < nstages; j++) {
       G0[i * nstages + j] = PetscPowRealInt(c[i], j);
       G1[i * nstages + j] = PetscPowRealInt(c[i], j + 1) / (j + 1);
     }
@@ -316,7 +316,7 @@ static PetscErrorCode RKCreate_Gauss(PetscInt nstages, PetscScalar **gauss_A, Pe
 
 static PetscErrorCode Assemble_AdvDiff(MPI_Comm comm, UserContext *user, Mat *J)
 {
-  PetscInt  matis, matie, i;
+  PetscInt matis, matie;
   PetscReal dx, dx2;
 
   PetscFunctionBegin;
@@ -327,7 +327,7 @@ static PetscErrorCode Assemble_AdvDiff(MPI_Comm comm, UserContext *user, Mat *J)
   PetscCall(MatSetSizes(*J, PETSC_DECIDE, PETSC_DECIDE, user->imax, user->imax));
   PetscCall(MatSetUp(*J));
   PetscCall(MatGetOwnershipRange(*J, &matis, &matie));
-  for (i = matis; i < matie; i++) {
+  for (PetscInt i = matis; i < matie; i++) {
     PetscScalar values[3];
     PetscInt    col[3];
     switch (user->physics_type) {

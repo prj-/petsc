@@ -136,8 +136,7 @@ static void f0_bd_u_linear(PetscInt dim, PetscInt Nf, PetscInt NfAux, const Pets
 /* <v, u> */
 static void g0_vu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt c;
-  for (c = 0; c < dim; ++c) g0[c * dim + c] = 1.0;
+  for (PetscInt c = 0; c < dim; ++c) g0[c * dim + c] = 1.0;
 }
 
 /* <q, p> */
@@ -152,30 +151,26 @@ static void g0_qp(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff
  * need <q,p> - <q,\div{u}.*/
 static void g1_qu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g1[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g1[d * dim + d] = -1.0;
+  for (PetscInt d = 0; d < dim; ++d) g1[d * dim + d] = -1.0;
 }
 
 /* <w, p> This is only used by the embedded system. Where we need to compute
  * <w,d> - <w,p> + <w, \div{u}>*/
 static void g0_wp(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g0[d * dim + d] = -1.0;
+  for (PetscInt d = 0; d < dim; ++d) g0[d * dim + d] = -1.0;
 }
 
 /* <w, d> */
 static void g0_wd(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g0[])
 {
-  PetscInt c;
-  for (c = 0; c < dim; ++c) g0[c * dim + c] = 1.0;
+  for (PetscInt c = 0; c < dim; ++c) g0[c * dim + c] = 1.0;
 }
 
 /* <w, \div{u}> for the embedded system. */
 static void g1_wu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar g1[])
 {
-  PetscInt d;
-  for (d = 0; d < dim; ++d) g1[d * dim + d] = 1.0;
+  for (PetscInt d = 0; d < dim; ++d) g1[d * dim + d] = 1.0;
 }
 
 /* Enum and string array for selecting mesh perturbation options */
@@ -249,7 +244,7 @@ static PetscErrorCode PerturbMesh(DM *mesh, PetscScalar *coordVals, PetscInt npo
 /* Apply a global skew transformation to the mesh. */
 static PetscErrorCode SkewMesh(DM *mesh, PetscScalar *coordVals, PetscInt npoints, PetscInt dim)
 {
-  PetscInt     i, j, k, l;
+  PetscInt i;
   PetscScalar *transMat;
   PetscScalar  tmpcoord[3];
   PetscRandom  ran;
@@ -261,7 +256,7 @@ static PetscErrorCode SkewMesh(DM *mesh, PetscScalar *coordVals, PetscInt npoint
 
   /* Make a matrix representing a skew transformation */
   for (i = 0; i < dim; ++i) {
-    for (j = 0; j < dim; ++j) {
+    for (PetscInt j = 0; j < dim; ++j) {
       PetscCall(PetscRandomGetValueReal(ran, &randVal));
       if (i == j) transMat[i * dim + j] = 1.;
       else if (j < i) transMat[i * dim + j] = 2 * (j + i) * randVal;
@@ -271,11 +266,11 @@ static PetscErrorCode SkewMesh(DM *mesh, PetscScalar *coordVals, PetscInt npoint
 
   /* Multiply each coordinate vector by our transformation.*/
   for (i = 0; i < npoints; ++i) {
-    for (j = 0; j < dim; ++j) {
+    for (PetscInt j = 0; j < dim; ++j) {
       tmpcoord[j] = 0;
-      for (k = 0; k < dim; ++k) tmpcoord[j] += coordVals[dim * i + k] * transMat[dim * k + j];
+      for (PetscInt k = 0; k < dim; ++k) tmpcoord[j] += coordVals[dim * i + k] * transMat[dim * k + j];
     }
-    for (l = 0; l < dim; ++l) coordVals[dim * i + l] = tmpcoord[l];
+    for (PetscInt l = 0; l < dim; ++l) coordVals[dim * i + l] = tmpcoord[l];
   }
   PetscCall(PetscFree(transMat));
   PetscCall(PetscRandomDestroy(&ran));
@@ -425,7 +420,6 @@ static PetscErrorCode SetupDiscretization(DM mesh, PetscErrorCode (*setup)(DM, U
 
 int main(int argc, char **argv)
 {
-  PetscInt        i;
   UserCtx         user;
   DM              mesh;
   SNES            snes;
@@ -458,7 +452,6 @@ int main(int argc, char **argv)
    * solution from SNES */
   PetscCall(DMCreateGlobalVector(mesh, &computed));
   PetscCall(PetscObjectSetName((PetscObject)computed, "computedSolution"));
-  PetscCall(VecSet(computed, 0.0));
   PetscCall(SNESSolve(snes, NULL, computed));
   PetscCall(SNESGetSolution(snes, &computed));
   PetscCall(VecViewFromOptions(computed, NULL, "-computedSolution_view"));
@@ -478,7 +471,7 @@ int main(int argc, char **argv)
   /* Tear down */
   PetscCall(VecDestroy(&divErr));
   PetscCall(VecDestroy(&computed));
-  for (i = 0; i < 3; ++i) PetscCall(ISDestroy(&fieldIS[i]));
+  for (PetscInt i = 0; i < 3; ++i) PetscCall(ISDestroy(&fieldIS[i]));
   PetscCall(PetscFree(fieldIS));
   PetscCall(SNESDestroy(&snes));
   PetscCall(DMDestroy(&mesh));

@@ -276,7 +276,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, PetscCtx C
   AppCtx             *ctx = (AppCtx *)Ctx;
   PetscDrawLG         lg;
   PetscScalar        *u;
-  PetscInt            Mx, i, xs, xm, cnt;
+  PetscInt Mx, xs, xm, cnt;
   PetscReal           x, y, hx, pause, sx, len, max, xx[2], yy[2];
   PetscDraw           draw;
   Vec                 localU;
@@ -322,7 +322,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, PetscCtx C
   PetscCall(PetscDrawLGSetColors(lg, colors + 1));
   PetscCall(PetscDrawViewPortsSet(ports, 2));
   x = hx * xs;
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xx[0] = xx[1] = x;
     yy[0]         = PetscRealPart(.25 * ctx->kappa * (u[i - 1] - u[i + 1]) * (u[i - 1] - u[i + 1]) * sx);
     if (ctx->allencahn) yy[1] = .25 * PetscRealPart((1. - u[i] * u[i]) * (1. - u[i] * u[i]));
@@ -342,7 +342,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, PetscCtx C
   PetscCall(PetscDrawLGReset(lg));
   x   = xs * hx;
   max = 0.;
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xx[0] = xx[1] = x;
     yy[0]         = PetscRealPart(ctx->kappa * (u[i - 1] + u[i + 1] - 2.0 * u[i]) * sx);
     max           = PetscMax(max, PetscAbs(yy[0]));
@@ -366,7 +366,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, PetscCtx C
   x = hx * xs;
   PetscCall(PetscDrawLGSetLimits(lg, x, x + (xm - 1) * hx, -1.1, 1.1));
   PetscCall(PetscDrawLGSetColors(lg, colors));
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xx[0] = x;
     yy[0] = PetscRealPart(u[i]);
     PetscCall(PetscDrawLGAddPoint(lg, xx, yy));
@@ -382,7 +382,7 @@ PetscErrorCode MyMonitor(TS ts, PetscInt step, PetscReal time, Vec U, PetscCtx C
   cnt = xm / 60;
   cnt = (!cnt) ? 1 : cnt;
 
-  for (i = xs; i < xs + xm; i += cnt) {
+  for (PetscInt i = xs; i < xs + xm; i += cnt) {
     y   = PetscRealPart(u[i]);
     len = .5 * PetscRealPart(ctx->kappa * (u[i - 1] + u[i + 1] - 2.0 * u[i]) * sx) / max;
     PetscCall(PetscDrawArrow(draw, x, y, x, y + len, PETSC_DRAW_RED));

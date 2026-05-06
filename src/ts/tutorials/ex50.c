@@ -415,7 +415,7 @@ PetscErrorCode RHSMatrixLaplaciangllDM(TS ts, PetscReal t, Vec X, Mat A, Mat BB,
   PetscReal **temp;
   PetscReal   vv;
   AppCtx     *appctx = (AppCtx *)ctx; /* user-defined application context */
-  PetscInt    i, xs, xn, l, j;
+  PetscInt xs, xn, l, j;
   PetscInt   *rowsDM;
   PetscBool   flg = PETSC_FALSE;
 
@@ -431,7 +431,7 @@ PetscErrorCode RHSMatrixLaplaciangllDM(TS ts, PetscReal t, Vec X, Mat A, Mat BB,
     PetscCheck(appctx->param.N > 1, PETSC_COMM_WORLD, PETSC_ERR_ARG_WRONG, "Spectral element order should be > 1");
 
     /* scale by the size of the element */
-    for (i = 0; i < appctx->param.N; i++) {
+    for (PetscInt i = 0; i < appctx->param.N; i++) {
       vv = -appctx->param.mu * 2.0 / appctx->param.Le;
       for (j = 0; j < appctx->param.N; j++) temp[i][j] = temp[i][j] * vv;
     }
@@ -486,7 +486,7 @@ PetscErrorCode RHSMatrixAdvectiongllDM(TS ts, PetscReal t, Vec X, Mat A, Mat BB,
 {
   PetscReal **temp;
   AppCtx     *appctx = (AppCtx *)ctx; /* user-defined application context */
-  PetscInt    xs, xn, l, j;
+  PetscInt xs, xn;
   PetscInt   *rowsDM;
   PetscBool   flg = PETSC_FALSE;
 
@@ -504,8 +504,8 @@ PetscErrorCode RHSMatrixAdvectiongllDM(TS ts, PetscReal t, Vec X, Mat A, Mat BB,
     xn = xn / (appctx->param.N - 1);
 
     PetscCall(PetscMalloc1(appctx->param.N, &rowsDM));
-    for (j = xs; j < xs + xn; j++) {
-      for (l = 0; l < appctx->param.N; l++) rowsDM[l] = 1 + (j - xs) * (appctx->param.N - 1) + l;
+    for (PetscInt j = xs; j < xs + xn; j++) {
+      for (PetscInt l = 0; l < appctx->param.N; l++) rowsDM[l] = 1 + (j - xs) * (appctx->param.N - 1) + l;
       PetscCall(MatSetValuesLocal(A, appctx->param.N, rowsDM, appctx->param.N, rowsDM, &temp[0][0], ADD_VALUES));
     }
     PetscCall(PetscFree(rowsDM));

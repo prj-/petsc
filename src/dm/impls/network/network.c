@@ -923,12 +923,11 @@ PetscErrorCode DMNetworkRegisterComponent(DM dm, const char *name, size_t size, 
   DM_Network         *network   = (DM_Network *)dm->data;
   DMNetworkComponent *component = NULL, *newcomponent = NULL;
   PetscBool           flg = PETSC_FALSE;
-  PetscInt            i;
 
   PetscFunctionBegin;
   if (!network->component) PetscCall(PetscCalloc1(network->max_comps_registered, &network->component));
 
-  for (i = 0; i < network->ncomponent; i++) {
+  for (PetscInt i = 0; i < network->ncomponent; i++) {
     PetscCall(PetscStrcmp(network->component[i].name, name, &flg));
     if (flg) {
       *key = i;
@@ -941,7 +940,7 @@ PetscErrorCode DMNetworkRegisterComponent(DM dm, const char *name, size_t size, 
     network->max_comps_registered += 2;
     PetscCall(PetscCalloc1(network->max_comps_registered, &newcomponent));
     /* Copy over the previous component info */
-    for (i = 0; i < network->ncomponent; i++) {
+    for (PetscInt i = 0; i < network->ncomponent; i++) {
       PetscCall(PetscStrncpy(newcomponent[i].name, network->component[i].name, sizeof(newcomponent[i].name)));
       newcomponent[i].size = network->component[i].size;
     }
@@ -2457,7 +2456,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
 {
   DM_Network     *network = (DM_Network *)dm->data;
   PetscInt        eStart, eEnd, vStart, vEnd, rstart, nrows, *rows, localSize;
-  PetscInt        cstart, ncols, j, e, v;
+  PetscInt cstart, ncols, j;
   PetscBool       ghost, ghost_vc, ghost2, isNest;
   Mat             Juser;
   PetscSection    sectionGlobal;
@@ -2498,14 +2497,13 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   PetscCall(VecCreate(comm, &vd_nz));
   PetscCall(VecSetSizes(vd_nz, localSize, PETSC_DECIDE));
   PetscCall(VecSetFromOptions(vd_nz));
-  PetscCall(VecSet(vd_nz, 0.0));
   PetscCall(VecDuplicate(vd_nz, &vo_nz));
 
   /* Set preallocation for edges */
   PetscCall(DMNetworkGetEdgeRange(dm, &eStart, &eEnd));
 
   PetscCall(PetscMalloc1(localSize, &rows));
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, e, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, e, &nrows));
@@ -2514,7 +2512,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
 
       /* Set preallocation for connected vertices */
       PetscCall(DMNetworkGetConnectedVertices(dm, e, &cone));
-      for (v = 0; v < 2; v++) {
+      for (PetscInt v = 0; v < 2; v++) {
         PetscCall(PetscSectionGetDof(network->DofSection, cone[v], &ncols));
 
         if (network->Je) Juser = network->Je[3 * e + 1 + v]; /* Jacobian(e,v) */
@@ -2535,7 +2533,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   PetscCall(DMNetworkGetVertexRange(dm, &vStart, &vEnd));
   if (vEnd - vStart) vptr = network->Jvptr;
 
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, v, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, v, &nrows));
@@ -2550,7 +2548,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
     /* Get supporting edges and connected vertices */
     PetscCall(DMNetworkGetSupportingEdges(dm, v, &nedges, &edges));
 
-    for (e = 0; e < nedges; e++) {
+    for (PetscInt e = 0; e < nedges; e++) {
       /* Supporting edges */
       PetscCall(DMNetworkGetGlobalVecOffset(dm, edges[e], ALL_COMPONENTS, &cstart));
       PetscCall(PetscSectionGetDof(network->DofSection, edges[e], &ncols));
@@ -2610,7 +2608,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   PetscCall(PetscFree2(dnnz, onnz));
 
   /* (2) Set matrix entries for edges */
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, e, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, e, &nrows));
@@ -2619,7 +2617,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
 
       /* Set matrix entries for connected vertices */
       PetscCall(DMNetworkGetConnectedVertices(dm, e, &cone));
-      for (v = 0; v < 2; v++) {
+      for (PetscInt v = 0; v < 2; v++) {
         PetscCall(DMNetworkGetGlobalVecOffset(dm, cone[v], ALL_COMPONENTS, &cstart));
         PetscCall(PetscSectionGetDof(network->DofSection, cone[v], &ncols));
 
@@ -2637,7 +2635,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   }
 
   /* Set matrix entries for vertices */
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, v, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, v, &nrows));
@@ -2651,7 +2649,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
     /* Get supporting edges and connected vertices */
     PetscCall(DMNetworkGetSupportingEdges(dm, v, &nedges, &edges));
 
-    for (e = 0; e < nedges; e++) {
+    for (PetscInt e = 0; e < nedges; e++) {
       /* Supporting edges */
       PetscCall(DMNetworkGetGlobalVecOffset(dm, edges[e], ALL_COMPONENTS, &cstart));
       PetscCall(PetscSectionGetDof(network->DofSection, edges[e], &ncols));
@@ -2710,7 +2708,6 @@ static PetscErrorCode DMNetworkDestroyComponentData(DM dm)
 PetscErrorCode DMDestroy_Network(DM dm)
 {
   DM_Network *network = (DM_Network *)dm->data;
-  PetscInt    j;
 
   PetscFunctionBegin;
   /*
@@ -2763,7 +2760,7 @@ PetscErrorCode DMDestroy_Network(DM dm)
     /* Developer Note: I'm not sure if vltog can be reused or not, as I'm not sure what it's purpose is. I
      naively think it can be reused. */
     PetscCall(PetscFree(network->cloneshared->vltog));
-    for (j = 0; j < network->cloneshared->Nsvtx; j++) PetscCall(PetscFree(network->cloneshared->svtx[j].sv));
+    for (PetscInt j = 0; j < network->cloneshared->Nsvtx; j++) PetscCall(PetscFree(network->cloneshared->svtx[j].sv));
     PetscCall(PetscFree(network->cloneshared->svtx));
     PetscCall(PetscFree2(network->cloneshared->subnetedge, network->cloneshared->subnetvtx));
     PetscCall(PetscHMapIDestroy(&network->cloneshared->svtable));

@@ -12,7 +12,7 @@ int main(int argc, char **args)
   double       *in1, *in2;
   ptrdiff_t     alloc_local, local_n0, local_0_start;
   ptrdiff_t     local_n1, local_1_start;
-  PetscInt      i, j, indx, n1;
+  PetscInt indx, n1;
   PetscInt      size, rank, n, N, *in, N_factor, NM;
   PetscScalar  *data_fin, value1, one = 1.57, zero = 0.0;
   PetscScalar   a, *x_arr, *y_arr, *z_arr, enorm;
@@ -103,8 +103,8 @@ int main(int argc, char **args)
   printf("The local index is %d from %d\n", low, rank);
   PetscCall(PetscMalloc1(local_n0 * N1 * N2, &indx3));
   PetscCall(PetscMalloc1(local_n0 * N1 * N2, &indx4));
-  for (i = 0; i < local_n0; i++) {
-    for (j = 0; j < N1; j++) {
+  for (PetscInt i = 0; i < local_n0; i++) {
+    for (PetscInt j = 0; j < N1; j++) {
       for (k = 0; k < N2; k++) {
         tempindx  = i * N1 * N2 + j * N2 + k;
         tempindx1 = i * N1 * NM + j * NM + k;
@@ -128,8 +128,8 @@ int main(int argc, char **args)
 
   printf("The local index value is %ld from %d", local_n0 * N1 * N2, rank);
   /*
-  for (i=0;i<N0;i++) {
-     for (j=0;j<N1;j++) {
+  for (PetscInt i=0;i<N0;i++) {
+     for (PetscInt j=0;j<N1;j++) {
         indx=i*N1*NM+j*NM;
         ISCreateStride(PETSC_COMM_WORLD,N2,indx,1,&indx1);
         indx=i*N1*N2+j*N2;

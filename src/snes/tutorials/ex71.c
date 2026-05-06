@@ -106,9 +106,9 @@ void f1_u(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], cons
 {
   const PetscReal nu = PetscRealPart(constants[1]);
   const PetscInt  Nc = dim;
-  PetscInt        c, d;
+  PetscInt        d;
 
-  for (c = 0; c < Nc; ++c) {
+  for (PetscInt c = 0; c < Nc; ++c) {
     for (d = 0; d < dim; ++d) {
       /* f1[c*dim+d] = 0.5*nu*(u_x[c*dim+d] + u_x[d*dim+c]); */
       f1[c * dim + d] = nu * u_x[c * dim + d];
@@ -157,10 +157,8 @@ void g3_uu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], con
 {
   const PetscReal nu = PetscRealPart(constants[1]);
   const PetscInt  Nc = dim;
-  PetscInt        c, d;
-
-  for (c = 0; c < Nc; ++c) {
-    for (d = 0; d < dim; ++d) g3[((c * Nc + c) * dim + d) * dim + d] = nu;
+  for (PetscInt c = 0; c < Nc; ++c) {
+    for (PetscInt d = 0; d < dim; ++d) g3[((c * Nc + c) * dim + d) * dim + d] = nu;
   }
 }
 
@@ -192,7 +190,7 @@ PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     Vec          coordinates;
     PetscScalar *coords;
     PetscReal    alpha;
-    PetscInt     cdim, N, bs, i;
+    PetscInt cdim, N, bs;
 
     PetscCall(DMGetCoordinateDim(*dm, &cdim));
     PetscCall(DMGetCoordinates(*dm, &coordinates));
@@ -202,7 +200,7 @@ PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     PetscCall(VecGetArray(coordinates, &coords));
     PetscCall(PetscBagGetData(user->bag, &param));
     alpha = param->alpha;
-    for (i = 0; i < N; i += cdim) {
+    for (PetscInt i = 0; i < N; i += cdim) {
       PetscScalar x = coords[i + 0];
       PetscScalar y = coords[i + 1];
 

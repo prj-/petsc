@@ -231,12 +231,10 @@ static PetscErrorCode DMPlexExpandedConesToFaces_Private(DM, IS, PetscSection, I
 
 static PetscErrorCode PortableBoundaryDestroy(PortableBoundary *bnd)
 {
-  PetscInt d;
-
   PetscFunctionBegin;
   if (!*bnd) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(VecDestroy(&(*bnd)->coordinates));
-  for (d = 0; d < (*bnd)->depth; d++) PetscCall(PetscSectionDestroy(&(*bnd)->sections[d]));
+  for (PetscInt d = 0; d < (*bnd)->depth; d++) PetscCall(PetscSectionDestroy(&(*bnd)->sections[d]));
   PetscCall(PetscFree((*bnd)->sections));
   PetscCall(PetscFree(*bnd));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -921,7 +919,7 @@ static PetscErrorCode TestExpandPoints(DM dm, AppCtx *user)
 
 static PetscErrorCode DMPlexExpandedConesToFaces_Private(DM dm, IS is, PetscSection section, IS *newis)
 {
-  PetscInt        n, n1, ncone, numCoveredPoints, o, p, q, start, end;
+  PetscInt n, n1, ncone, numCoveredPoints, o, p, start, end;
   const PetscInt *coveredPoints;
   const PetscInt *arr, *cone;
   PetscInt       *newarr;
@@ -933,7 +931,7 @@ static PetscErrorCode DMPlexExpandedConesToFaces_Private(DM dm, IS is, PetscSect
   PetscCheck(n == n1, PETSC_COMM_SELF, PETSC_ERR_PLIB, "IS size = %" PetscInt_FMT " != %" PetscInt_FMT " = section storage size", n, n1);
   PetscCall(ISGetIndices(is, &arr));
   PetscCall(PetscMalloc1(end - start, &newarr));
-  for (q = start; q < end; q++) {
+  for (PetscInt q = start; q < end; q++) {
     PetscCall(PetscSectionGetDof(section, q, &ncone));
     PetscCall(PetscSectionGetOffset(section, q, &o));
     cone = &arr[o];
@@ -965,13 +963,12 @@ static PetscErrorCode DMPlexExpandedConesToFaces_Private(DM dm, IS is, PetscSect
 
 static PetscErrorCode DMPlexExpandedVerticesToFaces_Private(DM dm, IS boundary_expanded_is, PetscInt depth, PetscSection sections[], IS *boundary_is)
 {
-  PetscInt d;
-  IS       is, newis;
+  IS is, newis;
 
   PetscFunctionBegin;
   is = boundary_expanded_is;
   PetscCall(PetscObjectReference((PetscObject)is));
-  for (d = 0; d < depth - 1; ++d) {
+  for (PetscInt d = 0; d < depth - 1; ++d) {
     PetscCall(DMPlexExpandedConesToFaces_Private(dm, is, sections[d], &newis));
     PetscCall(ISDestroy(&is));
     is = newis;
@@ -1101,7 +1098,6 @@ static PetscErrorCode DMPlexGetExpandedBoundary_Private(DM dm, PortableBoundary 
   MPI_Comm               comm;
   DM                     idm;
   DMLabel                label;
-  PetscInt               d;
   const char             boundaryName[] = "DMPlexDistributeInterpolateMarkInterface_boundary";
   IS                     boundary_is;
   IS                    *boundary_expanded_iss;
@@ -1184,7 +1180,7 @@ static PetscErrorCode DMPlexGetExpandedBoundary_Private(DM dm, PortableBoundary 
   bnd->depth = bnd0->depth;
   PetscCallMPI(MPI_Bcast(&bnd->depth, 1, MPIU_INT, rootrank, comm));
   PetscCall(PetscMalloc1(bnd->depth, &bnd->sections));
-  for (d = 0; d < bnd->depth; d++) PetscCall(PetscSectionReplicate_Private(comm, rootrank, (rank == rootrank) ? bnd0->sections[d] : NULL, &bnd->sections[d]));
+  for (PetscInt d = 0; d < bnd->depth; d++) PetscCall(PetscSectionReplicate_Private(comm, rootrank, (rank == rootrank) ? bnd0->sections[d] : NULL, &bnd->sections[d]));
 
   if (rank == rootrank) PetscCall(DMPlexRestoreConeRecursive(idm, boundary_is, &bnd0->depth, &boundary_expanded_iss, &bnd0->sections));
   PetscCall(PortableBoundaryDestroy(&bnd0));
@@ -1308,7 +1304,7 @@ static PetscErrorCode ViewPointsWithType_Internal(DM dm, IS pointsIS, PetscViewe
   PetscSection    coordsSection;
   Vec             coordsVec;
   PetscScalar    *coordsScalar;
-  PetscInt        coneSize, depth, dim, i, p, npoints;
+  PetscInt coneSize, depth, dim, p, npoints;
   const PetscInt *points;
 
   PetscFunctionBegin;
@@ -1320,7 +1316,7 @@ static PetscErrorCode ViewPointsWithType_Internal(DM dm, IS pointsIS, PetscViewe
   PetscCall(ISGetIndices(pointsIS, &points));
   PetscCall(DMPlexGetDepthLabel(dm, &label));
   PetscCall(PetscViewerASCIIPushTab(v));
-  for (i = 0; i < npoints; i++) {
+  for (PetscInt i = 0; i < npoints; i++) {
     p = points[i];
     PetscCall(DMLabelGetValue(label, p, &depth));
     if (!depth) {

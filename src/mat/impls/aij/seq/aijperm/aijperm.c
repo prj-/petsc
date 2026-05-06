@@ -295,7 +295,6 @@ static PetscErrorCode MatMult_SeqAIJPERM(Mat A, Vec xx, Vec yy)
    * begin and end in iperm. */
   PetscInt *nzgroup;
   PetscInt  ngroup;
-  PetscInt  igroup;
   PetscInt  jstart, jend;
   /* jstart is used in loops to denote the position in iperm where a
    * group starts; jend denotes the position where it ends.
@@ -323,7 +322,7 @@ static PetscErrorCode MatMult_SeqAIJPERM(Mat A, Vec xx, Vec yy)
   xgroup  = aijperm->xgroup;
   nzgroup = aijperm->nzgroup;
 
-  for (igroup = 0; igroup < ngroup; igroup++) {
+  for (PetscInt igroup = 0; igroup < ngroup; igroup++) {
     jstart = xgroup[igroup];
     jend   = xgroup[igroup + 1] - 1;
     nz     = nzgroup[igroup];
@@ -472,13 +471,12 @@ static PetscErrorCode MatMultAdd_SeqAIJPERM(Mat A, Vec xx, Vec ww, Vec yy)
    * begin and end in iperm. */
   PetscInt *nzgroup;
   PetscInt  ngroup;
-  PetscInt  igroup;
   PetscInt  jstart, jend;
   /* jstart is used in loops to denote the position in iperm where a
    * group starts; jend denotes the position where it ends.
    * (jend + 1 is where the next group starts.) */
   PetscInt    iold, nz;
-  PetscInt    istart, iend, isize;
+  PetscInt iend, isize;
   PetscInt    ipos;
   PetscScalar yp[NDIM];
   PetscInt    ip[NDIM];
@@ -504,7 +502,7 @@ static PetscErrorCode MatMultAdd_SeqAIJPERM(Mat A, Vec xx, Vec ww, Vec yy)
   xgroup  = aijperm->xgroup;
   nzgroup = aijperm->nzgroup;
 
-  for (igroup = 0; igroup < ngroup; igroup++) {
+  for (PetscInt igroup = 0; igroup < ngroup; igroup++) {
     jstart = xgroup[igroup];
     jend   = xgroup[igroup + 1] - 1;
 
@@ -529,7 +527,7 @@ static PetscErrorCode MatMultAdd_SeqAIJPERM(Mat A, Vec xx, Vec ww, Vec yy)
       /* We work our way through the current group in chunks of NDIM rows
        * at a time. */
 
-      for (istart = jstart; istart <= jend; istart += NDIM) {
+      for (PetscInt istart = jstart; istart <= jend; istart += NDIM) {
         /* Figure out where the chunk of 'isize' rows ends in iperm.
          * 'isize may of course be less than NDIM for the last chunk. */
         iend = istart + (NDIM - 1);

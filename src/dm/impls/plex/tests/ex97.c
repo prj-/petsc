@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
   DM             dm, pdm;
   char           ifilename[PETSC_MAX_PATH_LEN];
-  PetscInt       pStart, pEnd, p;
+  PetscInt pStart, pEnd;
   DMPolytopeType cellType;
   DMLabel        label;
 
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
   PetscCall(DMGetLabel(dm, "celltype", &label));
   PetscCall(DMLabelView(label, PETSC_VIEWER_STDOUT_WORLD));
   PetscCall(DMPlexGetHeightStratum(dm, 0, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscCall(DMPlexGetCellType(dm, p, &cellType));
     PetscCall(PetscPrintf(PETSC_COMM_SELF, "cell: %" PetscInt_FMT " type: %d\n", p, cellType));
   }

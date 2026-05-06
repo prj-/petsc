@@ -399,7 +399,7 @@ static PetscErrorCode ComputeError(TS ts, Vec U, Vec E)
   const PetscReal   *coords;
   PetscScalar       *e;
   PetscReal          t;
-  PetscInt           dim, d, Np, p;
+  PetscInt dim, Np, p;
 
   PetscFunctionBeginUser;
   PetscCall(PetscObjectGetComm((PetscObject)ts, &comm));
@@ -427,7 +427,7 @@ static PetscErrorCode ComputeError(TS ts, Vec U, Vec E)
       const PetscReal exen = 0.5 * PetscSqr(omega * x0);
       PetscCall(PetscPrintf(comm, "p%" PetscInt_FMT " error [%.2f %.2f] sol [%.6lf %.6lf] exact [%.6lf %.6lf] energy/exact energy %g / %g (%.10lf%%)\n", p, (double)PetscAbsReal(x - ex), (double)PetscAbsReal(v - ev), (double)x, (double)v, (double)ex, (double)ev, (double)en, (double)exen, (double)(PetscAbsReal(exen - en) * 100. / exen)));
     }
-    for (d = 0; d < dim; ++d) {
+    for (PetscInt d = 0; d < dim; ++d) {
       e[(p * 2 + 0) * dim + d] = u[(p * 2 + 0) * dim + d] - coords[p * dim + d] * ct;
       e[(p * 2 + 1) * dim + d] = u[(p * 2 + 1) * dim + d] + coords[p * dim + d] * omega * st;
     }
@@ -445,7 +445,7 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
   DM                 sw;
   const PetscScalar *u;
   PetscReal          dt;
-  PetscInt           dim, Np, p;
+  PetscInt dim, Np;
   MPI_Comm           comm;
 
   PetscFunctionBeginUser;
@@ -458,7 +458,7 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
     PetscCall(VecGetLocalSize(U, &Np));
     Np /= 2 * dim;
     if (!step) PetscCall(PetscPrintf(comm, "Time     Step Part     Energy Mod Energy\n"));
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       const PetscReal x2 = DMPlex_DotRealD_Internal(dim, &u[(p * 2 + 0) * dim], &u[(p * 2 + 0) * dim]);
       const PetscReal v2 = DMPlex_DotRealD_Internal(dim, &u[(p * 2 + 1) * dim], &u[(p * 2 + 1) * dim]);
       const PetscReal E  = 0.5 * (v2 + PetscSqr(omega) * x2);

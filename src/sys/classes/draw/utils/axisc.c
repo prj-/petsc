@@ -507,23 +507,23 @@ PetscErrorCode PetscStripZeros(char *buf)
 */
 PetscErrorCode PetscStripZerosPlus(char *buf)
 {
-  size_t i, j, n;
+  size_t n;
 
   PetscFunctionBegin;
   PetscCall(PetscStrlen(buf, &n));
   if (n < 5) PetscFunctionReturn(PETSC_SUCCESS);
-  for (i = 1; i < n - 2; i++) {
+  for (size_t i = 1; i < n - 2; i++) {
     if (buf[i] == '+') {
       if (buf[i + 1] == '0') {
-        for (j = i + 1; j < n; j++) buf[j - 1] = buf[j + 1];
+        for (size_t j = i + 1; j < n; j++) buf[j - 1] = buf[j + 1];
         PetscFunctionReturn(PETSC_SUCCESS);
       } else {
-        for (j = i + 1; j < n + 1; j++) buf[j - 1] = buf[j];
+        for (size_t j = i + 1; j < n + 1; j++) buf[j - 1] = buf[j];
         PetscFunctionReturn(PETSC_SUCCESS);
       }
     } else if (buf[i] == '-') {
       if (buf[i + 1] == '0') {
-        for (j = i + 1; j < n; j++) buf[j] = buf[j + 1];
+        for (size_t j = i + 1; j < n; j++) buf[j] = buf[j + 1];
         PetscFunctionReturn(PETSC_SUCCESS);
       }
     }

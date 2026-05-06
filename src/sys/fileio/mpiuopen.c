@@ -157,7 +157,7 @@ PetscErrorCode PetscPOpen(MPI_Comm comm, const char machine[], const char progra
 {
 #if defined(PETSC_HAVE_POPEN)
   PetscMPIInt rank;
-  size_t      i, len, cnt;
+  size_t len, cnt;
   char        commandt[PETSC_MAX_PATH_LEN], command[PETSC_MAX_PATH_LEN];
   FILE       *fd;
 #endif
@@ -178,7 +178,7 @@ PetscErrorCode PetscPOpen(MPI_Comm comm, const char machine[], const char progra
     */
     PetscCall(PetscStrlen(command, &cnt));
     PetscCall(PetscStrlen(program, &len));
-    for (i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
       if (program[i] == '\"') command[cnt++] = '\\';
       command[cnt++] = program[i];
     }

@@ -114,7 +114,6 @@ static PetscErrorCode MonitorObjective(TS ts, PetscInt step, PetscReal t, Vec X,
   /* Compute norm of gradient */
   PetscCall(VecDuplicate(X, &Xdot));
   PetscCall(VecDuplicate(X, &F));
-  PetscCall(VecZeroEntries(Xdot));
   PetscCall(FormIFunction(ts, t, X, Xdot, F, ictx));
   PetscCall(VecNorm(F, NORM_2, &gnorm));
   PetscCall(VecDestroy(&Xdot));
@@ -146,7 +145,6 @@ static PetscErrorCode FormIFunction(TS ts, PetscReal t, Vec X, Vec Xdot, Vec F, 
 {
   const PetscScalar *x;
   PetscScalar       *f;
-  PetscInt           i;
   Ctx               *ctx = (Ctx *)ictx;
 
   PetscFunctionBeginUser;
@@ -162,7 +160,7 @@ static PetscErrorCode FormIFunction(TS ts, PetscReal t, Vec X, Vec Xdot, Vec F, 
   PetscCall(VecGetArray(F, &f));
 
   /* Compute gradient of objective */
-  for (i = 0; i < ctx->n - 1; i++) {
+  for (PetscInt i = 0; i < ctx->n - 1; i++) {
     PetscScalar a, a0, a1;
     a  = x[i + 1] - PetscSqr(x[i]);
     a0 = -2. * x[i];
@@ -195,7 +193,6 @@ static PetscErrorCode FormIFunction(TS ts, PetscReal t, Vec X, Vec Xdot, Vec F, 
 static PetscErrorCode FormIJacobian(TS ts, PetscReal t, Vec X, Vec Xdot, PetscReal shift, Mat J, Mat B, void *ictx)
 {
   const PetscScalar *x;
-  PetscInt           i;
   Ctx               *ctx = (Ctx *)ictx;
 
   PetscFunctionBeginUser;
@@ -208,7 +205,7 @@ static PetscErrorCode FormIJacobian(TS ts, PetscReal t, Vec X, Vec Xdot, PetscRe
   /*
      Compute Jacobian entries and insert into matrix.
   */
-  for (i = 0; i < ctx->n - 1; i++) {
+  for (PetscInt i = 0; i < ctx->n - 1; i++) {
     PetscInt    rowcol[2];
     PetscScalar v[2][2], a, a0, a1, a00, a01, a10, a11;
     rowcol[0] = i;
@@ -226,7 +223,7 @@ static PetscErrorCode FormIJacobian(TS ts, PetscReal t, Vec X, Vec Xdot, PetscRe
     v[1][1]   = 200. * (a * a11 + a1 * a1);
     PetscCall(MatSetValues(B, 2, rowcol, 2, rowcol, &v[0][0], ADD_VALUES));
   }
-  for (i = 0; i < ctx->n; i++) PetscCall(MatSetValue(B, i, i, (PetscScalar)shift, ADD_VALUES));
+  for (PetscInt i = 0; i < ctx->n; i++) PetscCall(MatSetValue(B, i, i, (PetscScalar)shift, ADD_VALUES));
 
   PetscCall(VecRestoreArrayRead(X, &x));
 

@@ -309,7 +309,7 @@ static PetscErrorCode MatLUFactorSymbolic_LUSOL(Mat F, Mat A, IS r, IS c, const 
          F  - matrix storing the factorization;
   */
   Mat_LUSOL *lusol;
-  int        i, m, n, nz, nnz;
+  int m, n, nz, nnz;
 
   PetscFunctionBegin;
   /* Check the arguments.                                                 */
@@ -321,7 +321,7 @@ static PetscErrorCode MatLUFactorSymbolic_LUSOL(Mat F, Mat A, IS r, IS c, const 
   lusol                   = (Mat_LUSOL *)F->spptr;
 
   /* Initialize parameters                                                */
-  for (i = 0; i < 30; i++) {
+  for (int i = 0; i < 30; i++) {
     lusol->luparm[i] = 0;
     lusol->parmlu[i] = 0;
   }

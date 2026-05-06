@@ -606,7 +606,7 @@ PetscErrorCode RhsFunc(TS ts, PetscReal t, Vec Xglobal, Vec F, PetscCtx ctx)
 {
   AppCtx     *user = (AppCtx *)ctx; /* user-defined application context */
   DM          da   = user->da;
-  PetscInt    i, j, Mx, My, xs, ys, xm, ym;
+  PetscInt Mx, My, xs, ys, xm, ym;
   PetscReal   dhx, dhy;
   Vec         localT;
   Field     **X, **Frhs;                                            /* structures that contain variables of interest and left hand side of governing equations respectively */
@@ -661,8 +661,8 @@ PetscErrorCode RhsFunc(TS ts, PetscReal t, Vec Xglobal, Vec F, PetscCtx ctx)
   /* the interior points */
   xend = xs + xm;
   yend = ys + ym;
-  for (j = ys; j < yend; j++) {
-    for (i = xs; i < xend; i++) {
+  for (PetscInt j = ys; j < yend; j++) {
+    for (PetscInt i = xs; i < xend; i++) {
       Ts = X[j][i].Ts;
       u  = X[j][i].u;
       v  = X[j][i].v;

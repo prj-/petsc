@@ -18,7 +18,7 @@ static PetscErrorCode TestLocalDofOrder(DM dm)
   PetscFE      fe[3];
   PetscSection s;
   PetscBool    simplex;
-  PetscInt     dim, Nf, f;
+  PetscInt dim, Nf;
 
   PetscFunctionBegin;
   PetscCall(DMGetDimension(dm, &dim));
@@ -35,7 +35,7 @@ static PetscErrorCode TestLocalDofOrder(DM dm)
   PetscCall(PetscObjectViewFromOptions((PetscObject)s, NULL, "-dof_view"));
 
   PetscCall(DMGetNumFields(dm, &Nf));
-  for (f = 0; f < Nf; ++f) PetscCall(PetscFEDestroy(&fe[f]));
+  for (PetscInt f = 0; f < Nf; ++f) PetscCall(PetscFEDestroy(&fe[f]));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

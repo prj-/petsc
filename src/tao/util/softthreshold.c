@@ -30,7 +30,7 @@
 @*/
 PetscErrorCode TaoSoftThreshold(Vec in, PetscReal lb, PetscReal ub, Vec out)
 {
-  PetscInt     i, nlocal, mlocal;
+  PetscInt nlocal, mlocal;
   PetscScalar *inarray, *outarray;
 
   PetscFunctionBegin;
@@ -48,7 +48,7 @@ PetscErrorCode TaoSoftThreshold(Vec in, PetscReal lb, PetscReal ub, Vec out)
   PetscCheck(nlocal == mlocal, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Input and output vectors need to be of same size");
   PetscCall(VecGetArrayPair(in, out, &inarray, &outarray));
 
-  for (i = 0; i < nlocal; i++) outarray[i] = PetscMax(0, PetscRealPart(inarray[i]) - ub) + PetscMin(0, PetscRealPart(inarray[i]) - lb);
+  for (PetscInt i = 0; i < nlocal; i++) outarray[i] = PetscMax(0, PetscRealPart(inarray[i]) - ub) + PetscMin(0, PetscRealPart(inarray[i]) - lb);
 
   PetscCall(VecRestoreArrayPair(in, out, &inarray, &outarray));
   PetscFunctionReturn(PETSC_SUCCESS);

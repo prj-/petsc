@@ -21,11 +21,9 @@ struct _n_PetscViewers {
 @*/
 PetscErrorCode PetscViewersDestroy(PetscViewers *v)
 {
-  int i;
-
   PetscFunctionBegin;
   if (!*v) PetscFunctionReturn(PETSC_SUCCESS);
-  for (i = 0; i < (*v)->n; i++) PetscCall(PetscViewerDestroy(&(*v)->viewer[i]));
+  for (int i = 0; i < (*v)->n; i++) PetscCall(PetscViewerDestroy(&(*v)->viewer[i]));
   PetscCall(PetscFree((*v)->viewer));
   PetscCall(PetscFree(*v));
   PetscFunctionReturn(PETSC_SUCCESS);

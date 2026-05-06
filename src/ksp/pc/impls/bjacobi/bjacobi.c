@@ -148,7 +148,7 @@ static PetscErrorCode PCDestroy_BJacobi(PC pc)
 static PetscErrorCode PCSetFromOptions_BJacobi(PC pc, PetscOptionItems PetscOptionsObject)
 {
   PC_BJacobi *jac = (PC_BJacobi *)pc->data;
-  PetscInt    blocks, i;
+  PetscInt    blocks;
   PetscBool   flg;
 
   PetscFunctionBegin;
@@ -160,7 +160,7 @@ static PetscErrorCode PCSetFromOptions_BJacobi(PC pc, PetscOptionItems PetscOpti
   if (jac->ksp) {
     /* The sub-KSP has already been set up (e.g., PCSetUp_BJacobi_Singleblock), but KSPSetFromOptions was not called
      * unless we had already been called. */
-    for (i = 0; i < jac->n_local; i++) PetscCall(KSPSetFromOptions(jac->ksp[i]));
+    for (PetscInt i = 0; i < jac->n_local; i++) PetscCall(KSPSetFromOptions(jac->ksp[i]));
   }
   PetscOptionsHeadEnd();
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -172,7 +172,6 @@ static PetscErrorCode PCView_BJacobi(PC pc, PetscViewer viewer)
   PC_BJacobi           *jac   = (PC_BJacobi *)pc->data;
   PC_BJacobi_Multiproc *mpjac = (PC_BJacobi_Multiproc *)jac->data;
   PetscMPIInt           rank;
-  PetscInt              i;
   PetscBool             isascii, isstring, isdraw;
   PetscViewer           sviewer;
   PetscViewerFormat     format;
@@ -220,7 +219,7 @@ static PetscErrorCode PCView_BJacobi(PC pc, PetscViewer viewer)
       PetscCall(PetscViewerASCIIPushTab(viewer));
       PetscCall(PetscViewerGetSubViewer(viewer, PETSC_COMM_SELF, &sviewer));
       PetscCall(PetscViewerASCIIPrintf(sviewer, "[%d] number of local blocks = %" PetscInt_FMT ", first local block number = %" PetscInt_FMT "\n", rank, jac->n_local, jac->first_local));
-      for (i = 0; i < jac->n_local; i++) {
+      for (PetscInt i = 0; i < jac->n_local; i++) {
         PetscCall(PetscViewerASCIIPrintf(sviewer, "[%d] local block number %" PetscInt_FMT "\n", rank, i));
         PetscCall(KSPView(jac->ksp[i], sviewer));
         PetscCall(PetscViewerASCIIPrintf(sviewer, "- - - - - - - - - - - - - - - - - -\n"));
@@ -1008,7 +1007,7 @@ static PetscErrorCode PCApplyTranspose_BJacobi_Multiblock(PC pc, Vec x, Vec y)
 static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
 {
   PC_BJacobi            *jac = (PC_BJacobi *)pc->data;
-  PetscInt               m, n_local, N, M, start, i;
+  PetscInt m, n_local, N, M, start;
   const char            *prefix;
   KSP                    ksp;
   Vec                    x, y;
@@ -1054,7 +1053,7 @@ static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
       jac->data = (void *)bjac;
       PetscCall(PetscMalloc1(n_local, &bjac->is));
 
-      for (i = 0; i < n_local; i++) {
+      for (PetscInt i = 0; i < n_local; i++) {
         PetscCall(KSPCreate(PETSC_COMM_SELF, &ksp));
         PetscCall(PCGetKSPNestLevel(pc, &nestlevel));
         PetscCall(KSPSetNestLevel(ksp, nestlevel + 1));
@@ -1074,7 +1073,7 @@ static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
 
     start = 0;
     PetscCall(MatGetVecType(pmat, &vectype));
-    for (i = 0; i < n_local; i++) {
+    for (PetscInt i = 0; i < n_local; i++) {
       m = jac->l_lens[i];
       /*
       The reason we need to generate these vectors is to serve
@@ -1124,7 +1123,7 @@ static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
      different boundary conditions for the submatrices than for the global problem) */
   PetscCall(PCModifySubMatrices(pc, n_local, bjac->is, bjac->is, bjac->pmat, pc->modifysubmatricesP));
 
-  for (i = 0; i < n_local; i++) {
+  for (PetscInt i = 0; i < n_local; i++) {
     PetscCall(KSPGetOptionsPrefix(jac->ksp[i], &prefix));
     if (pc->useAmat) {
       PetscCall(KSPSetOperators(jac->ksp[i], bjac->mat[i], bjac->pmat[i]));
