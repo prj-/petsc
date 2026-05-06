@@ -692,14 +692,14 @@ static PetscErrorCode DMPlexView_GLVis_ASCII(DM dm, PetscViewer viewer)
       PetscCall(VecGetArray(hovec, &array));
       ptr = array;
       for (p = cStart; p < cEnd; p++) {
-        PetscInt     csize, v, d;
+        PetscInt csize;
         PetscScalar *vals = NULL;
 
         if (PetscUnlikely(pown && !PetscBTLookup(pown, p - cStart))) continue;
         PetscCall(DMPlexVecGetClosure(dm, coordSection, coordinates, p, &csize, &vals));
         PetscCheck(csize == vpc * sdim || csize == vpc * sdim * 2, PETSC_COMM_SELF, PETSC_ERR_SUP, "Unsupported closure size %" PetscInt_FMT " (vpc %" PetscInt_FMT ", sdim %" PetscInt_FMT ")", csize, vpc, sdim);
-        for (v = 0; v < vpc; v++) {
-          for (d = 0; d < sdim; d++) ptr[sdim * dof[v] + d] = vals[sdim * vids[v] + d];
+        for (PetscInt v = 0; v < vpc; v++) {
+          for (PetscInt d = 0; d < sdim; d++) ptr[sdim * dof[v] + d] = vals[sdim * vids[v] + d];
         }
         ptr += vpc * sdim;
         PetscCall(DMPlexVecRestoreClosure(dm, coordSection, coordinates, p, &csize, &vals));
@@ -902,13 +902,13 @@ static PetscErrorCode DMPlexView_GLVis_ASCII(DM dm, PetscViewer viewer)
         PetscCall(DMPlexGetSupport(dm, p, &support));
         for (PetscInt c = 0; c < supportSize; c++) {
           const PetscInt *cone;
-          PetscInt        cell, cl, coneSize;
+          PetscInt cell, coneSize;
 
           cell = support[c];
           if (pown && PetscUnlikely(!PetscBTLookup(pown, cell - cStart))) continue;
           PetscCall(DMPlexGetCone(dm, cell, &cone));
           PetscCall(DMPlexGetConeSize(dm, cell, &coneSize));
-          for (cl = 0; cl < coneSize; cl++) {
+          for (PetscInt cl = 0; cl < coneSize; cl++) {
             if (cone[cl] == p) {
               bf += 1;
               break;
@@ -1112,7 +1112,7 @@ static PetscErrorCode DMPlexView_GLVis_ASCII(DM dm, PetscViewer viewer)
   /* vertices */
   if (hovec) { /* higher-order meshes */
     const char *fec;
-    PetscInt    i, n, s;
+    PetscInt n, s;
     PetscCall(PetscViewerASCIIPrintf(viewer, "\nvertices\n"));
     PetscCall(PetscViewerASCIIPrintf(viewer, "%" PetscInt_FMT "\n", vEnd - vStart));
     PetscCall(PetscViewerASCIIPrintf(viewer, "nodes\n"));
@@ -1132,7 +1132,7 @@ static PetscErrorCode DMPlexView_GLVis_ASCII(DM dm, PetscViewer viewer)
         if (PetscUnlikely(pown && !PetscBTLookup(pown, p - cStart))) continue;
         PetscCall(DMPlexVecGetClosure(cdm, hoSection, hovec, p, &csize, &vals));
         PetscCheck(csize % sdim == 0, PETSC_COMM_SELF, PETSC_ERR_USER, "Size of closure %" PetscInt_FMT " incompatible with space dimension %" PetscInt_FMT, csize, sdim);
-        for (i = 0; i < csize / sdim; i++) {
+        for (PetscInt i = 0; i < csize / sdim; i++) {
           for (s = 0; s < sdim; s++) PetscCall(PetscViewerASCIIPrintf(viewer, fmt, (double)PetscRealPart(vals[i * sdim + s])));
           PetscCall(PetscViewerASCIIPrintf(viewer, "\n"));
         }
@@ -1142,7 +1142,7 @@ static PetscErrorCode DMPlexView_GLVis_ASCII(DM dm, PetscViewer viewer)
       PetscCall(VecGetArrayRead(hovec, &array));
       PetscCall(VecGetLocalSize(hovec, &n));
       PetscCheck(n % sdim == 0, PETSC_COMM_SELF, PETSC_ERR_USER, "Size of local coordinate vector %" PetscInt_FMT " incompatible with space dimension %" PetscInt_FMT, n, sdim);
-      for (i = 0; i < n / sdim; i++) {
+      for (PetscInt i = 0; i < n / sdim; i++) {
         for (s = 0; s < sdim; s++) PetscCall(PetscViewerASCIIPrintf(viewer, fmt, (double)PetscRealPart(array[i * sdim + s])));
         PetscCall(PetscViewerASCIIPrintf(viewer, "\n"));
       }

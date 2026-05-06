@@ -1352,10 +1352,9 @@ static cJSON_bool print_object(const cJSON *const item, printbuffer *const outpu
 
   while (current_item) {
     if (output_buffer->format) {
-      size_t i;
       output_pointer = ensure(output_buffer, output_buffer->depth);
       if (output_pointer == NULL) return false;
-      for (i = 0; i < output_buffer->depth; i++) *output_pointer++ = '\t';
+      for (size_t i = 0; i < output_buffer->depth; i++) *output_pointer++ = '\t';
       output_buffer->offset += output_buffer->depth;
     }
 
@@ -1390,8 +1389,7 @@ static cJSON_bool print_object(const cJSON *const item, printbuffer *const outpu
   output_pointer = ensure(output_buffer, output_buffer->format ? (output_buffer->depth + 1) : 2);
   if (output_pointer == NULL) return false;
   if (output_buffer->format) {
-    size_t i;
-    for (i = 0; i < (output_buffer->depth - 1); i++) *output_pointer++ = '\t';
+    for (size_t i = 0; i < (output_buffer->depth - 1); i++) *output_pointer++ = '\t';
   }
   *output_pointer++ = '}';
   *output_pointer   = '\0';

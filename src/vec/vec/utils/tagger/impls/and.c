@@ -71,7 +71,7 @@ static PetscErrorCode VecTaggerComputeBoxes_And(VecTagger tagger, Vec vec, Petsc
   }
   for (i = 0, nboxes = 0; i < nsubs; i++) { /* stupid O(N^3) check to intersect boxes */
     VecTaggerBox *isect;
-    PetscInt      j, k, l, m, n;
+    PetscInt j, l, m, n;
 
     n = numSubBoxes[i];
     if (!n) {
@@ -90,7 +90,7 @@ static PetscErrorCode VecTaggerComputeBoxes_And(VecTagger tagger, Vec vec, Petsc
     for (j = 0, l = 0; j < n; j++) {
       VecTaggerBox *subBox = &subBoxes[i][j * bs];
 
-      for (k = 0; k < nboxes; k++) {
+      for (PetscInt k = 0; k < nboxes; k++) {
         PetscBool     isEmpty;
         VecTaggerBox *prevBox = &bxs[bs * k];
 

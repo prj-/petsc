@@ -13,7 +13,7 @@
 
 PetscErrorCode PetscKernel_A_gets_inverse_A_5(MatScalar *a, PetscInt *ipvt, MatScalar *work, PetscReal shift, PetscBool allowzeropivot, PetscBool *zeropivotdetected)
 {
-  PetscInt   i__2, i__3, kp1, j, k, l, ll, i, kb, k3;
+  PetscInt i__2, i__3, kp1, k, l, k3;
   PetscInt   k4, j3;
   MatScalar *aa, *ax, *ay, stmp;
   MatReal    tmp, max;
@@ -35,7 +35,7 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_5(MatScalar *a, PetscInt *ipvt, MatS
     aa   = &a[k4];
     max  = PetscAbsScalar(aa[0]);
     l    = 1;
-    for (ll = 1; ll < i__2; ll++) {
+    for (PetscInt ll = 1; ll < i__2; ll++) {
       tmp = PetscAbsScalar(aa[ll]);
       if (tmp > max) {
         max = tmp;
@@ -67,11 +67,11 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_5(MatScalar *a, PetscInt *ipvt, MatS
     stmp = -1. / a[k4];
     i__2 = 5 - k;
     aa   = &a[1 + k4];
-    for (ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
+    for (PetscInt ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
 
     /* row elimination with column indexing */
     ax = &a[k4 + 1];
-    for (j = kp1; j <= 5; ++j) {
+    for (PetscInt j = kp1; j <= 5; ++j) {
       j3   = 5 * j;
       stmp = a[l + j3];
       if (l != k) {
@@ -81,7 +81,7 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_5(MatScalar *a, PetscInt *ipvt, MatS
 
       i__3 = 5 - k;
       ay   = &a[1 + k + j3];
-      for (ll = 0; ll < i__3; ll++) ay[ll] += stmp * ax[ll];
+      for (PetscInt ll = 0; ll < i__3; ll++) ay[ll] += stmp * ax[ll];
     }
   }
   ipvt[4] = 5;
@@ -100,30 +100,30 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_5(MatScalar *a, PetscInt *ipvt, MatS
     stmp  = -a[k4];
     i__2  = k - 1;
     aa    = &a[k3 + 1];
-    for (ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
+    for (PetscInt ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
     kp1 = k + 1;
     if (5 < kp1) continue;
     ax = aa;
-    for (j = kp1; j <= 5; ++j) {
+    for (PetscInt j = kp1; j <= 5; ++j) {
       j3        = 5 * j;
       stmp      = a[k + j3];
       a[k + j3] = 0.0;
       ay        = &a[j3 + 1];
-      for (ll = 0; ll < k; ll++) ay[ll] += stmp * ax[ll];
+      for (PetscInt ll = 0; ll < k; ll++) ay[ll] += stmp * ax[ll];
     }
   }
 
   /* form inverse(u)*inverse(l) */
-  for (kb = 1; kb <= 4; ++kb) {
+  for (PetscInt kb = 1; kb <= 4; ++kb) {
     k   = 5 - kb;
     k3  = 5 * k;
     kp1 = k + 1;
     aa  = a + k3;
-    for (i = kp1; i <= 5; ++i) {
+    for (PetscInt i = kp1; i <= 5; ++i) {
       work[i - 1] = aa[i];
       aa[i]       = 0.0;
     }
-    for (j = kp1; j <= 5; ++j) {
+    for (PetscInt j = kp1; j <= 5; ++j) {
       stmp = work[j - 1];
       ax   = &a[5 * j + 1];
       ay   = &a[k3 + 1];

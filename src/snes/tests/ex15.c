@@ -395,7 +395,7 @@ static PetscErrorCode InitializeConstants(DM sw, AppCtx *user)
 {
   DM         dm;
   PetscReal *weight, totalCharge, totalWeight = 0., gmin[3], gmax[3];
-  PetscInt   Np, p, dim;
+  PetscInt Np, dim;
 
   PetscFunctionBegin;
   PetscCall(DMSwarmGetCellDM(sw, &dm));
@@ -403,7 +403,7 @@ static PetscErrorCode InitializeConstants(DM sw, AppCtx *user)
   PetscCall(DMSwarmGetLocalSize(sw, &Np));
   PetscCall(DMGetBoundingBox(dm, gmin, gmax));
   PetscCall(DMSwarmGetField(sw, "w_q", NULL, NULL, (void **)&weight));
-  for (p = 0; p < Np; ++p) totalWeight += weight[p];
+  for (PetscInt p = 0; p < Np; ++p) totalWeight += weight[p];
   totalCharge = -1.0 * totalWeight;
   PetscCall(DMSwarmRestoreField(sw, "w_q", NULL, NULL, (void **)&weight));
   {

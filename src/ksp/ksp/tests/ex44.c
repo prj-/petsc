@@ -7,7 +7,7 @@ int main(int argc, char **args)
   KSP         ksp;  /* linear solver context */
   Mat         A;    /* linear system matrix */
   Vec         x, b; /* approx solution, RHS */
-  PetscInt    Ii, Istart, Iend;
+  PetscInt Istart, Iend;
   PetscScalar v[3] = {-1. / 2., 1., -1. / 2.};
   PetscInt    j[3];
   PetscInt    k = 15;
@@ -27,7 +27,7 @@ int main(int argc, char **args)
   PetscCall(MatSetUp(A));
   PetscCall(MatGetOwnershipRange(A, &Istart, &Iend));
   PetscCall(MatGetSize(A, &M, NULL));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     j[0] = Ii - k;
     j[1] = Ii;
     j[2] = (Ii + k) < M ? (Ii + k) : -1;

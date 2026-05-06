@@ -15,10 +15,10 @@ int main(int argc, char **argv)
   PetscCall(PetscMalloc3(maxdim + 1, &btup, maxdim + 1, &btupprev, maxdim, &gtup));
   for (d = 0; d <= maxdim; d++) {
     for (n = 0; n <= d + 2; n++) {
-      PetscInt j, k, Nk, kchk;
+      PetscInt j, Nk, kchk;
 
       PetscCall(PetscDTBinomialInt(d + n, d, &Nk));
-      for (k = 0; k < Nk; k++) {
+      for (PetscInt k = 0; k < Nk; k++) {
         PetscInt sum;
 
         PetscCall(PetscDTIndexToBary(d + 1, n, k, btup));

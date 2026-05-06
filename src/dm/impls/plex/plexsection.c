@@ -91,7 +91,7 @@ static PetscErrorCode DMPlexCreateSectionDof(DM dm, DMLabel label[], const Petsc
   DMLabel        depthLabel;
   DMPolytopeType ct;
   PetscInt       depth, cellHeight, pStart = 0, pEnd = 0;
-  PetscInt       Nf, f, Nds, n, dim, d, dep, p;
+  PetscInt Nf, f, Nds, n, dim, d, p;
   PetscBool     *isFE, hasCohesive = PETSC_FALSE;
 
   PetscFunctionBegin;
@@ -161,7 +161,7 @@ static PetscErrorCode DMPlexCreateSectionDof(DM dm, DMLabel label[], const Petsc
       PetscCall(ISRestoreIndices(pointIS, &points));
       PetscCall(ISDestroy(&pointIS));
     } else {
-      for (dep = 0; dep <= depth - cellHeight; ++dep) {
+      for (PetscInt dep = 0; dep <= depth - cellHeight; ++dep) {
         /* Cases: dim > depth (cell-vertex mesh), dim == depth (fully interpolated), dim < depth (interpolated submesh) */
         d = dim <= depth ? dep : (!dep ? 0 : dim);
         PetscCall(DMPlexGetDepthStratum(dm, dep, &pStart, &pEnd));
@@ -517,14 +517,14 @@ PetscErrorCode DMCreateLocalSection_Plex(DM dm)
       DMLabel                 label;
       const PetscInt         *comps;
       const PetscInt         *values;
-      PetscInt                bd2, field, numComps, numValues;
+      PetscInt field, numComps, numValues;
       DMBoundaryConditionType type;
       PetscBool               duplicate = PETSC_FALSE;
 
       PetscCall(PetscDSGetBoundary(dsBC, bd, NULL, &type, NULL, &label, &numValues, &values, &field, &numComps, &comps, NULL, NULL, NULL));
       if (!isFE[field] || !label) continue;
       /* Only want to modify label once */
-      for (bd2 = 0; bd2 < bd; ++bd2) {
+      for (PetscInt bd2 = 0; bd2 < bd; ++bd2) {
         DMLabel l;
 
         PetscCall(PetscDSGetBoundary(dsBC, bd2, NULL, NULL, NULL, &l, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL));

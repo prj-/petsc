@@ -257,7 +257,7 @@ static PetscErrorCode KSPDestroy_FGMRES(KSP ksp)
 static PetscErrorCode KSPFGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest, KSP ksp, PetscInt it)
 {
   PetscScalar tt;
-  PetscInt    ii, k, j;
+  PetscInt k, j;
   KSP_FGMRES *fgmres = (KSP_FGMRES *)ksp->data;
 
   PetscFunctionBegin;
@@ -278,7 +278,7 @@ static PetscErrorCode KSPFGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest
   } else {
     nrs[it] = 0.0;
   }
-  for (ii = 1; ii <= it; ii++) {
+  for (PetscInt ii = 1; ii <= it; ii++) {
     k  = it - ii;
     tt = *RS(k);
     for (j = k + 1; j <= it; j++) tt = tt - *HH(k, j) * nrs[j];

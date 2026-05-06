@@ -8,7 +8,7 @@ int main(int argc, char **argv)
   Vec          v;
   PetscSection section;
   PetscScalar  val[2];
-  PetscInt     pStart, pEnd, p;
+  PetscInt pStart, pEnd;
 
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
 
@@ -21,9 +21,9 @@ int main(int argc, char **argv)
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
   PetscCall(PetscSectionSetChart(section, pStart, pEnd));
   PetscCall(DMPlexGetHeightStratum(dm, 0, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; p++) PetscCall(PetscSectionSetDof(section, p, 1));
+  for (PetscInt p = pStart; p < pEnd; p++) PetscCall(PetscSectionSetDof(section, p, 1));
   PetscCall(DMPlexGetDepthStratum(dm, 0, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; p++) PetscCall(PetscSectionSetDof(section, p, 2));
+  for (PetscInt p = pStart; p < pEnd; p++) PetscCall(PetscSectionSetDof(section, p, 2));
   PetscCall(PetscSectionSetUp(section));
   PetscCall(DMSetLocalSection(dm, section));
   PetscCall(PetscSectionViewFromOptions(section, NULL, "-s_view"));
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
   /* look through all cells and change "cell values" */
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscInt dof;
 
     PetscCall(PetscSectionGetDof(section, p, &dof));
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
   }
   PetscCall(VecView(v, PETSC_VIEWER_STDOUT_WORLD));
 
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscScalar *x;
     PetscInt     dof;
 

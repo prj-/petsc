@@ -15,7 +15,7 @@ int main(int argc, char **args)
   Mat         A;
   PetscInt   *ia, *ja, bs = 2;
   PetscInt    N = 9, n;
-  PetscInt    rstart, rend, row, col;
+  PetscInt rstart, rend, col;
   PetscInt    i;
   PetscMPIInt rank, size;
   Vec         v;
@@ -38,7 +38,7 @@ int main(int argc, char **args)
   /* Construct a tri-diagonal CSR indexing */
   i     = 1;
   ia[0] = 0;
-  for (row = rstart; row < rend; row++) {
+  for (PetscInt row = rstart; row < rend; row++) {
     ia[i] = ia[i - 1];
 
     /* diagonal */

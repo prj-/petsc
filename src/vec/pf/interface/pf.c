@@ -121,7 +121,7 @@ PetscErrorCode PFCreate(MPI_Comm comm, PetscInt dimin, PetscInt dimout, PF *pf)
 @*/
 PetscErrorCode PFApplyVec(PF pf, Vec x, Vec y)
 {
-  PetscInt  i, rstart, rend, n, p;
+  PetscInt rstart, rend, n, p;
   PetscBool nox = PETSC_FALSE;
 
   PetscFunctionBegin;
@@ -140,7 +140,7 @@ PetscErrorCode PFApplyVec(PF pf, Vec x, Vec y)
     nox = PETSC_TRUE;
     PetscCall(VecGetOwnershipRange(x, &rstart, &rend));
     PetscCall(VecGetArray(x, &xx));
-    for (i = rstart; i < rend; i++) xx[i - rstart] = (PetscScalar)i;
+    for (PetscInt i = rstart; i < rend; i++) xx[i - rstart] = (PetscScalar)i;
     PetscCall(VecRestoreArray(x, &xx));
   }
 

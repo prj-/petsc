@@ -1899,7 +1899,7 @@ static PetscErrorCode RefineLabel_Internal(DMPlexTransform tr, DMLabel label, DM
   DM              dm;
   IS              valueIS;
   const PetscInt *values;
-  PetscInt        defVal, Nv, val;
+  PetscInt defVal, Nv;
 
   PetscFunctionBegin;
   PetscCall(DMPlexTransformGetDM(tr, &dm));
@@ -1908,7 +1908,7 @@ static PetscErrorCode RefineLabel_Internal(DMPlexTransform tr, DMLabel label, DM
   PetscCall(DMLabelGetValueIS(label, &valueIS));
   PetscCall(ISGetLocalSize(valueIS, &Nv));
   PetscCall(ISGetIndices(valueIS, &values));
-  for (val = 0; val < Nv; ++val) {
+  for (PetscInt val = 0; val < Nv; ++val) {
     IS              pointIS;
     const PetscInt *points;
     PetscInt        numPoints, p;
@@ -1975,12 +1975,12 @@ static PetscErrorCode DMPlexTransformCreateLabels(DMPlexTransform tr, DM rdm)
 PetscErrorCode DMPlexTransformCreateDiscLabels(DMPlexTransform tr, DM rdm)
 {
   DM       dm;
-  PetscInt Nf, f, Nds, s;
+  PetscInt Nf, Nds, s;
 
   PetscFunctionBegin;
   PetscCall(DMPlexTransformGetDM(tr, &dm));
   PetscCall(DMGetNumFields(dm, &Nf));
-  for (f = 0; f < Nf; ++f) {
+  for (PetscInt f = 0; f < Nf; ++f) {
     DMLabel     label, labelNew;
     PetscObject obj;
     const char *lname;
@@ -2197,7 +2197,7 @@ static PetscErrorCode DMPlexTransformSetCoordinates(DMPlexTransform tr, DM rdm)
   PetscScalar       *coordsNew;
   const PetscReal   *maxCell, *Lstart, *L;
   PetscBool          localized, localizeVertices = PETSC_FALSE, localizeCells = PETSC_FALSE, sparseLocalize;
-  PetscInt           dE, dEo, d, cStart, cEnd, c, cStartNew, cEndNew, vStartNew, vEndNew, v, pStart, pEnd, p;
+  PetscInt dE, dEo, d, cStart, cEnd, cStartNew, cEndNew, vStartNew, vEndNew, v, pStart, pEnd;
 
   PetscFunctionBegin;
   // Need to clear the DMField for coordinates
@@ -2265,7 +2265,7 @@ static PetscErrorCode DMPlexTransformSetCoordinates(DMPlexTransform tr, DM rdm)
 
     PetscCall(DMGetCellCoordinateSection(dm, &coordSectionCell));
     PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscInt dof;
 
       PetscCall(PetscSectionGetDof(coordSectionCell, c, &dof));
@@ -2321,7 +2321,7 @@ static PetscErrorCode DMPlexTransformSetCoordinates(DMPlexTransform tr, DM rdm)
   PetscCall(VecGetArray(coordsLocalNew, &coordsNew));
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
   /* First set coordinates for vertices */
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     DMPolytopeType  ct;
     DMPolytopeType *rct;
     PetscInt       *rsize, *rcone, *rornt;
@@ -2341,7 +2341,7 @@ static PetscErrorCode DMPlexTransformSetCoordinates(DMPlexTransform tr, DM rdm)
       const PetscScalar *array   = NULL;
       PetscScalar       *pcoords = NULL;
       PetscBool          isDG;
-      PetscInt           Nc, Nv, v, d;
+      PetscInt Nc, Nv;
 
       PetscCall(DMPlexGetCellCoordinates(dm, p, &isDG, &Nc, &array, &pcoords));
 
@@ -2351,8 +2351,8 @@ static PetscErrorCode DMPlexTransformSetCoordinates(DMPlexTransform tr, DM rdm)
         if (localizeVertices && maxCell) {
           PetscScalar anchor[3];
 
-          for (d = 0; d < dEo; ++d) anchor[d] = pcoords[d];
-          for (v = 0; v < Nv; ++v) PetscCall(DMLocalizeCoordinate_Internal(dm, dEo, anchor, &pcoords[v * dEo], &pcoords[v * dEo]));
+          for (PetscInt d = 0; d < dEo; ++d) anchor[d] = pcoords[d];
+          for (PetscInt v = 0; v < Nv; ++v) PetscCall(DMLocalizeCoordinate_Internal(dm, dEo, anchor, &pcoords[v * dEo], &pcoords[v * dEo]));
         }
       }
       for (n = 0; n < Nct; ++n) {
@@ -2395,7 +2395,7 @@ static PetscErrorCode DMPlexTransformSetCoordinates(DMPlexTransform tr, DM rdm)
     PetscCall(VecGetArrayRead(coordsLocalCell, &coords));
     PetscCall(VecGetArray(coordsLocalCellNew, &coordsNew));
 
-    for (p = pStart; p < pEnd; ++p) {
+    for (PetscInt p = pStart; p < pEnd; ++p) {
       DMPolytopeType  ct;
       DMPolytopeType *rct;
       PetscInt       *rsize, *rcone, *rornt;

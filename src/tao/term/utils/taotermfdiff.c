@@ -66,7 +66,7 @@ PetscErrorCode TaoTermComputeGradientFD(TaoTerm term, Vec x, Vec params, Vec g)
   Vec          x_perturbed;
   PetscScalar *_g;
   PetscReal    f, f2;
-  PetscInt     low, high, N, i;
+  PetscInt low, high, N;
   PetscReal    h;
 
   PetscFunctionBegin;
@@ -82,7 +82,7 @@ PetscErrorCode TaoTermComputeGradientFD(TaoTerm term, Vec x, Vec params, Vec g)
   PetscCall(VecGetOwnershipRange(x_perturbed, &low, &high));
   PetscCall(VecSetOption(x_perturbed, VEC_IGNORE_OFF_PROC_ENTRIES, PETSC_TRUE));
   PetscCall(VecGetArray(g, &_g));
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     PetscCall(VecSetValue(x_perturbed, i, -h, ADD_VALUES));
     PetscCall(VecAssemblyBegin(x_perturbed));
     PetscCall(VecAssemblyEnd(x_perturbed));

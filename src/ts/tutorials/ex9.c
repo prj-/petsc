@@ -1306,7 +1306,7 @@ static PetscErrorCode FVIJacobian(TS ts, PetscReal t, Vec X, Vec Xdot, PetscReal
 static PetscErrorCode FVSample(FVCtx *ctx, DM da, PetscReal time, Vec U)
 {
   PetscScalar *u, *uj;
-  PetscInt     i, j, k, dof, xs, xm, Mx;
+  PetscInt i, j, dof, xs, xm, Mx;
 
   PetscFunctionBeginUser;
   PetscCheck(ctx->physics.sample, PETSC_COMM_SELF, PETSC_ERR_SUP, "Physics has not provided a sampling function");
@@ -1318,11 +1318,11 @@ static PetscErrorCode FVSample(FVCtx *ctx, DM da, PetscReal time, Vec U)
     const PetscReal h = (ctx->xmax - ctx->xmin) / Mx, xi = ctx->xmin + h / 2 + i * h;
     const PetscInt  N = 200;
     /* Integrate over cell i using trapezoid rule with N points. */
-    for (k = 0; k < dof; k++) u[i * dof + k] = 0;
+    for (PetscInt k = 0; k < dof; k++) u[i * dof + k] = 0;
     for (j = 0; j < N + 1; j++) {
       PetscScalar xj = xi + h * (j - N / 2) / (PetscReal)N;
       PetscCall((*ctx->physics.sample)(ctx->physics.user, ctx->initial, ctx->bctype, ctx->xmin, ctx->xmax, time, xj, uj));
-      for (k = 0; k < dof; k++) u[i * dof + k] += ((j == 0 || j == N) ? 0.5 : 1.0) * uj[k] / N;
+      for (PetscInt k = 0; k < dof; k++) u[i * dof + k] += ((j == 0 || j == N) ? 0.5 : 1.0) * uj[k] / N;
     }
   }
   PetscCall(DMDAVecRestoreArray(da, U, &u));
@@ -1335,7 +1335,7 @@ static PetscErrorCode SolutionStatsView(DM da, Vec X, PetscViewer viewer)
   PetscReal          xmin, xmax;
   PetscScalar        sum, tvsum, tvgsum;
   const PetscScalar *x;
-  PetscInt           imin, imax, Mx, i, j, xs, xm, dof;
+  PetscInt imin, imax, Mx, i, xs, xm, dof;
   Vec                Xloc;
   PetscBool          isascii;
 
@@ -1351,7 +1351,7 @@ static PetscErrorCode SolutionStatsView(DM da, Vec X, PetscViewer viewer)
   PetscCall(DMDAGetInfo(da, 0, &Mx, 0, 0, 0, 0, 0, &dof, 0, 0, 0, 0, 0));
   tvsum = 0;
   for (i = xs; i < xs + xm; i++) {
-    for (j = 0; j < dof; j++) tvsum += PetscAbsScalar(x[i * dof + j] - x[(i - 1) * dof + j]);
+    for (PetscInt j = 0; j < dof; j++) tvsum += PetscAbsScalar(x[i * dof + j] - x[(i - 1) * dof + j]);
   }
   PetscCallMPI(MPIU_Allreduce(&tvsum, &tvgsum, 1, MPIU_REAL, MPIU_SUM, PetscObjectComm((PetscObject)da)));
   PetscCall(DMDAVecRestoreArrayRead(da, Xloc, (void *)&x));

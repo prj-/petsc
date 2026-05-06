@@ -88,7 +88,7 @@ int main(int argc, char **argv)
   PetscScalar    a, b, c, h;
   KSP            ksp;
   PC             pc;
-  PetscInt       start, n, e, nExtra;
+  PetscInt start, n, nExtra;
   PetscInt       iu, ip, ixu, ixp;
   PetscBool      isLastRank, isFirstRank;
   PetscScalar  **arrSol, **arrCoordSol;
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
   PetscCall(DMStagGetLocationSlot(dmSol, ELEMENT, 0, &ip));
   PetscCall(DMStagGetLocationSlot(dmCoordSol, LEFT, 0, &ixu));
   PetscCall(DMStagGetLocationSlot(dmCoordSol, ELEMENT, 0, &ixp));
-  for (e = start; e < start + n + nExtra; ++e) {
+  for (PetscInt e = start; e < start + n + nExtra; ++e) {
     {
       const PetscScalar coordu = arrCoordSol[e][ixu];
       arrSol[e][iu]            = a + (b - a - (c / 2.0)) * coordu + (c / 2.0) * coordu * coordu;
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 
   PetscCall(DMStagGetIsLastRank(dmSol, &isLastRank, NULL, NULL));
   PetscCall(DMStagGetIsFirstRank(dmSol, &isFirstRank, NULL, NULL));
-  for (e = start; e < start + n; ++e) {
+  for (PetscInt e = start; e < start + n; ++e) {
     DMStagStencil pos[3];
     PetscScalar   val[3];
     PetscInt      idxLoc;
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
   /* Note: normally it would be more efficient to assemble the RHS and the matrix
      in the same loop over elements, but we separate them for clarity here */
   PetscCall(DMGetCoordinatesLocal(dmSol, &coordSolLocal));
-  for (e = start; e < start + n; ++e) {
+  for (PetscInt e = start; e < start + n; ++e) {
     /* Velocity is either a BC or an interior point */
     if (isFirstRank && e == start) {
       DMStagStencil row;

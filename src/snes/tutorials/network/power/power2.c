@@ -158,7 +158,7 @@ PetscErrorCode FormFunction(SNES snes, Vec X, Vec F, void *appctx)
 PetscErrorCode FormJacobian_Subnet(DM networkdm, Vec localX, Mat J, Mat Jpre, PetscInt nv, PetscInt ne, const PetscInt *vtx, const PetscInt *edges, void *appctx)
 {
   UserCtx_Power     *User = (UserCtx_Power *)appctx;
-  PetscInt           e, v, vfrom, vto;
+  PetscInt e, vfrom, vto;
   const PetscScalar *xarr;
   PetscInt           offsetfrom, offsetto, goffsetfrom, goffsetto;
   PetscInt           row[2], col[8];
@@ -167,7 +167,7 @@ PetscErrorCode FormJacobian_Subnet(DM networkdm, Vec localX, Mat J, Mat Jpre, Pe
   PetscFunctionBegin;
   PetscCall(VecGetArrayRead(localX, &xarr));
 
-  for (v = 0; v < nv; v++) {
+  for (PetscInt v = 0; v < nv; v++) {
     PetscInt     i, j, key;
     PetscInt     offset, goffset;
     PetscScalar  Vm;

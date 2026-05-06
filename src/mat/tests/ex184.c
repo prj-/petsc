@@ -7,7 +7,7 @@ int main(int argc, char **args)
 {
   Mat          A, A_inv;
   PetscMPIInt  rank, size;
-  PetscInt     M, m, bs, rstart, rend, j, x, y;
+  PetscInt M, m, bs, rstart, rend;
   PetscInt    *dnnz;
   PetscScalar *v;
   Vec          X, Y;
@@ -32,15 +32,15 @@ int main(int argc, char **args)
   PetscCall(MatSetUp(A)); /* called so that MatGetLocalSize() will work */
   PetscCall(MatGetLocalSize(A, &m, NULL));
   PetscCall(PetscMalloc1(m / bs, &dnnz));
-  for (j = 0; j < m / bs; j++) dnnz[j] = 1;
+  for (PetscInt j = 0; j < m / bs; j++) dnnz[j] = 1;
   PetscCall(MatXAIJSetPreallocation(A, bs, dnnz, NULL, NULL, NULL));
   PetscCall(PetscFree(dnnz));
 
   PetscCall(PetscMalloc1(bs * bs, &v));
   PetscCall(MatGetOwnershipRange(A, &rstart, &rend));
-  for (j = rstart / bs; j < rend / bs; j++) {
-    for (x = 0; x < bs; x++) {
-      for (y = 0; y < bs; y++) {
+  for (PetscInt j = rstart / bs; j < rend / bs; j++) {
+    for (PetscInt x = 0; x < bs; x++) {
+      for (PetscInt y = 0; y < bs; y++) {
         if (x == y) {
           v[y + bs * x] = 2 * bs;
         } else {

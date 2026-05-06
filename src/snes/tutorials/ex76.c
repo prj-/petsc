@@ -229,11 +229,11 @@ static void g1_vu(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff
 {
   PetscInt NcI = dim;
   PetscInt NcJ = dim;
-  PetscInt c, d, e;
+  PetscInt c, d;
 
   for (c = 0; c < NcI; ++c) {
     for (d = 0; d < NcJ; ++d) {
-      for (e = 0; e < dim; ++e) {
+      for (PetscInt e = 0; e < dim; ++e) {
         if (c == d) g1[(c * NcJ + d) * dim + e] = u[e];
       }
     }
@@ -320,7 +320,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     Vec          coordinates;
     PetscScalar *coords;
     PetscReal    theta;
-    PetscInt     cdim, N, bs, i;
+    PetscInt cdim, N, bs;
 
     PetscCall(DMGetCoordinateDim(*dm, &cdim));
     PetscCall(DMGetCoordinates(*dm, &coordinates));
@@ -330,7 +330,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     PetscCall(VecGetArray(coordinates, &coords));
     PetscCall(PetscBagGetData(user->bag, &param));
     theta = param->theta;
-    for (i = 0; i < N; i += cdim) {
+    for (PetscInt i = 0; i < N; i += cdim) {
       PetscScalar x = coords[i + 0];
       PetscScalar y = coords[i + 1];
 

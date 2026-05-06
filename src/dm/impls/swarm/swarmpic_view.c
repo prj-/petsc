@@ -89,7 +89,7 @@ static PetscErrorCode private_DMSwarmView_XDMF(DM dm, PetscViewer viewer)
   char           datafile[PETSC_MAX_PATH_LEN];
   char          *datafilename;
   PetscViewer    fviewer;
-  PetscInt       k, ng, dim, Nfc;
+  PetscInt ng, dim, Nfc;
   Vec            dvec;
   long int      *bytes     = NULL;
   PetscContainer container = NULL;
@@ -143,7 +143,7 @@ static PetscErrorCode private_DMSwarmView_XDMF(DM dm, PetscViewer viewer)
   PetscCall(PetscViewerASCIIPopTab(viewer));
 
   /* write topology data */
-  for (k = 0; k < ng; k++) {
+  for (PetscInt k = 0; k < ng; k++) {
     PetscInt pvertex[3];
 
     pvertex[0] = 1;

@@ -211,12 +211,12 @@ static PetscErrorCode PetscByteSwapDouble(double *buff, PetscCount n)
 */
 static PetscErrorCode PetscByteSwapFloat(float *buff, PetscCount n)
 {
-  PetscCount i, j;
+  PetscCount i;
   float      tmp, *buff1 = buff;
   char      *ptr1, *ptr2 = (char *)&tmp;
 
   PetscFunctionBegin;
-  for (j = 0; j < n; j++) {
+  for (PetscCount j = 0; j < n; j++) {
     ptr1 = (char *)(buff1 + j);
     for (i = 0; i < (PetscCount)sizeof(float); i++) ptr2[i] = ptr1[sizeof(float) - 1 - i];
     for (i = 0; i < (PetscCount)sizeof(float); i++) ptr1[i] = ptr2[i];

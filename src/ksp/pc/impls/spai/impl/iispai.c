@@ -325,7 +325,7 @@ PETSC_EXTERN PetscErrorCode PCCreate_SPAI(PC pc)
 static PetscErrorCode ConvertMatToMatrix(MPI_Comm comm, Mat A, Mat AT, matrix **B)
 {
   matrix                  *M;
-  int                      i, j, col;
+  int i, col;
   int                      row_indx;
   int                      len, pe, local_indx, start_indx;
   int                     *mapping;
@@ -368,7 +368,7 @@ static PetscErrorCode ConvertMatToMatrix(MPI_Comm comm, Mat A, Mat AT, matrix **
 
   for (i = 0; i < size; i++) {
     start_indx = M->start_indices[i];
-    for (j = 0; j < M->mnls[i]; j++) M->pe[start_indx + j] = i;
+    for (int j = 0; j < M->mnls[i]; j++) M->pe[start_indx + j] = i;
   }
 
   if (AT) {
@@ -402,7 +402,7 @@ static PetscErrorCode ConvertMatToMatrix(MPI_Comm comm, Mat A, Mat AT, matrix **
     rows->ptrs[row_indx] = (int *)malloc(nz * sizeof(int));
     rows->A[row_indx]    = (double *)malloc(nz * sizeof(double));
     /* copy the matrix */
-    for (j = 0; j < nz; j++) {
+    for (int j = 0; j < nz; j++) {
       col = cols[j];
       len = rows->len[row_indx]++;
 
@@ -423,7 +423,7 @@ static PetscErrorCode ConvertMatToMatrix(MPI_Comm comm, Mat A, Mat AT, matrix **
       /* allocate buffers */
       rows->rptrs[row_indx] = (int *)malloc(nz * sizeof(int));
       /* copy the matrix (i.e., the structure) */
-      for (j = 0; j < nz; j++) {
+      for (int j = 0; j < nz; j++) {
         col = cols[j];
         len = rows->rlen[row_indx]++;
 
@@ -452,7 +452,7 @@ static PetscErrorCode ConvertMatrixToMat(MPI_Comm comm, matrix *B, Mat *PB)
   int         m, n, M, N;
   int         d_nz, o_nz;
   int        *d_nnz, *o_nnz;
-  int         i, k, global_row, global_col, first_diag_col, last_diag_col;
+  int global_row, global_col, first_diag_col, last_diag_col;
   PetscScalar val;
 
   PetscFunctionBegin;
@@ -465,11 +465,11 @@ static PetscErrorCode ConvertMatrixToMat(MPI_Comm comm, matrix *B, Mat *PB)
   /* Determine preallocation for MatCreateAIJ */
   PetscCall(PetscMalloc1(m, &d_nnz));
   PetscCall(PetscMalloc1(m, &o_nnz));
-  for (i = 0; i < m; i++) d_nnz[i] = o_nnz[i] = 0;
+  for (int i = 0; i < m; i++) d_nnz[i] = o_nnz[i] = 0;
   first_diag_col = B->start_indices[rank];
   last_diag_col  = first_diag_col + B->mnls[rank];
-  for (i = 0; i < B->mnls[rank]; i++) {
-    for (k = 0; k < B->lines->len[i]; k++) {
+  for (int i = 0; i < B->mnls[rank]; i++) {
+    for (int k = 0; k < B->lines->len[i]; k++) {
       global_col = B->lines->ptrs[i][k];
       if ((global_col >= first_diag_col) && (global_col < last_diag_col)) d_nnz[i]++;
       else o_nnz[i]++;
@@ -484,9 +484,9 @@ static PetscErrorCode ConvertMatrixToMat(MPI_Comm comm, matrix *B, Mat *PB)
   PetscCall(MatSeqAIJSetPreallocation(*PB, d_nz, d_nnz));
   PetscCall(MatMPIAIJSetPreallocation(*PB, d_nz, d_nnz, o_nz, o_nnz));
 
-  for (i = 0; i < B->mnls[rank]; i++) {
+  for (int i = 0; i < B->mnls[rank]; i++) {
     global_row = B->start_indices[rank] + i;
-    for (k = 0; k < B->lines->len[i]; k++) {
+    for (int k = 0; k < B->lines->len[i]; k++) {
       global_col = B->lines->ptrs[i][k];
 
       val = B->lines->A[i][k];

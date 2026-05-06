@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   const PetscInt *csID;
   PetscInt       *pStartDepth, *pEndDepth;
   PetscInt        order = 1;
-  PetscInt        sdim, d, pStart, pEnd, p, numCS, set;
+  PetscInt sdim, pStart, pEnd, numCS, set;
   PetscMPIInt     rank, size;
   PetscViewer     viewer;
   const char     *nodalVarName2D[4] = {"U_x", "U_y", "Alpha", "Beta"};
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
   PetscCall(PetscSectionSetChart(section, pStart, pEnd));
   PetscCall(PetscMalloc2(sdim + 1, &pStartDepth, sdim + 1, &pEndDepth));
-  for (d = 0; d <= sdim; ++d) PetscCall(DMPlexGetDepthStratum(dm, d, &pStartDepth[d], &pEndDepth[d]));
+  for (PetscInt d = 0; d <= sdim; ++d) PetscCall(DMPlexGetDepthStratum(dm, d, &pStartDepth[d], &pEndDepth[d]));
   /* Vector field U, Scalar field Alpha, Tensor field Sigma */
   PetscCall(PetscSectionSetFieldComponents(section, fieldU, sdim));
   PetscCall(PetscSectionSetFieldComponents(section, fieldA, 1));
@@ -236,9 +236,9 @@ int main(int argc, char **argv)
         PetscInt *closure = NULL;
 
         PetscCall(DMPlexGetTransitiveClosure(dm, cellID[cell], PETSC_TRUE, &closureSize, &closure));
-        for (p = 0; p < closureSize; ++p) {
+        for (PetscInt p = 0; p < closureSize; ++p) {
           /* Find depth of p */
-          for (d = 0; d <= sdim; ++d) {
+          for (PetscInt d = 0; d <= sdim; ++d) {
             if ((closure[2 * p] >= pStartDepth[d]) && (closure[2 * p] < pEndDepth[d])) {
               PetscCall(PetscSectionSetDof(section, closure[2 * p], dofU[d] + dofA[d] + dofS[d]));
               PetscCall(PetscSectionSetFieldDof(section, closure[2 * p], fieldU, dofU[d]));
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
     PetscSection coordSection;
     Vec          coord;
     PetscScalar *cval, *xyz;
-    PetscInt     clSize, i, j;
+    PetscInt clSize;
 
     PetscCall(DMGetLocalSection(dmUA, &sectionUA));
     PetscCall(DMGetLocalVector(dmUA, &UALoc));
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
     PetscCall(DMGetCoordinatesLocal(dmUA, &coord));
     PetscCall(DMPlexGetChart(dmUA, &pStart, &pEnd));
 
-    for (p = pStart; p < pEnd; ++p) {
+    for (PetscInt p = pStart; p < pEnd; ++p) {
       PetscInt dofUA, offUA;
 
       PetscCall(PetscSectionGetDof(sectionUA, p, &dofUA));
@@ -330,9 +330,9 @@ int main(int argc, char **argv)
         PetscCall(PetscSectionGetOffset(sectionUA, p, &offUA));
         PetscCall(DMPlexVecGetClosure(dmUA, coordSection, coord, p, &clSize, &xyz));
         cval[offUA + sdim] = 0.;
-        for (i = 0; i < sdim; ++i) {
+        for (PetscInt i = 0; i < sdim; ++i) {
           cval[offUA + i] = 0;
-          for (j = 0; j < clSize / sdim; ++j) cval[offUA + i] += xyz[j * sdim + i];
+          for (PetscInt j = 0; j < clSize / sdim; ++j) cval[offUA + i] += xyz[j * sdim + i];
           cval[offUA + i] = cval[offUA + i] * sdim / clSize;
           cval[offUA + sdim] += PetscSqr(cval[offUA + i]);
         }
@@ -419,7 +419,7 @@ int main(int argc, char **argv)
       const PetscInt *cellID;
       PetscInt        numCells;
       PetscScalar    *cval = NULL, *xyz = NULL;
-      PetscInt        clSize, cdimCoord, c;
+      PetscInt clSize, cdimCoord;
 
       PetscCall(DMGetStratumIS(dmS, "Cell Sets", csID[set], &cellIS));
       PetscCall(ISGetIndices(cellIS, &cellID));
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
         cval[0] = rank;
         cval[1] = csID[set];
         cval[2] = 0.;
-        for (c = 0; c < cdimCoord / sdim; c++) cval[2] += xyz[c * sdim];
+        for (PetscInt c = 0; c < cdimCoord / sdim; c++) cval[2] += xyz[c * sdim];
         cval[2] = cval[2] * sdim / cdimCoord;
         PetscCall(DMPlexVecSetClosure(dmS, NULL, S, cellID[cell], cval, INSERT_ALL_VALUES));
       }

@@ -259,34 +259,34 @@ PetscErrorCode PetscFEGeomGetCellPoint(PetscFEGeom *geom, PetscInt c, PetscInt p
 @*/
 PetscErrorCode PetscFEGeomComplete(PetscFEGeom *geom)
 {
-  PetscInt i, j, N, dE;
+  PetscInt N, dE;
 
   PetscFunctionBeginHot;
   N  = geom->numPoints * geom->numCells;
   dE = geom->dimEmbed;
   switch (dE) {
   case 3:
-    for (i = 0; i < N; i++) {
+    for (PetscInt i = 0; i < N; i++) {
       DMPlex_Det3D_Internal(&geom->detJ[i], &geom->J[dE * dE * i]);
       if (geom->invJ) DMPlex_Invert3D_Internal(&geom->invJ[dE * dE * i], &geom->J[dE * dE * i], geom->detJ[i]);
     }
     break;
   case 2:
-    for (i = 0; i < N; i++) {
+    for (PetscInt i = 0; i < N; i++) {
       DMPlex_Det2D_Internal(&geom->detJ[i], &geom->J[dE * dE * i]);
       if (geom->invJ) DMPlex_Invert2D_Internal(&geom->invJ[dE * dE * i], &geom->J[dE * dE * i], geom->detJ[i]);
     }
     break;
   case 1:
-    for (i = 0; i < N; i++) {
+    for (PetscInt i = 0; i < N; i++) {
       geom->detJ[i] = PetscAbsReal(geom->J[i]);
       if (geom->invJ) geom->invJ[i] = 1. / geom->J[i];
     }
     break;
   }
   if (geom->n) {
-    for (i = 0; i < N; i++) {
-      for (j = 0; j < dE; j++) geom->n[dE * i + j] = geom->J[dE * dE * i + dE * j + dE - 1] * ((dE == 2) ? -1. : 1.);
+    for (PetscInt i = 0; i < N; i++) {
+      for (PetscInt j = 0; j < dE; j++) geom->n[dE * i + j] = geom->J[dE * dE * i + dE * j + dE - 1] * ((dE == 2) ? -1. : 1.);
     }
   }
   PetscFunctionReturn(PETSC_SUCCESS);

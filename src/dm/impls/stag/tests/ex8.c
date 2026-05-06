@@ -122,7 +122,7 @@ PetscErrorCode ApplyOperator(Mat A, Vec in, Vec out)
   Vec             inLocal, outLocal;
   PetscScalar ****arrIn;
   PetscScalar ****arrOut;
-  PetscInt        startx, starty, startz, nx, ny, nz, nExtrax, nExtray, nExtraz, ex, ey, ez, idxP, idxUx, idxUy, idxUz, startGhostx, startGhosty, startGhostz, nGhostx, nGhosty, nGhostz;
+  PetscInt startx, starty, startz, nx, ny, nz, nExtrax, nExtray, nExtraz, idxP, idxUx, idxUy, idxUz, startGhostx, startGhosty, startGhostz, nGhostx, nGhosty, nGhostz;
   PetscBool       isFirstx, isFirsty, isFirstz, isLastx, isLasty, isLastz;
 
   PetscFunctionBeginUser;
@@ -144,41 +144,41 @@ PetscErrorCode ApplyOperator(Mat A, Vec in, Vec out)
 
   /* Set "pressures" on ghost boundaries by copying neighboring values*/
   if (isFirstx) {
-    for (ez = startz; ez < startz + nz + nExtraz; ++ez) {
-      for (ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ez][ey][-1][idxP] = arrIn[ez][ey][0][idxP];
+    for (PetscInt ez = startz; ez < startz + nz + nExtraz; ++ez) {
+      for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ez][ey][-1][idxP] = arrIn[ez][ey][0][idxP];
     }
   }
   if (isLastx) {
-    for (ez = startz; ez < startz + nz + nExtraz; ++ez) {
-      for (ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ez][ey][startx + nx][idxP] = arrIn[ez][ey][startx + nx - 1][idxP];
+    for (PetscInt ez = startz; ez < startz + nz + nExtraz; ++ez) {
+      for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ez][ey][startx + nx][idxP] = arrIn[ez][ey][startx + nx - 1][idxP];
     }
   }
   if (isFirsty) {
-    for (ez = startz; ez < startz + nz + nExtraz; ++ez) {
-      for (ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[ez][-1][ex][idxP] = arrIn[ez][0][ex][idxP];
+    for (PetscInt ez = startz; ez < startz + nz + nExtraz; ++ez) {
+      for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[ez][-1][ex][idxP] = arrIn[ez][0][ex][idxP];
     }
   }
   if (isLasty) {
-    for (ez = startz; ez < startz + nz + nExtraz; ++ez) {
-      for (ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[ez][starty + ny][ex][idxP] = arrIn[ez][starty + ny - 1][ex][idxP];
+    for (PetscInt ez = startz; ez < startz + nz + nExtraz; ++ez) {
+      for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[ez][starty + ny][ex][idxP] = arrIn[ez][starty + ny - 1][ex][idxP];
     }
   }
 
   if (isFirstz) {
-    for (ey = starty; ey < starty + ny + nExtray; ++ey) {
-      for (ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[-1][ey][ex][idxP] = arrIn[0][ey][ex][idxP];
+    for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) {
+      for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[-1][ey][ex][idxP] = arrIn[0][ey][ex][idxP];
     }
   }
   if (isLastz) {
-    for (ey = starty; ey < starty + ny + nExtray; ++ey) {
-      for (ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[startz + nz][ey][ex][idxP] = arrIn[startz + nz - 1][ey][ex][idxP];
+    for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) {
+      for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[startz + nz][ey][ex][idxP] = arrIn[startz + nz - 1][ey][ex][idxP];
     }
   }
 
   /* Apply operator on physical points */
-  for (ez = startz; ez < startz + nz + nExtraz; ++ez) {
-    for (ey = starty; ey < starty + ny + nExtray; ++ey) {
-      for (ex = startx; ex < startx + nx + nExtrax; ++ex) {
+  for (PetscInt ez = startz; ez < startz + nz + nExtraz; ++ez) {
+    for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) {
+      for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) {
         if (ex < startx + nx && ey < starty + ny && ez < startz + nz) { /* Don't compute pressure outside domain */
           arrOut[ez][ey][ex][idxP] = arrIn[ez][ey][ex][idxP];
         }

@@ -8,7 +8,7 @@ PetscErrorCode MINPACKseq(PetscInt *n, const PetscInt *indrow, const PetscInt *j
   PetscInt i__1, i__2, i__3;
 
   /* Local variables */
-  PetscInt jcol, j, ic, ip, jp, ir;
+  PetscInt jcol, j, ic, jp, ir;
 
   /*     Given the sparsity pattern of an m by n matrix A, this */
   /*     subroutine determines a consistent partition of the */
@@ -97,7 +97,7 @@ PetscErrorCode MINPACKseq(PetscInt *n, const PetscInt *indrow, const PetscInt *j
       /*           which correspond to non-zeroes in the matrix. */
 
       i__3 = ipntr[ir + 1] - 1;
-      for (ip = ipntr[ir]; ip <= i__3; ++ip) {
+      for (PetscInt ip = ipntr[ir]; ip <= i__3; ++ip) {
         ic = indcol[ip];
 
         /*              Array iwa marks the group numbers of the */

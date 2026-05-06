@@ -218,14 +218,14 @@ PetscErrorCode PetscDrawTensorContour(PetscDraw draw, int m, int n, const PetscR
 @*/
 PetscErrorCode PetscDrawTensorContourPatch(PetscDraw draw, int m, int n, PetscReal *x, PetscReal *y, PetscReal min, PetscReal max, PetscReal *v)
 {
-  int       c1, c2, c3, c4, i, j;
+  int c1, c2, c3, c4;
   PetscReal x1, x2, x3, x4, y_1, y2, y3, y4;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(draw, PETSC_DRAW_CLASSID, 1);
   /* PetscDraw the contour plot patch */
-  for (j = 0; j < n - 1; j++) {
-    for (i = 0; i < m - 1; i++) {
+  for (int j = 0; j < n - 1; j++) {
+    for (int i = 0; i < m - 1; i++) {
       x1  = x[i];
       y_1 = y[j];
       c1  = PetscDrawRealToColor(v[i + j * m], min, max);

@@ -419,7 +419,7 @@ static void FormStressOperatorQ1(PetscScalar Ke[], PetscScalar coords[], PetscSc
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][2];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, k, l;
+  PetscInt p, i, j;
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p;
   PetscScalar B[3][U_DOFS * NODES_PER_EL];
@@ -469,8 +469,8 @@ static void FormStressOperatorQ1(PetscScalar Ke[], PetscScalar coords[], PetscSc
      */
     for (i = 0; i < 8; i++) {
       for (j = 0; j < 8; j++) {
-        for (k = 0; k < 3; k++) {
-          for (l = 0; l < 3; l++) Ke[8 * i + j] = Ke[8 * i + j] + B[k][i] * constit_D[k][l] * B[l][j];
+        for (PetscInt k = 0; k < 3; k++) {
+          for (PetscInt l = 0; l < 3; l++) Ke[8 * i + j] = Ke[8 * i + j] + B[k][i] * constit_D[k][l] * B[l][j];
         }
       }
     }
@@ -707,7 +707,7 @@ static PetscErrorCode solve_elasticity_2d(PetscInt mx, PetscInt my)
   PetscInt                 mxl, myl;
   DM                       prop_cda, vel_cda;
   Vec                      prop_coords, vel_coords;
-  PetscInt                 si, sj, nx, ny, i, j, p;
+  PetscInt si, sj, nx, ny, i, j;
   Vec                      f, X;
   PetscInt                 prop_dof, prop_stencil_width;
   Vec                      properties, l_properties;
@@ -797,7 +797,7 @@ static PetscErrorCode solve_elasticity_2d(PetscInt mx, PetscInt my)
       PetscCall(GetElementCoords(_vel_coords, i, j, el_coords));
       ConstructGaussQuadrature(&ngp, gp_xi, gp_weight);
 
-      for (p = 0; p < GAUSS_POINTS; p++) {
+      for (PetscInt p = 0; p < GAUSS_POINTS; p++) {
         PetscScalar gp_x, gp_y;
         PetscScalar xi_p[2], Ni_p[4];
 
@@ -834,7 +834,7 @@ static PetscErrorCode solve_elasticity_2d(PetscInt mx, PetscInt my)
         PetscCall(PetscOptionsGetScalar(NULL, NULL, "-iso_E", &opts_E, &flg));
         PetscCall(PetscOptionsGetScalar(NULL, NULL, "-iso_nu", &opts_nu, &flg));
 
-        for (p = 0; p < GAUSS_POINTS; p++) {
+        for (PetscInt p = 0; p < GAUSS_POINTS; p++) {
           element_props[j][i].E[p]  = opts_E;
           element_props[j][i].nu[p] = opts_nu;
 
@@ -854,7 +854,7 @@ static PetscErrorCode solve_elasticity_2d(PetscInt mx, PetscInt my)
         PetscCall(PetscOptionsGetScalar(NULL, NULL, "-step_nu1", &opts_nu1, &flg));
         PetscCall(PetscOptionsGetScalar(NULL, NULL, "-step_xc", &opts_xc, &flg));
 
-        for (p = 0; p < GAUSS_POINTS; p++) {
+        for (PetscInt p = 0; p < GAUSS_POINTS; p++) {
           coord_x = centroid_x;
           coord_y = centroid_y;
           if (use_gp_coords) {
@@ -899,7 +899,7 @@ static PetscErrorCode solve_elasticity_2d(PetscInt mx, PetscInt my)
         index = (jj + i / span) % nbricks;
         /*printf("j=%d: index = %d \n", j,index); */
 
-        for (p = 0; p < GAUSS_POINTS; p++) {
+        for (PetscInt p = 0; p < GAUSS_POINTS; p++) {
           element_props[j][i].E[p]  = values_E[index];
           element_props[j][i].nu[p] = values_nu[index];
         }
@@ -926,13 +926,13 @@ static PetscErrorCode solve_elasticity_2d(PetscInt mx, PetscInt my)
         ci = i - ii * (opts_t + opts_w + opts_t);
         cj = j - jj * (opts_t + opts_w + opts_t);
 
-        for (p = 0; p < GAUSS_POINTS; p++) {
+        for (PetscInt p = 0; p < GAUSS_POINTS; p++) {
           element_props[j][i].E[p]  = opts_E0;
           element_props[j][i].nu[p] = opts_nu0;
         }
         if ((ci >= opts_t) && (ci < opts_t + opts_w)) {
           if ((cj >= opts_t) && (cj < opts_t + opts_w)) {
-            for (p = 0; p < GAUSS_POINTS; p++) {
+            for (PetscInt p = 0; p < GAUSS_POINTS; p++) {
               element_props[j][i].E[p]  = opts_E1;
               element_props[j][i].nu[p] = opts_nu1;
             }

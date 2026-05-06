@@ -666,7 +666,7 @@ PetscErrorCode DMPlexCreateOverlapLabelFromLabels(DM dm, PetscInt numLabels, con
   const PetscInt    *local;
   const PetscInt    *nrank, *rrank;
   PetscInt          *adj = NULL;
-  PetscInt           pStart, pEnd, p, sStart, sEnd, nleaves, l, el;
+  PetscInt pStart, pEnd, p, sStart, sEnd, nleaves, l;
   PetscMPIInt        rank, size;
   PetscBool          flg;
 
@@ -708,7 +708,7 @@ PetscErrorCode DMPlexCreateOverlapLabelFromLabels(DM dm, PetscInt numLabels, con
           for (PetscInt a = 0; a < adjSize; ++a) {
             PetscBool insert = PETSC_TRUE;
 
-            for (el = 0; el < numExLabels; ++el) {
+            for (PetscInt el = 0; el < numExLabels; ++el) {
               PetscInt exVal;
               PetscCall(DMLabelGetValue(exLabel[el], adj[a], &exVal));
               if (exVal == exValue[el]) {
@@ -2385,7 +2385,7 @@ PetscErrorCode DMPlexGetRedundantDM(DM dm, PetscSF *sf, PeOp DM *redundantMesh)
 {
   MPI_Comm     comm;
   PetscMPIInt  size, rank;
-  PetscInt     pStart, pEnd, p;
+  PetscInt pStart, pEnd;
   PetscInt     numPoints = -1;
   PetscSF      migrationSF, sfPoint, gatherSF;
   DM           gatherDM, dmCoord;
@@ -2411,7 +2411,7 @@ PetscErrorCode DMPlexGetRedundantDM(DM dm, PetscSF *sf, PeOp DM *redundantMesh)
   PetscCallMPI(MPI_Bcast(&numPoints, 1, MPIU_INT, 0, comm));
   PetscCall(PetscMalloc1(numPoints, &points));
   PetscCall(PetscSFCreate(comm, &migrationSF));
-  for (p = 0; p < numPoints; p++) {
+  for (PetscInt p = 0; p < numPoints; p++) {
     points[p].index = p;
     points[p].rank  = 0;
   }

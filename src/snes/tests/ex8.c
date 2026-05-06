@@ -579,7 +579,7 @@ static PetscErrorCode CheckTransfer(DM dm, InterpType inType, PetscInt order, Ap
     KSP      smoother;
     Mat      A, iVM, fVM;
     Vec      iV, fV;
-    PetscInt k, dim, d, im, fm;
+    PetscInt dim, im, fm;
 
     PetscCall(PetscPrintf(comm, " Adapting interpolator using %s\n", user->usePoly ? "polynomials" : "harmonics"));
     PetscCall(DMGetDimension(dm, &dim));
@@ -592,8 +592,8 @@ static PetscErrorCode CheckTransfer(DM dm, InterpType inType, PetscInt order, Ap
     PetscCall(MatCreateDense(PetscObjectComm((PetscObject)dm), fm, PETSC_DECIDE, PETSC_DECIDE, user->K * dim, NULL, &fVM));
     PetscCall(DMRestoreGlobalVector(idm, &iV));
     PetscCall(DMRestoreGlobalVector(fdm, &fV));
-    for (k = 0; k < user->K; ++k) {
-      for (d = 0; d < dim; ++d) {
+    for (PetscInt k = 0; k < user->K; ++k) {
+      for (PetscInt d = 0; d < dim; ++d) {
         PetscCall(MatDenseGetColumnVecWrite(iVM, k * dim + d, &iV));
         PetscCall(MatDenseGetColumnVecWrite(fVM, k * dim + d, &fV));
         PetscCall(SetupFunctions(idm, user->usePoly, user->usePoly ? k : k + 1, d, exactFuncs, exactFuncDers, user));
@@ -615,8 +615,8 @@ static PetscErrorCode CheckTransfer(DM dm, InterpType inType, PetscInt order, Ap
     PetscCall(PetscSNPrintf(checkname, PETSC_MAX_PATH_LEN, "  %s poly", testname));
     PetscCall(MatInterpolate(InterpAdapt, iu, fu));
     PetscCall(CheckTransferError(fdm, PETSC_TRUE, order, 0, checkname, fu, user));
-    for (k = 0; k < user->K; ++k) {
-      for (d = 0; d < dim; ++d) {
+    for (PetscInt k = 0; k < user->K; ++k) {
+      for (PetscInt d = 0; d < dim; ++d) {
         PetscCall(PetscSNPrintf(checkname, PETSC_MAX_PATH_LEN, "  %s trig (%" PetscInt_FMT ", %" PetscInt_FMT ")", testname, k, d));
         PetscCall(MatDenseGetColumnVecRead(iVM, k * dim + d, &iV));
         PetscCall(MatDenseGetColumnVecWrite(fVM, k * dim + d, &fV));

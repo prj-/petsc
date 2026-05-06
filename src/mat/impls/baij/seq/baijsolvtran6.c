@@ -125,7 +125,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
   IS                 iscol = a->col, isrow = a->row;
   const PetscInt     n = a->mbs, *vi, *ai = a->i, *aj = a->j, *diag = a->diag;
   const PetscInt    *r, *c, *rout, *cout;
-  PetscInt           nz, idx, idt, j, i, oidx, ii, ic, ir;
+  PetscInt nz, idx, idt, oidx, ii, ic, ir;
   const PetscInt     bs = A->rmap->bs, bs2 = a->bs2;
   const MatScalar   *aa = a->a, *v;
   PetscScalar        s1, s2, s3, s4, s5, s6, x1, x2, x3, x4, x5, x6, *x, *t;
@@ -142,7 +142,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
   c = cout;
 
   /* copy b into temp work space according to permutation */
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     ii        = bs * i;
     ic        = bs * c[i];
     t[ii]     = b[ic];
@@ -155,7 +155,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
 
   /* forward solve the U^T */
   idx = 0;
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     v = aa + bs2 * diag[i];
     /* multiply by the inverse of the block diagonal */
     x1 = t[idx];
@@ -174,7 +174,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
 
     vi = aj + diag[i] - 1;
     nz = diag[i] - diag[i + 1] - 1;
-    for (j = 0; j > -nz; j--) {
+    for (PetscInt j = 0; j > -nz; j--) {
       oidx = bs * vi[j];
       t[oidx] -= v[0] * s1 + v[1] * s2 + v[2] * s3 + v[3] * s4 + v[4] * s5 + v[5] * s6;
       t[oidx + 1] -= v[6] * s1 + v[7] * s2 + v[8] * s3 + v[9] * s4 + v[10] * s5 + v[11] * s6;
@@ -193,7 +193,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
     idx += bs;
   }
   /* backward solve the L^T */
-  for (i = n - 1; i >= 0; i--) {
+  for (PetscInt i = n - 1; i >= 0; i--) {
     v   = aa + bs2 * ai[i];
     vi  = aj + ai[i];
     nz  = ai[i + 1] - ai[i];
@@ -204,7 +204,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
     s4  = t[3 + idt];
     s5  = t[4 + idt];
     s6  = t[5 + idt];
-    for (j = 0; j < nz; j++) {
+    for (PetscInt j = 0; j < nz; j++) {
       idx = bs * vi[j];
       t[idx] -= v[0] * s1 + v[1] * s2 + v[2] * s3 + v[3] * s4 + v[4] * s5 + v[5] * s6;
       t[idx + 1] -= v[6] * s1 + v[7] * s2 + v[8] * s3 + v[9] * s4 + v[10] * s5 + v[11] * s6;
@@ -217,7 +217,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_6(Mat A, Vec bb, Vec xx)
   }
 
   /* copy t into x according to permutation */
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     ii        = bs * i;
     ir        = bs * r[i];
     x[ir]     = t[ii];

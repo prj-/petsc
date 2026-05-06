@@ -569,7 +569,7 @@ PetscErrorCode DestroyBoundaryConditions(PetscCtxRt Ctx)
 */
 PetscErrorCode ComputeInitialGuess(SNES snes, Vec X, void *unused)
 {
-  PetscInt      i, j, mx, my;
+  PetscInt mx, my;
   DM            da;
   AppCtx       *ctx;
   PetscScalar **x;
@@ -585,8 +585,8 @@ PetscErrorCode ComputeInitialGuess(SNES snes, Vec X, void *unused)
   /* Get pointers to vector data */
   PetscCall(DMDAVecGetArray(da, X, &x));
   /* Perform local computations */
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) x[j][i] = (((j + 1.0) * ctx->bottom[i + 1] + (my - j + 1.0) * ctx->top[i + 1]) / (my + 2.0) + ((i + 1.0) * ctx->left[j + 1] + (mx - i + 1.0) * ctx->right[j + 1]) / (mx + 2.0)) / 2.0;
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) x[j][i] = (((j + 1.0) * ctx->bottom[i + 1] + (my - j + 1.0) * ctx->top[i + 1]) / (my + 2.0) + ((i + 1.0) * ctx->left[j + 1] + (mx - i + 1.0) * ctx->right[j + 1]) / (mx + 2.0)) / 2.0;
   }
   /* Restore vectors */
   PetscCall(DMDAVecRestoreArray(da, X, &x));

@@ -27,7 +27,7 @@ static PetscErrorCode KSPSetUp_LCD(KSP ksp)
 */
 static PetscErrorCode KSPSolve_LCD(KSP ksp)
 {
-  PetscInt    it, j, max_k;
+  PetscInt it, max_k;
   PetscScalar alfa, beta, num, den, mone;
   PetscReal   rnorm = 0.0;
   Vec         X, B, R, Z;
@@ -101,7 +101,7 @@ static PetscErrorCode KSPSolve_LCD(KSP ksp)
       PetscCall(KSP_MatMult(ksp, Amat, lcd->P[it + 1], Z));
       PetscCall(KSP_PCApply(ksp, Z, lcd->Q[it + 1]));
 
-      for (j = 0; j <= it; j++) {
+      for (PetscInt j = 0; j <= it; j++) {
         PetscCall(VecDot(lcd->P[j], lcd->Q[it + 1], &num));
         KSPCheckDot(ksp, num);
         PetscCall(VecDot(lcd->P[j], lcd->Q[j], &den));

@@ -458,7 +458,7 @@ static PetscErrorCode FormFunctionMatlab(SNES snes, Vec X, Vec F, void *ptr)
  */
 static PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
 {
-  PetscInt      i, j, k, Mx, My, xs, ys, xm, ym, its, tot_its, sweeps, l;
+  PetscInt Mx, My, xs, ys, xm, ym, its, tot_its, sweeps;
   PetscReal     lambda, hx, hy, hxdhy, hydhx, sc;
   PetscScalar **x, **b, bij, F, F0 = 0, J, u, un, us, ue, eu, uw, uxx, uyy, y;
   PetscReal     atol, rtol, stol;
@@ -484,7 +484,7 @@ static PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
 
   PetscCall(DMGetLocalVector(da, &localX));
   if (B) PetscCall(DMGetLocalVector(da, &localB));
-  for (l = 0; l < sweeps; l++) {
+  for (PetscInt l = 0; l < sweeps; l++) {
     PetscCall(DMGlobalToLocalBegin(da, X, INSERT_VALUES, localX));
     PetscCall(DMGlobalToLocalEnd(da, X, INSERT_VALUES, localX));
     if (B) {
@@ -507,8 +507,8 @@ static PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
      */
     PetscCall(DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL));
 
-    for (j = ys; j < ys + ym; j++) {
-      for (i = xs; i < xs + xm; i++) {
+    for (PetscInt j = ys; j < ys + ym; j++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
         if (i == 0 || j == 0 || i == Mx - 1 || j == My - 1) {
           /* boundary conditions are all zero Dirichlet */
           x[j][i] = 0.0;
@@ -522,7 +522,7 @@ static PetscErrorCode NonlinearGS(SNES snes, Vec X, Vec B, PetscCtx ctx)
           ue = x[j][i - 1];
           uw = x[j][i + 1];
 
-          for (k = 0; k < its; k++) {
+          for (PetscInt k = 0; k < its; k++) {
             eu  = PetscExpScalar(u);
             uxx = (2.0 * u - ue - uw) * hydhx;
             uyy = (2.0 * u - un - us) * hxdhy;

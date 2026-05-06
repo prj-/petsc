@@ -453,7 +453,7 @@ static PetscErrorCode PetscRegressorFit_Linear(PetscRegressor regressor)
   KSP                    ksp;
   PetscScalar            target_mean, *column_means_global, *column_means_local, column_means_dot_coefficients;
   Vec                    column_means;
-  PetscInt               m, N, istart, i, kspits;
+  PetscInt m, N, istart, kspits;
 
   PetscFunctionBegin;
   if (linear->use_ksp) PetscCall(PetscRegressorLinearGetKSP(regressor, &linear->ksp));
@@ -487,7 +487,7 @@ static PetscErrorCode PetscRegressorFit_Linear(PetscRegressor regressor)
     PetscCall(VecGetLocalSize(column_means, &m));
     PetscCall(VecGetOwnershipRange(column_means, &istart, NULL));
     PetscCall(VecGetArrayWrite(column_means, &column_means_local));
-    for (i = 0; i < m; i++) column_means_local[i] = column_means_global[istart + i];
+    for (PetscInt i = 0; i < m; i++) column_means_local[i] = column_means_global[istart + i];
     PetscCall(VecRestoreArrayWrite(column_means, &column_means_local));
     PetscCall(VecDot(column_means, linear->coefficients, &column_means_dot_coefficients));
     PetscCall(VecDestroy(&column_means));

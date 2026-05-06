@@ -330,7 +330,7 @@ static PetscErrorCode SNESSolve_NEWTONTRDC(SNES snes)
   Vec                         X, F, Y, G, W, GradF, YNtmp;
   Vec                         YCtmp;
   Mat                         jac;
-  PetscInt                    maxits, i, j, lits, inner_count, bs;
+  PetscInt maxits, i, lits, inner_count, bs;
   PetscReal                   rho, fnorm, gnorm, xnorm = 0, delta, ynorm, temp_xnorm, temp_ynorm; /* TRDC inner iteration */
   PetscReal                   inorms[99];                                                         /* need to make it dynamic eventually, fixed max block size of 99 for now */
   PetscReal                   deltaM, ynnorm, f0, mp, gTy, g, yTHy;                               /* rho calculation */
@@ -414,7 +414,7 @@ static PetscErrorCode SNESSolve_NEWTONTRDC(SNES snes)
     */
     if (bs > 1 && neP->auto_scale_multiphase) {
       PetscCall(VecStrideNormAll(YNtmp, NORM_INFINITY, inorms));
-      for (j = 0; j < bs; j++) {
+      for (PetscInt j = 0; j < bs; j++) {
         if (neP->auto_scale_max > 1.0) {
           if (inorms[j] < 1.0 / neP->auto_scale_max) inorms[j] = 1.0 / neP->auto_scale_max;
         }
@@ -489,7 +489,7 @@ static PetscErrorCode SNESSolve_NEWTONTRDC(SNES snes)
 
       /* scale back solution update */
       if (bs > 1 && neP->auto_scale_multiphase) {
-        for (j = 0; j < bs; j++) {
+        for (PetscInt j = 0; j < bs; j++) {
           PetscCall(VecStrideScale(Y, j, inorms[j]));
           if (inner_count == 0) {
             /* TRDC inner algorithm does not need scaled X after calculating delta in the outer iteration */

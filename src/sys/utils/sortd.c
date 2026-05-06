@@ -162,7 +162,7 @@ static PetscErrorCode PetscSortRealWithArrayInt_Private(PetscReal *v, PetscInt *
 @*/
 PetscErrorCode PetscSortRealWithArrayInt(PetscCount n, PetscReal r[], PetscInt Ii[])
 {
-  PetscCount j, k;
+  PetscCount j;
   PetscInt   itmp;
   PetscReal  rk, rtmp;
 
@@ -170,7 +170,7 @@ PetscErrorCode PetscSortRealWithArrayInt(PetscCount n, PetscReal r[], PetscInt I
   PetscAssertPointer(r, 2);
   PetscAssertPointer(Ii, 3);
   if (n < 8) {
-    for (k = 0; k < n; k++) {
+    for (PetscCount k = 0; k < n; k++) {
       rk = r[k];
       for (j = k + 1; j < n; j++) {
         if (rk > r[j]) {
@@ -343,7 +343,7 @@ PetscErrorCode PetscSortSplit(PetscInt ncut, PetscInt n, PetscScalar a[], PetscI
 @*/
 PetscErrorCode PetscSortSplitReal(PetscInt ncut, PetscInt n, PetscReal a[], PetscInt idx[])
 {
-  PetscInt  i, mid, last, itmp, j, first;
+  PetscInt i, mid, last, itmp, first;
   PetscReal d, tmp;
   PetscReal abskey;
 
@@ -357,7 +357,7 @@ PetscErrorCode PetscSortSplitReal(PetscInt ncut, PetscInt n, PetscReal a[], Pets
     d      = a[mid];
     abskey = PetscAbsReal(d);
     i      = last;
-    for (j = first + 1; j <= i; ++j) {
+    for (PetscInt j = first + 1; j <= i; ++j) {
       d = a[j];
       if (PetscAbsReal(d) >= abskey) {
         ++mid;

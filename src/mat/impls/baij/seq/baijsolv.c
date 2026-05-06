@@ -1143,7 +1143,7 @@ PetscErrorCode MatSolve_SeqBAIJ_2(Mat A, Vec bb, Vec xx)
   Mat_SeqBAIJ       *a     = (Mat_SeqBAIJ *)A->data;
   IS                 iscol = a->col, isrow = a->row;
   const PetscInt     n = a->mbs, *vi, *ai = a->i, *aj = a->j, *adiag = a->diag;
-  PetscInt           i, nz, idx, jdx, idt, idc, m;
+  PetscInt i, nz, idx, jdx, idt, idc;
   const PetscInt    *r, *c, *rout, *cout;
   const MatScalar   *aa = a->a, *v;
   PetscScalar       *x, s1, s2, x1, x2, *t;
@@ -1170,7 +1170,7 @@ PetscErrorCode MatSolve_SeqBAIJ_2(Mat A, Vec bb, Vec xx)
     idx = 2 * r[i];
     s1  = b[idx];
     s2  = b[1 + idx];
-    for (m = 0; m < nz; m++) {
+    for (PetscInt m = 0; m < nz; m++) {
       jdx = 2 * vi[m];
       x1  = t[jdx];
       x2  = t[1 + jdx];
@@ -1190,7 +1190,7 @@ PetscErrorCode MatSolve_SeqBAIJ_2(Mat A, Vec bb, Vec xx)
     idt = 2 * i;
     s1  = t[idt];
     s2  = t[1 + idt];
-    for (m = 0; m < nz; m++) {
+    for (PetscInt m = 0; m < nz; m++) {
       idx = 2 * vi[m];
       x1  = t[idx];
       x2  = t[1 + idx];

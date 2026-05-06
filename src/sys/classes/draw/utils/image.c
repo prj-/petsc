@@ -176,7 +176,7 @@ static PetscErrorCode PetscDrawImageSave_GIF(const char filename[], unsigned cha
 
 PETSC_EXTERN PetscErrorCode PetscDrawMovieSaveGIF(const char pattern[], PetscInt count, const char movie[])
 {
-  int          i, j, Row;
+  int i;
   char         image[PETSC_MAX_PATH_LEN];
   GifFileType *GifMovie = NULL;
   GifFileType *GifImage = NULL;
@@ -198,14 +198,14 @@ PETSC_EXTERN PetscErrorCode PetscDrawMovieSaveGIF(const char pattern[], PetscInt
       if (EGifPutScreenDesc(GifMovie, GifImage->SWidth, GifImage->SHeight, GifImage->SColorResolution, GifImage->SBackGroundColor, GifImage->SColorMap) != GIF_OK) SETERRGIF("Writing screen descriptor,", movie);
     }
     /* loop over all frames in image */
-    for (j = 0; j < GifImage->ImageCount; j++) {
+    for (int j = 0; j < GifImage->ImageCount; j++) {
       SavedImage     *sp            = &GifImage->SavedImages[j];
       GifImageDesc   *GifFrame      = &sp->ImageDesc;
       ColorMapObject *FrameColorMap = GifFrame->ColorMap ? GifFrame->ColorMap : GifImage->SColorMap;
       if (GifMovie->SColorMap && GifMovie->SColorMap->ColorCount == FrameColorMap->ColorCount && !memcmp(GifMovie->SColorMap->Colors, FrameColorMap->Colors, (size_t)FrameColorMap->ColorCount * sizeof(GifColorType))) FrameColorMap = NULL;
       /* add frame to movie */
       if (EGifPutImageDesc(GifMovie, GifFrame->Left, GifFrame->Top, GifFrame->Width, GifFrame->Height, GifFrame->Interlace, FrameColorMap) != GIF_OK) SETERRGIF("Writing image descriptor,", movie);
-      for (Row = 0; Row < GifFrame->Height; Row++) {
+      for (int Row = 0; Row < GifFrame->Height; Row++) {
         if (EGifPutLine(GifMovie, sp->RasterBits + Row * GifFrame->Width, GifFrame->Width) != GIF_OK) SETERRGIF("Writing image pixels,", movie);
       }
     }
@@ -340,7 +340,6 @@ PetscErrorCode PetscDrawImageCheckFormat(const char *ext[])
 
 PetscErrorCode PetscDrawImageSave(const char basename[], const char ext[], unsigned char palette[][3], unsigned int w, unsigned int h, const unsigned char pixels[])
 {
-  size_t    k;
   PetscBool match = PETSC_FALSE;
   char      filename[PETSC_MAX_PATH_LEN];
 
@@ -352,7 +351,7 @@ PetscErrorCode PetscDrawImageSave(const char basename[], const char ext[], unsig
 
   PetscCall(PetscDrawImageCheckFormat(&ext));
   PetscCall(PetscSNPrintf(filename, sizeof(filename), "%s%s", basename, ext));
-  for (k = 0; k < PETSC_STATIC_ARRAY_LENGTH(PetscDrawImageSaveTable); k++) {
+  for (size_t k = 0; k < PETSC_STATIC_ARRAY_LENGTH(PetscDrawImageSaveTable); k++) {
     PetscCall(PetscStrcasecmp(ext, PetscDrawImageSaveTable[k].extension, &match));
     if (match && PetscDrawImageSaveTable[k].SaveImage) {
       PetscCall(PetscDrawImageSaveTable[k].SaveImage(filename, palette, w, h, pixels));

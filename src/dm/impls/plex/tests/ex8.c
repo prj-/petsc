@@ -108,7 +108,7 @@ static PetscErrorCode ChangeCoordinates(DM dm, PetscInt spaceDim, PetscScalar ve
   PetscSection coordSection;
   Vec          coordinates;
   PetscScalar *coords;
-  PetscInt     vStart, vEnd, v, d, coordSize;
+  PetscInt vStart, vEnd, d, coordSize;
 
   PetscFunctionBegin;
   PetscCall(DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd));
@@ -116,7 +116,7 @@ static PetscErrorCode ChangeCoordinates(DM dm, PetscInt spaceDim, PetscScalar ve
   PetscCall(PetscSectionSetNumFields(coordSection, 1));
   PetscCall(PetscSectionSetFieldComponents(coordSection, 0, spaceDim));
   PetscCall(PetscSectionSetChart(coordSection, vStart, vEnd));
-  for (v = vStart; v < vEnd; ++v) {
+  for (PetscInt v = vStart; v < vEnd; ++v) {
     PetscCall(PetscSectionSetDof(coordSection, v, spaceDim));
     PetscCall(PetscSectionSetFieldDof(coordSection, v, 0, spaceDim));
   }
@@ -127,7 +127,7 @@ static PetscErrorCode ChangeCoordinates(DM dm, PetscInt spaceDim, PetscScalar ve
   PetscCall(VecSetSizes(coordinates, coordSize, PETSC_DETERMINE));
   PetscCall(VecSetFromOptions(coordinates));
   PetscCall(VecGetArray(coordinates, &coords));
-  for (v = vStart; v < vEnd; ++v) {
+  for (PetscInt v = vStart; v < vEnd; ++v) {
     PetscInt off;
 
     PetscCall(PetscSectionGetOffset(coordSection, v, &off));
@@ -146,7 +146,7 @@ static PetscErrorCode ChangeCoordinates(DM dm, PetscInt spaceDim, PetscScalar ve
 static PetscErrorCode CheckFEMGeometry(DM dm, PetscInt cell, PetscInt spaceDim, PetscReal v0Ex[], PetscReal JEx[], PetscReal invJEx[], PetscReal detJEx)
 {
   PetscReal v0[3], J[9], invJ[9], detJ;
-  PetscInt  d, i, j;
+  PetscInt d;
 
   PetscFunctionBegin;
   PetscCall(DMPlexComputeCellGeometryFEM(dm, cell, NULL, v0, J, invJ, &detJ));
@@ -162,8 +162,8 @@ static PetscErrorCode CheckFEMGeometry(DM dm, PetscInt cell, PetscInt spaceDim, 
       }
     }
   }
-  for (i = 0; i < spaceDim; ++i) {
-    for (j = 0; j < spaceDim; ++j) {
+  for (PetscInt i = 0; i < spaceDim; ++i) {
+    for (PetscInt j = 0; j < spaceDim; ++j) {
       PetscCheck(RelativeError(J[i * spaceDim + j], JEx[i * spaceDim + j]) < 10 * PETSC_SMALL, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Invalid J[%" PetscInt_FMT ",%" PetscInt_FMT "]: %g != %g", i, j, (double)J[i * spaceDim + j], (double)JEx[i * spaceDim + j]);
       PetscCheck(RelativeError(invJ[i * spaceDim + j], invJEx[i * spaceDim + j]) < 10 * PETSC_SMALL, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Invalid invJ[%" PetscInt_FMT ",%" PetscInt_FMT "]: %g != %g", i, j, (double)invJ[i * spaceDim + j], (double)invJEx[i * spaceDim + j]);
     }
@@ -244,7 +244,7 @@ static PetscErrorCode CheckCell(DM dm, PetscInt cell, PetscBool transform, Petsc
     PetscReal   *v0ExT, *JExT, *invJExT, detJExT = 0, *centroidExT, *normalExT, volExT = 0;
     PetscReal   *faceCentroidExT, *faceNormalExT, faceVolExT;
     PetscRandom  r, ang, ang2;
-    PetscInt     coordSize, numCorners, t;
+    PetscInt coordSize, numCorners;
 
     PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
     PetscCall(DMGetCoordinateSection(dm, &coordSection));
@@ -265,11 +265,11 @@ static PetscErrorCode CheckCell(DM dm, PetscInt cell, PetscBool transform, Petsc
     PetscCall(PetscRandomCreate(PETSC_COMM_SELF, &ang2));
     PetscCall(PetscRandomSetFromOptions(ang2));
     PetscCall(PetscRandomSetInterval(ang2, 0.0, PETSC_PI));
-    for (t = 0; t < 1; ++t) {
+    for (PetscInt t = 0; t < 1; ++t) {
       PetscScalar trans[3];
       PetscReal   R[9], rot[3], rotM[9];
       PetscReal   scale, phi, theta, psi = 0.0, norm;
-      PetscInt    d, e, f, p;
+      PetscInt d, e, f;
 
       for (PetscInt c = 0; c < coordSize; ++c) newCoords[c] = origCoords[c];
       PetscCall(PetscRandomGetValueReal(r, &scale));
@@ -370,12 +370,12 @@ static PetscErrorCode CheckCell(DM dm, PetscInt cell, PetscBool transform, Petsc
           for (d = 0; d < cdim; ++d) normalExT[d] /= norm;
       }
       for (d = 0; d < cdim; ++d) {
-        for (p = 0; p < numCorners; ++p) {
+        for (PetscInt p = 0; p < numCorners; ++p) {
           newCoords[p * cdim + d] *= scale;
           newCoords[p * cdim + d] += trans[d];
         }
       }
-      for (p = 0; p < numCorners; ++p) {
+      for (PetscInt p = 0; p < numCorners; ++p) {
         for (d = 0; d < cdim; ++d) {
           for (e = 0, rot[d] = 0.0; e < cdim; ++e) rot[d] += R[d * cdim + e] * PetscRealPart(newCoords[p * cdim + e]);
         }
@@ -650,7 +650,7 @@ int main(int argc, char **argv)
     DM                 gdm, dmCell;
     Vec                cellgeom, facegeom;
     const PetscScalar *cgeom;
-    PetscInt           dim, d, cStart, cEnd, cEndInterior, c;
+    PetscInt dim, cStart, cEnd, cEndInterior;
 
     PetscCall(DMGetCoordinateDim(user.dm, &dim));
     PetscCall(DMPlexConstructGhostCells(user.dm, NULL, NULL, &gdm));
@@ -664,12 +664,12 @@ int main(int argc, char **argv)
     if (cEndInterior >= 0) cEnd = cEndInterior;
     PetscCall(VecGetDM(cellgeom, &dmCell));
     PetscCall(VecGetArrayRead(cellgeom, &cgeom));
-    for (c = 0; c < cEnd - cStart; ++c) {
+    for (PetscInt c = 0; c < cEnd - cStart; ++c) {
       PetscFVCellGeom *cg;
 
       PetscCall(DMPlexPointLocalRead(dmCell, c, cgeom, &cg));
       PetscCall(PetscPrintf(PETSC_COMM_SELF, "Cell %4" PetscInt_FMT ": Centroid (", c));
-      for (d = 0; d < dim; ++d) {
+      for (PetscInt d = 0; d < dim; ++d) {
         if (d > 0) PetscCall(PetscPrintf(PETSC_COMM_SELF, ", "));
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "%12.2g", (double)cg->centroid[d]));
       }

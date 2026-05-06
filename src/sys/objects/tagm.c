@@ -363,7 +363,7 @@ PetscErrorCode PetscCommDestroy(MPI_Comm *comm)
 @*/
 PetscErrorCode PetscObjectsListGetGlobalNumbering(MPI_Comm comm, PetscInt len, PetscObject objlist[], PetscInt *count, PetscInt *numbering)
 {
-  PetscInt    i, roots, offset;
+  PetscInt roots, offset;
   PetscMPIInt size, rank;
 
   PetscFunctionBegin;
@@ -373,7 +373,7 @@ PetscErrorCode PetscObjectsListGetGlobalNumbering(MPI_Comm comm, PetscInt len, P
   PetscCallMPI(MPI_Comm_size(comm, &size));
   PetscCallMPI(MPI_Comm_rank(comm, &rank));
   roots = 0;
-  for (i = 0; i < len; ++i) {
+  for (PetscInt i = 0; i < len; ++i) {
     PetscMPIInt srank;
     PetscCallMPI(MPI_Comm_rank(objlist[i]->comm, &srank));
     /* Am I the root of the i-th subcomm? */
@@ -398,7 +398,7 @@ PetscErrorCode PetscObjectsListGetGlobalNumbering(MPI_Comm comm, PetscInt len, P
       broadcast is collective on the subcomm.
     */
     roots = 0;
-    for (i = 0; i < len; ++i) {
+    for (PetscInt i = 0; i < len; ++i) {
       PetscMPIInt srank;
       numbering[i] = offset + roots; /* only meaningful if !srank. */
 

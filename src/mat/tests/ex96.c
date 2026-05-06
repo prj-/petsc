@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   AppCtx          user;
   PetscInt        Npx = PETSC_DECIDE, Npy = PETSC_DECIDE, Npz = PETSC_DECIDE;
   PetscMPIInt     size, rank;
-  PetscInt        m, n, M, N, i, nrows;
+  PetscInt m, n, M, N, nrows;
   PetscScalar     one  = 1.0;
   PetscReal       fill = 2.0;
   Mat             A, A_tmp, P, C, C1, C2;
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     PetscCall(MatGetRowIJ(A, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     if (flg) {
       PetscCall(MatSeqAIJGetArray(A, &array));
-      for (i = 0; i < ia[nrows]; i++) array[i] = one;
+      for (PetscInt i = 0; i < ia[nrows]; i++) array[i] = one;
       PetscCall(MatSeqAIJRestoreArray(A, &array));
     }
     PetscCall(MatRestoreRowIJ(A, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
@@ -119,14 +119,14 @@ int main(int argc, char **argv)
     PetscCall(MatGetRowIJ(AA, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     if (flg) {
       PetscCall(MatSeqAIJGetArray(AA, &array));
-      for (i = 0; i < ia[nrows]; i++) array[i] = one;
+      for (PetscInt i = 0; i < ia[nrows]; i++) array[i] = one;
       PetscCall(MatSeqAIJRestoreArray(AA, &array));
     }
     PetscCall(MatRestoreRowIJ(AA, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     PetscCall(MatGetRowIJ(AB, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     if (flg) {
       PetscCall(MatSeqAIJGetArray(AB, &array));
-      for (i = 0; i < ia[nrows]; i++) array[i] = one;
+      for (PetscInt i = 0; i < ia[nrows]; i++) array[i] = one;
       PetscCall(MatSeqAIJRestoreArray(AB, &array));
     }
     PetscCall(MatRestoreRowIJ(AB, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 
     /* Test MAT_REUSE_MATRIX - reuse symbolic C */
     alpha = 1.0;
-    for (i = 0; i < 2; i++) {
+    for (PetscInt i = 0; i < 2; i++) {
       alpha -= 0.1;
       PetscCall(MatScale(A_tmp, alpha));
       PetscCall(MatMatMult(A_tmp, P, MAT_REUSE_MATRIX, fill, &C));
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
     PetscCall(VecSetFromOptions(x));
 
     norm = 0.0;
-    for (i = 0; i < 10; i++) {
+    for (PetscInt i = 0; i < 10; i++) {
       PetscCall(VecSetRandom(x, rdm));
       PetscCall(MatMult(P, x, v1));
       PetscCall(MatMult(A_tmp, v1, v2)); /* v2 = A*P*x */
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 
     /* Test MAT_REUSE_MATRIX - reuse symbolic C */
     alpha = 1.0;
-    for (i = 0; i < 1; i++) {
+    for (PetscInt i = 0; i < 1; i++) {
       alpha -= 0.1;
       PetscCall(MatScale(A, alpha));
       PetscCall(MatPtAP(A, P, MAT_REUSE_MATRIX, fill, &C));
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
     PetscCall(VecDuplicate(v3, &v4));
 
     norm = 0.0;
-    for (i = 0; i < 10; i++) {
+    for (PetscInt i = 0; i < 10; i++) {
       PetscCall(VecSetRandom(x, rdm));
       PetscCall(MatMult(P, x, v1));
       PetscCall(MatMult(A, v1, v2)); /* v2 = A*P*x */

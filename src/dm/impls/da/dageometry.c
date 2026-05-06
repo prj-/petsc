@@ -267,7 +267,7 @@ PetscErrorCode DMLocatePoints_DA_Regular(DM dm, Vec pos, DMPointLocationType lty
 {
   IS              iscell;
   PetscSFNode    *cells;
-  PetscInt        p, bs, dim, npoints, nfound;
+  PetscInt bs, dim, npoints, nfound;
   const PetscInt *boxCells;
 
   PetscFunctionBegin;
@@ -292,7 +292,7 @@ PetscErrorCode DMLocatePoints_DA_Regular(DM dm, Vec pos, DMPointLocationType lty
   PetscCall(PetscMalloc1(npoints, &cells));
   PetscCall(ISGetIndices(iscell, &boxCells));
 
-  for (p = 0; p < npoints; p++) {
+  for (PetscInt p = 0; p < npoints; p++) {
     cells[p].rank  = 0;
     cells[p].index = boxCells[p];
   }

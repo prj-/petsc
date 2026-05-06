@@ -283,14 +283,13 @@ static PetscErrorCode Form2DElementMass(PetscInt P, PetscScalar *Me1D, PetscScal
 /* element stiffness for Laplacian */
 static PetscErrorCode Form2DElementStiffness(PetscInt P, PetscScalar *Ke1D, PetscScalar *Me1D, PetscScalar *Ke2D)
 {
-  PetscInt i1, j1, i2, j2;
   PetscInt indx1, indx2, indx3;
 
   PetscFunctionBeginUser;
-  for (j2 = 0; j2 < (P + 1); ++j2) {
-    for (i2 = 0; i2 < (P + 1); ++i2) {
-      for (j1 = 0; j1 < (P + 1); ++j1) {
-        for (i1 = 0; i1 < (P + 1); ++i1) {
+  for (PetscInt j2 = 0; j2 < (P + 1); ++j2) {
+    for (PetscInt i2 = 0; i2 < (P + 1); ++i2) {
+      for (PetscInt j1 = 0; j1 < (P + 1); ++j1) {
+        for (PetscInt i1 = 0; i1 < (P + 1); ++i1) {
           indx1       = j1 * (P + 1) + i1;
           indx2       = j2 * (P + 1) + i2;
           indx3       = (j2 * (P + 1) + j1) * (P + 1) * (P + 1) + (i2 * (P + 1) + i1);

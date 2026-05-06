@@ -831,7 +831,7 @@ PetscErrorCode TSRosWRegister(TSRosWType name, PetscInt order, PetscInt s, const
 {
   RosWTableauLink link;
   RosWTableau     t;
-  PetscInt        i, j, k;
+  PetscInt i, j;
   PetscScalar    *GammaInv;
 
   PetscFunctionBegin;
@@ -908,7 +908,7 @@ PetscErrorCode TSRosWRegister(TSRosWType name, PetscInt order, PetscInt s, const
   PetscCall(PetscFree(GammaInv));
 
   for (i = 0; i < s; i++) {
-    for (k = 0; k < i + 1; k++) {
+    for (PetscInt k = 0; k < i + 1; k++) {
       t->GammaExplicitCorr[i * s + k] = (t->GammaExplicitCorr[i * s + k]) * (t->GammaInv[k * s + k]);
       for (j = k + 1; j < i + 1; j++) t->GammaExplicitCorr[i * s + k] += (t->GammaExplicitCorr[i * s + j]) * (t->GammaInv[j * s + k]);
     }
@@ -917,7 +917,7 @@ PetscErrorCode TSRosWRegister(TSRosWType name, PetscInt order, PetscInt s, const
   for (i = 0; i < s; i++) {
     for (j = 0; j < s; j++) {
       t->At[i * s + j] = 0;
-      for (k = 0; k < s; k++) t->At[i * s + j] += t->A[i * s + k] * t->GammaInv[k * s + j];
+      for (PetscInt k = 0; k < s; k++) t->At[i * s + j] += t->A[i * s + k] * t->GammaInv[k * s + j];
     }
     t->bt[i] = 0;
     for (j = 0; j < s; j++) t->bt[i] += t->b[j] * t->GammaInv[j * s + i];

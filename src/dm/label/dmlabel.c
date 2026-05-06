@@ -1776,7 +1776,7 @@ PetscErrorCode DMLabelFilter(DMLabel label, PetscInt start, PetscInt end)
 PetscErrorCode DMLabelPermute(DMLabel label, IS permutation, DMLabel *labelNew)
 {
   const PetscInt *perm;
-  PetscInt        numValues, numPoints, v, q;
+  PetscInt numValues, numPoints, v;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(label, DMLABEL_CLASSID, 1);
@@ -1794,7 +1794,7 @@ PetscErrorCode DMLabelPermute(DMLabel label, IS permutation, DMLabel *labelNew)
 
     PetscCall(ISGetIndices((*labelNew)->points[v], &points));
     PetscCall(PetscCalloc1(size, &pointsNew));
-    for (q = 0; q < size; ++q) {
+    for (PetscInt q = 0; q < size; ++q) {
       const PetscInt point = points[q];
 
       PetscCheck(!(point < 0) && !(point >= numPoints), PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Label point %" PetscInt_FMT " is not in [0, %" PetscInt_FMT ") for the remapping", point, numPoints);
@@ -2095,7 +2095,7 @@ PetscErrorCode DMLabelGather(DMLabel label, PetscSF sf, DMLabel *labelNew)
   PetscSection    rootSection;
   PetscSF         sfLabel;
   PetscSFNode    *rootPoints, *leafPoints;
-  PetscInt        p, s, d, nroots, nleaves, nmultiroots, idx, dof, offset;
+  PetscInt p, s, nroots, nleaves, nmultiroots, idx, dof, offset;
   const PetscInt *rootDegree, *ilocal;
   PetscInt       *rootStrata;
   const char     *lname;
@@ -2147,7 +2147,7 @@ PetscErrorCode DMLabelGather(DMLabel label, PetscSF sf, DMLabel *labelNew)
   PetscCall(DMLabelDistribute_Internal(label, sfLabel, &rootSection, &rootStrata));
   /* Rebuild the point strata on the receiver */
   for (p = 0, idx = 0; p < nroots; p++) {
-    for (d = 0; d < rootDegree[p]; d++) {
+    for (PetscInt d = 0; d < rootDegree[p]; d++) {
       PetscCall(PetscSectionGetDof(rootSection, idx + d, &dof));
       PetscCall(PetscSectionGetOffset(rootSection, idx + d, &offset));
       for (s = 0; s < dof; s++) PetscCall(DMLabelSetValue(*labelNew, p, rootStrata[offset + s]));
@@ -2191,13 +2191,13 @@ static PetscErrorCode DMLabelPropagateFini_Internal(DMLabel label, PetscSF point
 {
   const PetscInt *degree;
   const PetscInt *points;
-  PetscInt        Nr, r, Nl, l, val, defVal;
+  PetscInt Nr, r, Nl, val, defVal;
 
   PetscFunctionBegin;
   PetscCall(DMLabelGetDefaultValue(label, &defVal));
   /* Read out leaves */
   PetscCall(PetscSFGetGraph(pointSF, &Nr, &Nl, &points, NULL));
-  for (l = 0; l < Nl; ++l) {
+  for (PetscInt l = 0; l < Nl; ++l) {
     const PetscInt p    = points[l];
     const PetscInt cval = valArray[p];
 
@@ -2946,7 +2946,7 @@ PetscErrorCode PetscSectionSymLabelSetStratum(PetscSectionSym sym, PetscInt stra
 
 static PetscErrorCode PetscSectionSymGetPoints_Label(PetscSectionSym sym, PetscSection section, PetscInt numPoints, const PetscInt *points, const PetscInt **perms, const PetscScalar **rots)
 {
-  PetscInt               i, j, numStrata;
+  PetscInt j, numStrata;
   PetscSectionSym_Label *sl;
   DMLabel                label;
 
@@ -2954,7 +2954,7 @@ static PetscErrorCode PetscSectionSymGetPoints_Label(PetscSectionSym sym, PetscS
   sl        = (PetscSectionSym_Label *)sym->data;
   numStrata = sl->numStrata;
   label     = sl->label;
-  for (i = 0; i < numPoints; i++) {
+  for (PetscInt i = 0; i < numPoints; i++) {
     PetscInt point = points[2 * i];
     PetscInt ornt  = points[2 * i + 1];
 

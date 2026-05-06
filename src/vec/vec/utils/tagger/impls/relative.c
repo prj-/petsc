@@ -4,7 +4,7 @@
 static PetscErrorCode VecTaggerComputeBoxes_Relative(VecTagger tagger, Vec vec, PetscInt *numBoxes, VecTaggerBox **boxes, PetscBool *listed)
 {
   VecTagger_Simple  *smpl = (VecTagger_Simple *)tagger->data;
-  PetscInt           bs, i, j, k, n;
+  PetscInt bs, i, k, n;
   VecTaggerBox      *bxs;
   const PetscScalar *vArray;
 
@@ -25,7 +25,7 @@ static PetscErrorCode VecTaggerComputeBoxes_Relative(VecTagger tagger, Vec vec, 
   }
   PetscCall(VecGetArrayRead(vec, &vArray));
   for (i = 0, k = 0; i < n; i++) {
-    for (j = 0; j < bs; j++, k++) {
+    for (PetscInt j = 0; j < bs; j++, k++) {
 #if !defined(PETSC_USE_COMPLEX)
       bxs[j].min = PetscMin(bxs[j].min, vArray[k]);
       bxs[j].max = PetscMax(bxs[j].max, vArray[k]);

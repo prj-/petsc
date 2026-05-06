@@ -495,7 +495,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
   if (user->rand) {
     PetscRandom r;
     PetscReal   val;
-    PetscInt    dim, N, i;
+    PetscInt dim, N;
 
     PetscCall(DMGetDimension(*dm, &dim));
     N = PetscPowInt(user->div, dim);
@@ -505,7 +505,7 @@ static PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     PetscCall(PetscRandomSetInterval(r, 0.0, user->k));
     PetscCall(PetscRandomSetSeed(r, 1973));
     PetscCall(PetscRandomSeed(r));
-    for (i = 0; i < N; ++i) {
+    for (PetscInt i = 0; i < N; ++i) {
       PetscCall(PetscRandomGetValueReal(r, &val));
       user->kgrid[i] = 1 + (PetscInt)val;
     }

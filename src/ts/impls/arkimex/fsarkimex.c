@@ -222,7 +222,7 @@ static PetscErrorCode TSStep_ARKIMEX_FastSlowSplit(TS ts)
   PetscBool        extrapolate = ark->extrapolate;
   TSAdapt          adapt;
   SNES             snes;
-  PetscInt         i, j, its, lits;
+  PetscInt its, lits;
   PetscInt         rejections = 0;
   PetscBool        fasthasE = PETSC_FALSE, stageok, accept = PETSC_TRUE;
   PetscReal        next_time_step = ts->time_step;
@@ -244,7 +244,7 @@ static PetscErrorCode TSStep_ARKIMEX_FastSlowSplit(TS ts)
       PetscCall(VecCopy(YdotI_fast[s - 1], Ydot0_fast));
     }
     if (ark->extrapolate && !ts->steprestart) { /* Save the Y, YdotI, YdotRHS for extrapolation initial guess */
-      for (i = 0; i < s; i++) {
+      for (PetscInt i = 0; i < s; i++) {
         PetscCall(VecISCopy(Y[i], ark->is_fast, SCATTER_REVERSE, ark->Y_prev[i]));
         PetscCall(VecCopy(YdotI_fast[i], ark->YdotI_prev[i]));
         if (fasthasE) PetscCall(VecCopy(YdotRHS_fast[i], ark->YdotRHS_prev[i]));
@@ -289,7 +289,7 @@ static PetscErrorCode TSStep_ARKIMEX_FastSlowSplit(TS ts)
   while (!ts->reason && ark->status != TS_STEP_COMPLETE) {
     PetscReal t = ts->ptime;
     PetscReal h = ts->time_step;
-    for (i = 0; i < s; i++) {
+    for (PetscInt i = 0; i < s; i++) {
       ark->stage_time = t + h * ct[i];
       PetscCall(TSPreStage(ts, ark->stage_time));
       PetscCall(VecCopy(ts->vec_sol, Y[i]));
@@ -298,10 +298,10 @@ static PetscErrorCode TSStep_ARKIMEX_FastSlowSplit(TS ts)
         if (At[i * s + i] == 0) { /* This stage is explicit */
           PetscCheck(i == 0 || ts->equation_type < TS_EQ_IMPLICIT, PetscObjectComm((PetscObject)ts), PETSC_ERR_SUP, "Explicit stages other than the first one are not supported for implicit problems");
           PetscCall(VecGetSubVector(Y[i], ark->is_fast, &Yfast));
-          for (j = 0; j < i; j++) w[j] = h * At[i * s + j];
+          for (PetscInt j = 0; j < i; j++) w[j] = h * At[i * s + j];
           PetscCall(VecMAXPY(Yfast, i, w, YdotI_fast));
           if (fasthasE) {
-            for (j = 0; j < i; j++) w[j] = h * A[i * s + j];
+            for (PetscInt j = 0; j < i; j++) w[j] = h * A[i * s + j];
             PetscCall(VecMAXPY(Yfast, i, w, YdotRHS_fast));
           }
           PetscCall(VecRestoreSubVector(Y[i], ark->is_fast, &Yfast));
@@ -309,10 +309,10 @@ static PetscErrorCode TSStep_ARKIMEX_FastSlowSplit(TS ts)
           ark->scoeff = 1. / At[i * s + i];
           /* Ydot = shift*(Y-Z) */
           PetscCall(VecISCopy(ts->vec_sol, ark->is_fast, SCATTER_REVERSE, Z));
-          for (j = 0; j < i; j++) w[j] = h * At[i * s + j];
+          for (PetscInt j = 0; j < i; j++) w[j] = h * At[i * s + j];
           PetscCall(VecMAXPY(Z, i, w, YdotI_fast));
           if (fasthasE) {
-            for (j = 0; j < i; j++) w[j] = h * A[i * s + j];
+            for (PetscInt j = 0; j < i; j++) w[j] = h * A[i * s + j];
             PetscCall(VecMAXPY(Z, i, w, YdotRHS_fast));
           }
           PetscCall(TSRHSSplitGetSNES(ts, &snes));
@@ -367,7 +367,7 @@ static PetscErrorCode TSStep_ARKIMEX_FastSlowSplit(TS ts)
       }
       /* slow components */
       if (ark->is_slow) {
-        for (j = 0; j < i; j++) w[j] = h * A[i * s + j];
+        for (PetscInt j = 0; j < i; j++) w[j] = h * A[i * s + j];
         PetscCall(VecGetSubVector(Y[i], ark->is_slow, &Yslow));
         PetscCall(VecMAXPY(Yslow, i, w, YdotRHS_slow));
         PetscCall(VecRestoreSubVector(Y[i], ark->is_slow, &Yslow));

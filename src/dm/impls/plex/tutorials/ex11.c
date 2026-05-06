@@ -69,7 +69,7 @@ static PetscErrorCode CheckCellVertices(DM dm, PetscInt cell, PetscInt o)
   DMPolytopeType  ct;
   const PetscInt *arrVerts;
   PetscInt       *closure = NULL;
-  PetscInt        Ncl, cl, Nv, vStart, vEnd, v;
+  PetscInt Ncl, cl, Nv, vStart, vEnd;
   MPI_Comm        comm;
 
   PetscFunctionBeginUser;
@@ -85,7 +85,7 @@ static PetscErrorCode CheckCellVertices(DM dm, PetscInt cell, PetscInt o)
   }
   PetscCheck(Nv == DMPolytopeTypeGetNumVertices(ct), comm, PETSC_ERR_ARG_WRONG, "Cell %" PetscInt_FMT " has %" PetscInt_FMT " vertices != %" PetscInt_FMT " vertices in a %s", cell, Nv, DMPolytopeTypeGetNumVertices(ct), DMPolytopeTypes[ct]);
   arrVerts = DMPolytopeTypeGetVertexArrangement(ct, o);
-  for (v = 0; v < Nv; ++v) {
+  for (PetscInt v = 0; v < Nv; ++v) {
     PetscCheck(closure[v] == arrVerts[v] + vStart, comm, PETSC_ERR_ARG_WRONG, "Cell %" PetscInt_FMT " vertex[%" PetscInt_FMT "]: %" PetscInt_FMT " should be %" PetscInt_FMT " for arrangement %" PetscInt_FMT, cell, v, closure[v], arrVerts[v] + vStart, o);
   }
   PetscCall(DMPlexRestoreTransitiveClosure(dm, cell, PETSC_TRUE, &Ncl, &closure));
@@ -99,7 +99,7 @@ static PetscErrorCode ReorientCell(DM dm, PetscInt cell, PetscInt o, PetscBool s
   Vec          coordinates;
   PetscScalar *coords, *ccoords = NULL;
   PetscInt    *closure = NULL;
-  PetscInt     cdim, d, Nc, Ncl, cl, vStart, vEnd, Nv;
+  PetscInt cdim, Nc, Ncl, cl, vStart, vEnd, Nv;
 
   PetscFunctionBegin;
   /* Change vertex coordinates so that it plots as we expect */
@@ -120,7 +120,7 @@ static PetscErrorCode ReorientCell(DM dm, PetscInt cell, PetscInt o, PetscBool s
 
       if (vertex < vStart || vertex >= vEnd) continue;
       PetscCall(DMPlexPointLocalRef(cdm, vertex, coords, &vcoords));
-      for (d = 0; d < cdim; ++d) vcoords[d] = ccoords[Nv * cdim + d];
+      for (PetscInt d = 0; d < cdim; ++d) vcoords[d] = ccoords[Nv * cdim + d];
       ++Nv;
     }
     PetscCall(DMPlexRestoreTransitiveClosure(dm, cell, PETSC_TRUE, &Ncl, &closure));

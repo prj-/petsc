@@ -848,11 +848,11 @@ static PetscErrorCode MatStashScatterBegin_BTS(Mat mat, MatStash *stash, PetscIn
     }
   } else { /* Dynamically count and pack (first time) */
     PetscInt   sendno;
-    PetscCount i, rowstart;
+    PetscCount i;
 
     /* Count number of send ranks and allocate for sends */
     stash->nsendranks = 0;
-    for (rowstart = 0; rowstart < nblocks;) {
+    for (PetscCount rowstart = 0; rowstart < nblocks;) {
       PetscInt       owner;
       MatStashBlock *sendblock_rowstart = (MatStashBlock *)&sendblocks[rowstart * stash->blocktype_size];
 
@@ -870,7 +870,7 @@ static PetscErrorCode MatStashScatterBegin_BTS(Mat mat, MatStash *stash, PetscIn
 
     /* Set up sendhdrs and sendframes */
     sendno = 0;
-    for (rowstart = 0; rowstart < nblocks;) {
+    for (PetscCount rowstart = 0; rowstart < nblocks;) {
       PetscInt       iowner;
       PetscMPIInt    owner;
       MatStashBlock *sendblock_rowstart = (MatStashBlock *)&sendblocks[rowstart * stash->blocktype_size];
@@ -903,11 +903,11 @@ static PetscErrorCode MatStashScatterBegin_BTS(Mat mat, MatStash *stash, PetscIn
   }
 
   if (stash->first_assembly_done) {
-    PetscMPIInt i, tag;
+    PetscMPIInt tag;
 
     PetscCall(PetscCommGetNewTag(stash->comm, &tag));
-    for (i = 0; i < stash->nrecvranks; i++) PetscCall(MatStashBTSRecv_Private(stash->comm, &tag, stash->recvranks[i], &stash->recvhdr[i], &stash->recvreqs[i], stash));
-    for (i = 0; i < stash->nsendranks; i++) PetscCall(MatStashBTSSend_Private(stash->comm, &tag, i, stash->sendranks[i], &stash->sendhdr[i], &stash->sendreqs[i], stash));
+    for (PetscMPIInt i = 0; i < stash->nrecvranks; i++) PetscCall(MatStashBTSRecv_Private(stash->comm, &tag, stash->recvranks[i], &stash->recvhdr[i], &stash->recvreqs[i], stash));
+    for (PetscMPIInt i = 0; i < stash->nsendranks; i++) PetscCall(MatStashBTSSend_Private(stash->comm, &tag, i, stash->sendranks[i], &stash->sendhdr[i], &stash->sendreqs[i], stash));
     stash->use_status = PETSC_TRUE; /* Use count from message status. */
   } else {
     PetscCall(PetscCommBuildTwoSidedFReq(stash->comm, 1, MPIU_INT, stash->nsendranks, stash->sendranks, (PetscInt *)stash->sendhdr, &stash->nrecvranks, &stash->recvranks, (PetscInt *)&stash->recvhdr, 1, &stash->sendreqs, &stash->recvreqs, MatStashBTSSend_Private, MatStashBTSRecv_Private, stash));

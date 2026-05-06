@@ -678,7 +678,7 @@ int main(int argc, char **argv)
         for (PetscInt d = 0; d < 2; d++) {
           PetscScalar ***x_coord_3d;
           PetscScalar   *vec_array;
-          PetscInt       i, j, idx;
+          PetscInt idx;
           PetscInt       local_grid_points = xm * ym;
 
           /* Create vector for this coordinate component - size should be nx*ny */
@@ -693,8 +693,8 @@ int main(int argc, char **argv)
 
           /* Copy coordinates from 2D array */
           idx = 0;
-          for (j = ys; j < ys + ym; j++) {
-            for (i = xs; i < xs + xm; i++) vec_array[idx++] = x_coord_3d[j][i][d];
+          for (PetscInt j = ys; j < ys + ym; j++) {
+            for (PetscInt i = xs; i < xs + xm; i++) vec_array[idx++] = x_coord_3d[j][i][d];
           }
 
           PetscCall(VecRestoreArray(Vecxyz[d], &vec_array));

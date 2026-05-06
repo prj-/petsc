@@ -74,7 +74,7 @@ PetscErrorCode AssertSetsEqual(PetscInt64 *set, PetscInt64 *true_set)
 /* Parallel implementation of the sieve of Eratosthenes */
 PetscErrorCode test_sieve(MPI_Comm comm)
 {
-  PetscInt64  ii, local_p, maximum, n;
+  PetscInt64 local_p, maximum, n;
   PetscInt64 *local_set, *cursor, *bootstrap_primes, *truth;
   PetscMPIInt size, rank;
   PetscReal   x;
@@ -106,11 +106,11 @@ PetscErrorCode test_sieve(MPI_Comm comm)
   */
   local_set[0] = n;
   cursor       = &local_set[1];
-  for (ii = 0; ii < rank + 1; ii++) {
+  for (PetscInt64 ii = 0; ii < rank + 1; ii++) {
     *cursor = bootstrap_primes[ii + 1];
     cursor++;
   }
-  for (ii = local_p + 1; ii <= maximum; ii++) {
+  for (PetscInt64 ii = local_p + 1; ii <= maximum; ii++) {
     if (ii % local_p != 0) {
       *cursor = ii;
       cursor++;

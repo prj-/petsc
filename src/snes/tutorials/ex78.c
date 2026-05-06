@@ -174,7 +174,7 @@ PetscErrorCode FormFunction(SNES snes, Vec x, Vec f, PetscCtx ctx)
 PetscErrorCode FormJacobian(SNES snes, Vec x, Mat jac, Mat B, PetscCtx ctx)
 {
   PetscScalar *xx, A[3];
-  PetscInt     i, M, xs, xm;
+  PetscInt M, xs, xm;
   DM           da = (DM)ctx;
   MatStencil   row, cols[3];
   PetscReal    h;
@@ -194,7 +194,7 @@ PetscErrorCode FormJacobian(SNES snes, Vec x, Mat jac, Mat B, PetscCtx ctx)
   PetscCall(MatZeroEntries(jac));
   h = 1.0 / M;
   /* because of periodic boundary conditions we can simply loop over all local nodes and access to the left and right */
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     row.i     = i;
     cols[0].i = i - 1;
     cols[1].i = i;

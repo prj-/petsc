@@ -7,7 +7,7 @@ int main(int argc, char **args)
   Mat           A, RHS, C, F, X;
   Vec           u, x, b;
   PetscMPIInt   size;
-  PetscInt      m, n, nsolve, nrhs;
+  PetscInt m, n, nrhs;
   PetscReal     norm, tol = PETSC_SQRT_MACHINE_EPSILON;
   PetscRandom   rand;
   PetscBool     data_provided, herm, symm, hpd;
@@ -131,7 +131,7 @@ int main(int argc, char **args)
     PetscCall(MatQRFactor(F, NULL, NULL));
   } else SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, "Factorization %s not supported in this example", MatFactorTypes[ftyp]);
 
-  for (nsolve = 0; nsolve < 2; nsolve++) {
+  for (PetscInt nsolve = 0; nsolve < 2; nsolve++) {
     PetscCall(VecSetRandom(x, rand));
     PetscCall(VecCopy(x, u));
     if (nsolve) {

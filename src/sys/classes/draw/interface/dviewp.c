@@ -237,7 +237,7 @@ PetscErrorCode PetscDrawViewPortsCreateRect(PetscDraw draw, PetscInt nx, PetscIn
 {
   PetscDrawViewPorts *ports;
   PetscReal          *xl, *xr, *yl, *yr, hx, hy;
-  PetscInt            i, j, k, n;
+  PetscInt k, n;
   PetscBool           isnull;
   PetscMPIInt         rank;
 
@@ -271,8 +271,8 @@ PetscErrorCode PetscDrawViewPortsCreateRect(PetscDraw draw, PetscInt nx, PetscIn
 
   PetscCall(PetscDrawSetCoordinates(draw, 0.0, 0.0, 1.0, 1.0));
   PetscDrawCollectiveBegin(draw);
-  for (i = 0; i < nx; i++) {
-    for (j = 0; j < ny; j++) {
+  for (PetscInt i = 0; i < nx; i++) {
+    for (PetscInt j = 0; j < ny; j++) {
       k = j * nx + i;
 
       xl[k] = ((PetscReal)i) * hx;

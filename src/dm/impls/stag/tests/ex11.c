@@ -117,7 +117,7 @@ PetscErrorCode ApplyOperator(Mat A, Vec in, Vec out)
   Vec            inLocal, outLocal;
   PetscScalar ***arrIn;
   PetscScalar ***arrOut;
-  PetscInt       startx, starty, nx, ny, nExtrax, nExtray, ex, ey, idxP, idxUx, idxUy, startGhostx, startGhosty, nGhostx, nGhosty;
+  PetscInt startx, starty, nx, ny, nExtrax, nExtray, idxP, idxUx, idxUy, startGhostx, startGhosty, nGhostx, nGhosty;
   PetscBool      isFirstx, isFirsty, isFirstz, isLastx, isLasty, isLastz;
 
   PetscFunctionBeginUser;
@@ -138,21 +138,21 @@ PetscErrorCode ApplyOperator(Mat A, Vec in, Vec out)
 
   /* Set "pressures" on ghost boundaries by copying neighboring values*/
   if (isFirstx) {
-    for (ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ey][-1][idxP] = arrIn[ey][0][idxP];
+    for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ey][-1][idxP] = arrIn[ey][0][idxP];
   }
   if (isLastx) {
-    for (ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ey][startx + nx][idxP] = arrIn[ey][startx + nx - 1][idxP];
+    for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) arrIn[ey][startx + nx][idxP] = arrIn[ey][startx + nx - 1][idxP];
   }
   if (isFirsty) {
-    for (ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[-1][ex][idxP] = arrIn[0][ex][idxP];
+    for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[-1][ex][idxP] = arrIn[0][ex][idxP];
   }
   if (isLasty) {
-    for (ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[starty + ny][ex][idxP] = arrIn[starty + ny - 1][ex][idxP];
+    for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) arrIn[starty + ny][ex][idxP] = arrIn[starty + ny - 1][ex][idxP];
   }
 
   /* Apply operator on physical points */
-  for (ey = starty; ey < starty + ny + nExtray; ++ey) {
-    for (ex = startx; ex < startx + nx + nExtrax; ++ex) {
+  for (PetscInt ey = starty; ey < starty + ny + nExtray; ++ey) {
+    for (PetscInt ex = startx; ex < startx + nx + nExtrax; ++ex) {
       if (ex < startx + nx && ey < starty + ny) { /* Don't compute pressure outside domain */
         arrOut[ey][ex][idxP] = arrIn[ey][ex][idxP];
       }

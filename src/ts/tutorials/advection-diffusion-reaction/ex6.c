@@ -241,7 +241,7 @@ PetscErrorCode IFunction_LaxFriedrichs(TS ts, PetscReal t, Vec U, Vec Udot, Vec 
 PetscErrorCode IFunction_LaxWendroff(TS ts, PetscReal t, Vec U, Vec Udot, Vec F, PetscCtx ctx)
 {
   AppCtx      *appctx = (AppCtx *)ctx;
-  PetscInt     mstart, mend, M, i, um;
+  PetscInt mstart, mend, M, um;
   DM           da;
   Vec          Uold, localUold;
   PetscScalar *uarray, *f, *uoldarray, h, RFlux, LFlux, lambda;
@@ -271,7 +271,7 @@ PetscErrorCode IFunction_LaxWendroff(TS ts, PetscReal t, Vec U, Vec Udot, Vec F,
   lambda = dt / h;
   a      = appctx->a;
 
-  for (i = mstart; i < mend; i++) {
+  for (PetscInt i = mstart; i < mend; i++) {
     RFlux = 0.5 * a * (uoldarray[i + 1] + uoldarray[i]) - a * a * 0.5 * lambda * (uoldarray[i + 1] - uoldarray[i]);
     LFlux = 0.5 * a * (uoldarray[i - 1] + uoldarray[i]) - a * a * 0.5 * lambda * (uoldarray[i] - uoldarray[i - 1]);
     f[i]  = uarray[i] - uoldarray[i] + lambda * (RFlux - LFlux);

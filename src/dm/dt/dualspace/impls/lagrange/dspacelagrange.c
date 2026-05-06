@@ -495,7 +495,7 @@ static PetscErrorCode PetscLagNodeIndicesCreateTensorVertices(DM dm, PetscLagNod
   PetscLagNodeIndices ni;
   PetscInt            nodeIdxDim, subNodeIdxDim = facetni->nodeIdxDim;
   PetscInt            nVerts, nSubVerts         = facetni->nNodes;
-  PetscInt            dim, d, e, f, g;
+  PetscInt dim, d, e, f;
 
   PetscFunctionBegin;
   PetscCall(PetscNew(&ni));
@@ -507,7 +507,7 @@ static PetscErrorCode PetscLagNodeIndicesCreateTensorVertices(DM dm, PetscLagNod
   PetscCall(PetscCalloc1(nodeIdxDim * nVerts, &ni->nodeIdx));
   for (f = 0, d = 0; d < 2; d++) {
     for (e = 0; e < nSubVerts; e++, f++) {
-      for (g = 0; g < subNodeIdxDim; g++) ni->nodeIdx[f * nodeIdxDim + g] = facetni->nodeIdx[e * subNodeIdxDim + g];
+      for (PetscInt g = 0; g < subNodeIdxDim; g++) ni->nodeIdx[f * nodeIdxDim + g] = facetni->nodeIdx[e * subNodeIdxDim + g];
       ni->nodeIdx[f * nodeIdxDim + subNodeIdxDim]     = (1 - d);
       ni->nodeIdx[f * nodeIdxDim + subNodeIdxDim + 1] = d;
     }
@@ -1038,7 +1038,7 @@ static PetscErrorCode MatTensorAltV(Mat trace, Mat fiber, PetscInt dimTrace, Pet
   PetscInt     dim, NkTrace, NkFiber, Nk;
   PetscInt     dT, dF;
   PetscInt    *nnzTrace, *nnzFiber, *nnz;
-  PetscInt     iT, iF, jT, jF, il, jl;
+  PetscInt iF, jF;
   PetscReal   *workT, *workT2, *workF, *workF2, *work, *workstar;
   PetscReal   *projT, *projF;
   PetscReal   *projTstar, *projFstar;
@@ -1099,7 +1099,7 @@ static PetscErrorCode MatTensorAltV(Mat trace, Mat fiber, PetscInt dimTrace, Pet
 
     PetscCall(MatGetRow(fiber, iF, &ncolsF, &colsF, &valsF));
     nformsF = ncolsF / NkFiber;
-    for (iT = 0; iT < mTrace; iT++, i++) {
+    for (PetscInt iT = 0; iT < mTrace; iT++, i++) {
       PetscInt           ncolsT, nformsT;
       const PetscInt    *colsT;
       const PetscScalar *valsT;
@@ -1109,34 +1109,34 @@ static PetscErrorCode MatTensorAltV(Mat trace, Mat fiber, PetscInt dimTrace, Pet
       for (j = 0, jF = 0; jF < nformsF; jF++) {
         PetscInt colF = colsF[jF * NkFiber] / NkFiber;
 
-        for (il = 0; il < dF; il++) {
+        for (PetscInt il = 0; il < dF; il++) {
           PetscReal val = 0.;
-          for (jl = 0; jl < NkFiber; jl++) val += projFstar[il * NkFiber + jl] * PetscRealPart(valsF[jF * NkFiber + jl]);
+          for (PetscInt jl = 0; jl < NkFiber; jl++) val += projFstar[il * NkFiber + jl] * PetscRealPart(valsF[jF * NkFiber + jl]);
           workF[il] = val;
         }
         if (kFiber < 0) {
-          for (il = 0; il < dF; il++) workF2[il] = workF[il];
+          for (PetscInt il = 0; il < dF; il++) workF2[il] = workF[il];
           PetscCall(PetscDTAltVStar(dim, PetscAbsInt(kFiber), 1, workF2, workF));
         }
         PetscCall(PetscDTAltVWedgeMatrix(dim, PetscAbsInt(kFiber), PetscAbsInt(kTrace), workF, wedgeMat));
-        for (jT = 0; jT < nformsT; jT++, j++) {
+        for (PetscInt jT = 0; jT < nformsT; jT++, j++) {
           PetscInt           colT = colsT[jT * NkTrace] / NkTrace;
           PetscInt           col  = colF * (nTrace / NkTrace) + colT;
           const PetscScalar *vals;
 
-          for (il = 0; il < dT; il++) {
+          for (PetscInt il = 0; il < dT; il++) {
             PetscReal val = 0.;
-            for (jl = 0; jl < NkTrace; jl++) val += projTstar[il * NkTrace + jl] * PetscRealPart(valsT[jT * NkTrace + jl]);
+            for (PetscInt jl = 0; jl < NkTrace; jl++) val += projTstar[il * NkTrace + jl] * PetscRealPart(valsT[jT * NkTrace + jl]);
             workT[il] = val;
           }
           if (kTrace < 0) {
-            for (il = 0; il < dT; il++) workT2[il] = workT[il];
+            for (PetscInt il = 0; il < dT; il++) workT2[il] = workT[il];
             PetscCall(PetscDTAltVStar(dim, PetscAbsInt(kTrace), 1, workT2, workT));
           }
 
-          for (il = 0; il < Nk; il++) {
+          for (PetscInt il = 0; il < Nk; il++) {
             PetscReal val = 0.;
-            for (jl = 0; jl < dT; jl++) val += sign * wedgeMat[il * dT + jl] * workT[jl];
+            for (PetscInt jl = 0; jl < dT; jl++) val += sign * wedgeMat[il * dT + jl] * workT[jl];
             work[il] = val;
           }
           if (k < 0) {
@@ -1592,20 +1592,19 @@ static PetscErrorCode PetscDualSpaceCreateAllDataFromInteriorData(PetscDualSpace
         PetscInt           ncols;
         const PetscInt    *cols;
         const PetscScalar *vals;
-        PetscInt           l, d, e;
         PetscInt           row = j + off;
 
         PetscCall(MatGetRow(intMat, j, &ncols, &cols, &vals));
         PetscCheck(ncols % pNk == 0, PETSC_COMM_SELF, PETSC_ERR_PLIB, "interior matrix is not laid out as blocks of k-forms");
-        for (l = 0; l < ncols / pNk; l++) {
+        for (PetscInt l = 0; l < ncols / pNk; l++) {
           PetscInt blockcol;
 
-          for (d = 0; d < pNk; d++) PetscCheck((cols[l * pNk + d] % pNk) == d, PETSC_COMM_SELF, PETSC_ERR_PLIB, "interior matrix is not laid out as blocks of k-forms");
+          for (PetscInt d = 0; d < pNk; d++) PetscCheck((cols[l * pNk + d] % pNk) == d, PETSC_COMM_SELF, PETSC_ERR_PLIB, "interior matrix is not laid out as blocks of k-forms");
           blockcol = cols[l * pNk] / pNk;
-          for (d = 0; d < Nk; d++) iwork[l * Nk + d] = (blockcol + countNodesIn) * Nk + d;
-          for (d = 0; d < Nk; d++) work[l * Nk + d] = 0.;
-          for (d = 0; d < Nk; d++) {
-            for (e = 0; e < pNk; e++) {
+          for (PetscInt d = 0; d < Nk; d++) iwork[l * Nk + d] = (blockcol + countNodesIn) * Nk + d;
+          for (PetscInt d = 0; d < Nk; d++) work[l * Nk + d] = 0.;
+          for (PetscInt d = 0; d < Nk; d++) {
+            for (PetscInt e = 0; e < pNk; e++) {
               /* "push forward" dof by pulling back a k-form to be evaluated on the point: multiply on the right by L */
               work[l * Nk + d] += vals[l * pNk + e] * L[e * Nk + d];
             }
@@ -1809,7 +1808,7 @@ static PetscErrorCode DMPlexPointIsTensor_Internal_Given(DM dm, PetscInt p, Pets
  * that could be the opposite ends */
 static PetscErrorCode DMPlexPointIsTensor_Internal(DM dm, PetscInt p, PetscBool *isTensor, PetscInt *endA, PetscInt *endB)
 {
-  PetscInt        coneSize, c, c2;
+  PetscInt coneSize, c;
   const PetscInt *cone;
 
   PetscFunctionBegin;
@@ -1827,7 +1826,7 @@ static PetscErrorCode DMPlexPointIsTensor_Internal(DM dm, PetscInt p, PetscBool 
     PetscCall(DMPlexGetConeSize(dm, f, &fConeSize));
     if (fConeSize != coneSize - 2) continue;
 
-    for (c2 = c + 1; c2 < coneSize; c2++) {
+    for (PetscInt c2 = c + 1; c2 < coneSize; c2++) {
       PetscInt  f2 = cone[c2];
       PetscBool isTensorff2;
       PetscInt  f2ConeSize;

@@ -18,7 +18,7 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
   PetscReal    zeta, zeta0, rnmax_computed, rnmax_true, nrm0;
   PetscBool    bUpdateX;
   PetscInt     maxit;
-  PetscInt     h, i, j, k, vi, ell;
+  PetscInt k, vi, ell;
   PetscBLASInt ldMZ, bierr;
   PetscScalar  utb;
   PetscReal    max_s, pinv_tol;
@@ -96,7 +96,7 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
     /* BiCG part */
     rho0 = -omega * rho0;
     nrm0 = zeta;
-    for (j = 0; j < bcgsl->ell; j++) {
+    for (PetscInt j = 0; j < bcgsl->ell; j++) {
       /* rho1 <- r_j' * r_tilde */
       PetscCall(VecDot(VVR[j], VRT, &rho1));
       KSPCheckDot(ksp, rho1);
@@ -106,7 +106,7 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
       }
       beta = alpha * (rho1 / rho0);
       rho0 = rho1;
-      for (i = 0; i <= j; i++) {
+      for (PetscInt i = 0; i <= j; i++) {
         /* u_i <- r_i - beta*u_i */
         PetscCall(VecAYPX(VVU[i], -beta, VVR[i]));
       }
@@ -124,7 +124,7 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
       /* x <- x + alpha*u_0 */
       PetscCall(VecAXPY(VX, alpha, VVU[0]));
 
-      for (i = 0; i <= j; i++) {
+      for (PetscInt i = 0; i <= j; i++) {
         /* r_i <- r_i - alpha*u_{i+1} */
         PetscCall(VecAXPY(VVR[i], -alpha, VVU[i + 1]));
       }
@@ -152,10 +152,10 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
     }
 
     /* Polynomial part */
-    for (i = 0; i <= bcgsl->ell; ++i) PetscCall(VecMDot(VVR[i], i + 1, VVR, &MZa[i * ldMZ]));
+    for (PetscInt i = 0; i <= bcgsl->ell; ++i) PetscCall(VecMDot(VVR[i], i + 1, VVR, &MZa[i * ldMZ]));
     /* Symmetrize MZa */
-    for (i = 0; i <= bcgsl->ell; ++i) {
-      for (j = i + 1; j <= bcgsl->ell; ++j) MZa[i * ldMZ + j] = MZa[j * ldMZ + i] = PetscConj(MZa[j * ldMZ + i]);
+    for (PetscInt i = 0; i <= bcgsl->ell; ++i) {
+      for (PetscInt j = i + 1; j <= bcgsl->ell; ++j) MZa[i * ldMZ + j] = MZa[j * ldMZ + i] = PetscConj(MZa[j * ldMZ + i]);
     }
     /* Copy MZa to MZb */
     PetscCall(PetscArraycpy(MZb, MZa, ldMZ * ldMZ));
@@ -177,18 +177,18 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
         }
         /* Apply pseudo-inverse */
         max_s = bcgsl->s[0];
-        for (i = 1; i < bell; i++) {
+        for (PetscInt i = 1; i < bell; i++) {
           if (bcgsl->s[i] > max_s) max_s = bcgsl->s[i];
         }
         /* tolerance is hardwired to bell*max(s)*PETSC_MACHINE_EPSILON */
         pinv_tol = bell * max_s * PETSC_MACHINE_EPSILON;
         PetscCall(PetscArrayzero(&AY0c[1], bell));
-        for (i = 0; i < bell; i++) {
+        for (PetscInt i = 0; i < bell; i++) {
           if (bcgsl->s[i] >= pinv_tol) {
             utb = 0.;
-            for (j = 0; j < bell; j++) utb += MZb[1 + j] * bcgsl->u[i * bell + j];
+            for (PetscInt j = 0; j < bell; j++) utb += MZb[1 + j] * bcgsl->u[i * bell + j];
 
-            for (j = 0; j < bell; j++) AY0c[1 + j] += utb / bcgsl->s[i] * bcgsl->v[j * bell + i];
+            for (PetscInt j = 0; j < bell; j++) AY0c[1 + j] += utb / bcgsl->s[i] * bcgsl->v[j * bell + i];
           }
         }
       } else {
@@ -245,22 +245,22 @@ static PetscErrorCode KSPSolve_BCGSL(KSP ksp)
         } else {
           ghat = kappaA / (kappa1 * kappa1);
         }
-        for (i = 0; i <= bcgsl->ell; i++) AY0c[i] = AY0c[i] - ghat * AYlc[i];
+        for (PetscInt i = 0; i <= bcgsl->ell; i++) AY0c[i] = AY0c[i] - ghat * AYlc[i];
       }
     }
 
     omega = AY0c[bcgsl->ell];
-    for (h = bcgsl->ell; h > 0 && omega == 0.0; h--) omega = AY0c[h];
+    for (PetscInt h = bcgsl->ell; h > 0 && omega == 0.0; h--) omega = AY0c[h];
     if (omega == 0.0) {
       ksp->reason = KSP_DIVERGED_BREAKDOWN;
       PetscFunctionReturn(PETSC_SUCCESS);
     }
 
     PetscCall(VecMAXPY(VX, bcgsl->ell, AY0c + 1, VVR));
-    for (i = 1; i <= bcgsl->ell; i++) AY0c[i] *= -1.0;
+    for (PetscInt i = 1; i <= bcgsl->ell; i++) AY0c[i] *= -1.0;
     PetscCall(VecMAXPY(VVU[0], bcgsl->ell, AY0c + 1, VVU + 1));
     PetscCall(VecMAXPY(VVR[0], bcgsl->ell, AY0c + 1, VVR + 1));
-    for (i = 1; i <= bcgsl->ell; i++) AY0c[i] *= -1.0;
+    for (PetscInt i = 1; i <= bcgsl->ell; i++) AY0c[i] *= -1.0;
     PetscCall(VecNorm(VVR[0], NORM_2, &zeta));
     KSPCheckNorm(ksp, zeta);
 

@@ -1614,7 +1614,7 @@ PetscErrorCode PCGASMCreateSubdomains2D(PC pc, PetscInt M, PetscInt N, PetscInt 
   PetscInt    x[2][2], y[2][2], n[2];
   PetscInt    first, last;
   PetscInt    nidx, *idx;
-  PetscInt    ii, jj, s, q, d;
+  PetscInt s;
   PetscInt    k, kk;
   PetscMPIInt color;
   MPI_Comm    comm, subcomm;
@@ -1686,7 +1686,7 @@ PetscErrorCode PCGASMCreateSubdomains2D(PC pc, PetscInt M, PetscInt N, PetscInt 
          Do this twice: first for the domains with overlaps, and once without.
          During the first pass create the subcommunicators, and use them on the second pass as well.
       */
-      for (q = 0; q < 2; ++q) {
+      for (PetscInt q = 0; q < 2; ++q) {
         PetscBool split = PETSC_FALSE;
         /*
           domain limits, (xleft, xright) and (ylow, yheigh) are adjusted
@@ -1735,19 +1735,19 @@ PetscErrorCode PCGASMCreateSubdomains2D(PC pc, PetscInt M, PetscInt N, PetscInt 
           PetscCall(PetscMalloc1(nidx, &idx));
           if (nidx) {
             k = 0;
-            for (jj = ylow_loc; jj < yhigh_loc; ++jj) {
+            for (PetscInt jj = ylow_loc; jj < yhigh_loc; ++jj) {
               PetscInt x0 = (jj == ylow_loc) ? xleft_loc : xleft;
               PetscInt x1 = (jj == yhigh_loc - 1) ? xright_loc : xright;
               kk          = dof * (M * jj + x0);
-              for (ii = x0; ii < x1; ++ii) {
-                for (d = 0; d < dof; ++d) idx[k++] = kk++;
+              for (PetscInt ii = x0; ii < x1; ++ii) {
+                for (PetscInt d = 0; d < dof; ++d) idx[k++] = kk++;
               }
             }
           }
           PetscCall(ISCreateGeneral(subcomm, nidx, idx, PETSC_OWN_POINTER, (*xis) + s));
           if (split) PetscCallMPI(MPI_Comm_free(&subcomm));
         } /* if (n[0]) */
-      } /* for (q = 0; q < 2; ++q) */
+      } /* for (PetscInt q = 0; q < 2; ++q) */
       if (n[0]) ++s;
       xstart += maxwidth;
     } /* for (PetscInt i = 0; i < Mdomains; ++i) */

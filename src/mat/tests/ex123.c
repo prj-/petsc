@@ -171,7 +171,7 @@ int main(int argc, char **args)
     const PetscScalar *vA, *vB;
     PetscScalar       *coo_v;
     PetscInt          *coo_i, *coo_j;
-    PetscInt           i, j, nA, nB, nnz;
+    PetscInt nA, nB, nnz;
     PetscBool          flg;
 
     T = A;
@@ -184,15 +184,15 @@ int main(int argc, char **args)
     nnz = iA[nA] + iB[nB];
     PetscCall(PetscMalloc3(nnz, &coo_i, nnz, &coo_j, nnz, &coo_v));
     nnz = 0;
-    for (i = 0; i < nA; i++) {
-      for (j = iA[i]; j < iA[i + 1]; j++, nnz++) {
+    for (PetscInt i = 0; i < nA; i++) {
+      for (PetscInt j = iA[i]; j < iA[i + 1]; j++, nnz++) {
         coo_i[nnz] = i + rstart;
         coo_j[nnz] = jA[j] + cstart;
         coo_v[nnz] = vA[j];
       }
     }
-    for (i = 0; i < nB; i++) {
-      for (j = iB[i]; j < iB[i + 1]; j++, nnz++) {
+    for (PetscInt i = 0; i < nB; i++) {
+      for (PetscInt j = iB[i]; j < iB[i + 1]; j++, nnz++) {
         coo_i[nnz] = i + rstart;
         coo_j[nnz] = garray[jB[j]];
         coo_v[nnz] = vB[j];

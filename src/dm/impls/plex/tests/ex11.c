@@ -218,7 +218,7 @@ static PetscErrorCode TestUniversalLabel(MPI_Comm comm)
   DM               dm1, dm2;
   DMLabel          bd1, bd2, ulabel;
   DMUniversalLabel universal;
-  PetscInt         pStart, pEnd, p;
+  PetscInt pStart, pEnd;
   PetscBool        run = PETSC_FALSE, notFile;
 
   PetscFunctionBeginUser;
@@ -275,7 +275,7 @@ static PetscErrorCode TestUniversalLabel(MPI_Comm comm)
   PetscCall(PetscObjectSetName((PetscObject)dm2, "Second Mesh"));
   PetscCall(DMUniversalLabelCreateLabels(universal, PETSC_TRUE, dm2));
   PetscCall(DMPlexGetChart(dm2, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     PetscInt val;
 
     PetscCall(DMLabelGetValue(ulabel, p, &val));

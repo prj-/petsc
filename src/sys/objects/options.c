@@ -729,7 +729,6 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
 {
   const char *const *opt = precedentOptions;
   const size_t       n   = PO_NUM;
-  size_t             o;
   int                a;
   const char       **val;
   char             **cval;
@@ -740,7 +739,7 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
   val = (const char **)cval;
 
   /* Look for options possibly set using PetscOptionsSetValue beforehand */
-  for (o = 0; o < n; o++) PetscCall(PetscOptionsFindPair(options, NULL, opt[o], &val[o], &set[o]));
+  for (size_t o = 0; o < n; o++) PetscCall(PetscOptionsFindPair(options, NULL, opt[o], &val[o], &set[o]));
 
   /* Loop through all args to collect last occurring value of each option */
   for (a = 1; a < argc; a++) {
@@ -748,7 +747,7 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
 
     PetscCall(PetscOptionsValidKey(args[a], &valid));
     if (!valid) continue;
-    for (o = 0; o < n; o++) {
+    for (size_t o = 0; o < n; o++) {
       PetscCall(PetscStrcasecmp(args[a], opt[o], &eq));
       if (eq) {
         set[o] = PETSC_TRUE;
@@ -772,7 +771,7 @@ static PetscErrorCode PetscOptionsProcessPrecedentFlags(PetscOptions options, in
   *skip_petscrc_set = set[PO_SKIP_PETSCRC];
 
   /* Store precedent options in database and mark them as used */
-  for (o = 1; o < n; o++) {
+  for (size_t o = 1; o < n; o++) {
     if (set[o]) {
       PetscCall(PetscOptionsSetValue_Private(options, opt[o], val[o], &a, PETSC_OPT_COMMAND_LINE));
       options->used[a] = PETSC_TRUE;

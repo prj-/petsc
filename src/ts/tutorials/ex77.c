@@ -543,7 +543,7 @@ static PetscErrorCode SetupDiscretization(DM dm, DM sdm, AppCtx *user)
   PetscReal      x[3], dx[3];
   PetscScalar   *coords;
   DMPolytopeType ct;
-  PetscInt       dim, d, cStart, cEnd, c, Np, p, i, j, k;
+  PetscInt dim, d, cStart, cEnd, Np, p;
   PetscBool      simplex;
   MPI_Comm       comm;
   const char    *cellid;
@@ -602,7 +602,7 @@ static PetscErrorCode SetupDiscretization(DM dm, DM sdm, AppCtx *user)
     PetscCall(DMSwarmSetLocalSizes(sdm, (cEnd - cStart) * user->Npc, 0));
     PetscCall(DMSetFromOptions(sdm));
     PetscCall(DMSwarmGetField(sdm, cellid, NULL, NULL, (void **)&swarm_cellid));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       for (p = 0; p < user->Npc; ++p) {
         const PetscInt n = c * user->Npc + p;
 
@@ -625,9 +625,9 @@ static PetscErrorCode SetupDiscretization(DM dm, DM sdm, AppCtx *user)
     switch (dim) {
     case 2:
       x[0] = user->partLower[0];
-      for (i = 0; i < n[0]; ++i, x[0] += dx[0]) {
+      for (PetscInt i = 0; i < n[0]; ++i, x[0] += dx[0]) {
         x[1] = user->partLower[1];
-        for (j = 0; j < n[1]; ++j, x[1] += dx[1]) {
+        for (PetscInt j = 0; j < n[1]; ++j, x[1] += dx[1]) {
           const PetscInt p = j * n[0] + i;
           for (d = 0; d < dim; ++d) coords[p * dim + d] = x[d];
         }
@@ -635,11 +635,11 @@ static PetscErrorCode SetupDiscretization(DM dm, DM sdm, AppCtx *user)
       break;
     case 3:
       x[0] = user->partLower[0];
-      for (i = 0; i < n[0]; ++i, x[0] += dx[0]) {
+      for (PetscInt i = 0; i < n[0]; ++i, x[0] += dx[0]) {
         x[1] = user->partLower[1];
-        for (j = 0; j < n[1]; ++j, x[1] += dx[1]) {
+        for (PetscInt j = 0; j < n[1]; ++j, x[1] += dx[1]) {
           x[2] = user->partLower[2];
-          for (k = 0; k < n[2]; ++k, x[2] += dx[2]) {
+          for (PetscInt k = 0; k < n[2]; ++k, x[2] += dx[2]) {
             const PetscInt p = (k * n[1] + j) * n[0] + i;
             for (d = 0; d < dim; ++d) coords[p * dim + d] = x[d];
           }
@@ -726,13 +726,13 @@ static PetscErrorCode MonitorError(TS ts, PetscInt step, PetscReal crtime, Vec u
   PetscDS   ds;
   Vec       v;
   PetscReal ferrors[3];
-  PetscInt  tl, l, f;
+  PetscInt tl, l;
 
   PetscFunctionBeginUser;
   PetscCall(TSGetDM(ts, &dm));
   PetscCall(DMGetDS(dm, &ds));
 
-  for (f = 0; f < 3; ++f) PetscCall(PetscDSGetExactSolution(ds, f, &exactFuncs[f], &ctxs[f]));
+  for (PetscInt f = 0; f < 3; ++f) PetscCall(PetscDSGetExactSolution(ds, f, &exactFuncs[f], &ctxs[f]));
   PetscCall(DMComputeL2FieldDiff(dm, crtime, exactFuncs, ctxs, u, ferrors));
   PetscCall(PetscObjectGetTabLevel((PetscObject)ts, &tl));
   for (l = 0; l < tl; ++l) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\t"));
@@ -795,7 +795,7 @@ static PetscErrorCode MonitorParticleError(TS ts, PetscInt step, PetscReal time,
   Parameter         *param;
   const PetscScalar *xp0, *xp;
   PetscReal          error = 0.0;
-  PetscInt           dim, tl, l, Np, p;
+  PetscInt dim, tl, Np;
   MPI_Comm           comm;
 
   PetscFunctionBeginUser;
@@ -806,7 +806,7 @@ static PetscErrorCode MonitorParticleError(TS ts, PetscInt step, PetscReal time,
   PetscCall(DMSwarmGetLocalSize(sdm, &Np));
   PetscCall(VecGetArrayRead(adv->x0, &xp0));
   PetscCall(VecGetArrayRead(u, &xp));
-  for (p = 0; p < Np; ++p) {
+  for (PetscInt p = 0; p < Np; ++p) {
     PetscScalar x[3];
     PetscReal   x0[3];
     PetscReal   perror = 0.0;
@@ -819,7 +819,7 @@ static PetscErrorCode MonitorParticleError(TS ts, PetscInt step, PetscReal time,
   PetscCall(VecRestoreArrayRead(adv->x0, &xp0));
   PetscCall(VecRestoreArrayRead(u, &xp));
   PetscCall(PetscObjectGetTabLevel((PetscObject)ts, &tl));
-  for (l = 0; l < tl; ++l) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\t"));
+  for (PetscInt l = 0; l < tl; ++l) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\t"));
   PetscCall(PetscPrintf(comm, "Timestep: %04d time = %-8.4g \t L_2 Particle Error: [%2.3g]\n", (int)step, (double)time, (double)error));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

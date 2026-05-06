@@ -181,7 +181,7 @@ int main(int argc, char **args)
   preload = (PetscBool)(M != m || p != n); /* Global or local dimension mismatch */
   PetscCallMPI(MPIU_Allreduce(&preload, &flg, 1, MPI_C_BOOL, MPI_LOR, PetscObjectComm((PetscObject)A)));
   if (flg) { /* Create a new vector b by padding the old one */
-    PetscInt     j, mvec, start, end, indx;
+    PetscInt mvec, start, end, indx;
     Vec          tmp;
     PetscScalar *bold;
 
@@ -191,7 +191,7 @@ int main(int argc, char **args)
     PetscCall(VecGetOwnershipRange(b, &start, &end));
     PetscCall(VecGetLocalSize(b, &mvec));
     PetscCall(VecGetArray(b, &bold));
-    for (j = 0; j < mvec; j++) {
+    for (PetscInt j = 0; j < mvec; j++) {
       indx = start + j;
       PetscCall(VecSetValues(tmp, 1, &indx, bold + j, INSERT_VALUES));
     }

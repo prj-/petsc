@@ -111,13 +111,13 @@ static PetscErrorCode CreateSubdomainMesh(DM dm, DMLabel *domLabel, DM *subdm, A
 {
   DMLabel   label;
   PetscBool simplex;
-  PetscInt  dim, cStart, cEnd, c;
+  PetscInt dim, cStart, cEnd;
 
   PetscFunctionBeginUser;
   PetscCall(DMPlexIsSimplex(dm, &simplex));
   PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
   PetscCall(DMLabelCreate(PETSC_COMM_SELF, "subdomain", &label));
-  for (c = cStart + (cEnd - cStart) / 2; c < cEnd; ++c) PetscCall(DMLabelSetValue(label, c, 1));
+  for (PetscInt c = cStart + (cEnd - cStart) / 2; c < cEnd; ++c) PetscCall(DMLabelSetValue(label, c, 1));
   PetscCall(DMPlexFilter(dm, label, 1, PETSC_FALSE, PETSC_FALSE, PetscObjectComm((PetscObject)dm), NULL, subdm));
   PetscCall(DMGetDimension(*subdm, &dim));
   PetscCall(SetupDiscretization(*subdm, dim, simplex, user));

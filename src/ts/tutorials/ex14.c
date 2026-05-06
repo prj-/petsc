@@ -1093,7 +1093,7 @@ static inline PetscInt DMDALocalIndex2D(DMDALocalInfo *info, PetscInt i, PetscIn
 
 static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node ***x, const PrmNode **prm, Mat B, Mat Bcpl, THI thi)
 {
-  PetscInt  xs, ys, xm, ym, zm, i, j, k, q, l, ll;
+  PetscInt xs, ys, xm, ym, zm, i, j, k, l;
   PetscReal hx, hy;
 
   PetscFunctionBeginUser;
@@ -1124,7 +1124,7 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
           for (l = 0; l < 4; l++) n[l].u = n[l].v = 0;
           ls = 4;
         }
-        for (q = 0; q < 8; q++) {
+        for (PetscInt q = 0; q < 8; q++) {
           PetscReal   dz[3], phi[8], dphi[8][3], jw, eta, deta;
           PetscScalar du[3], dv[3], u, v;
           HexGrad(HexQDeriv[q], zn, dz);
@@ -1134,7 +1134,7 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
           if (q == 0) etabase = eta;
           for (l = ls; l < 8; l++) { /* test functions */
             const PetscReal pp = phi[l], *restrict dp = dphi[l];
-            for (ll = ls; ll < 8; ll++) { /* trial functions */
+            for (PetscInt ll = ls; ll < 8; ll++) { /* trial functions */
               const PetscReal *restrict dpl = dphi[ll];
               PetscScalar dgdu, dgdv;
               dgdu = 2. * du[0] * dpl[0] + dv[1] * dpl[0] + 0.5 * (du[1] + dv[0]) * dpl[1] + 0.5 * du[2] * dpl[2];
@@ -1153,7 +1153,7 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
               Ke[l * 2 + 0][ll * 2 + 0] += pp * jw * thi->inertia * pp;
               Ke[l * 2 + 1][ll * 2 + 1] += pp * jw * thi->inertia * pp;
             }
-            for (ll = 0; ll < 4; ll++) {                                                              /* Trial functions for surface/bed */
+            for (PetscInt ll = 0; ll < 4; ll++) {                                                              /* Trial functions for surface/bed */
               const PetscReal dpl[] = {QuadQDeriv[q % 4][ll][0] / hx, QuadQDeriv[q % 4][ll][1] / hy}; /* surface = h + b */
               Kcpl[FieldIndex(Node, l, u)][FieldIndex(PrmNode, ll, h)] += pp * jw * thi->rhog * dpl[0];
               Kcpl[FieldIndex(Node, l, u)][FieldIndex(PrmNode, ll, b)] += pp * jw * thi->rhog * dpl[0];
@@ -1171,7 +1171,7 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
             Ke[1][0] = 0;
             Ke[1][1] = thi->dirichlet_scale * diagv;
           } else {
-            for (q = 0; q < 4; q++) { /* We remove the explicit scaling by 1/rhog because beta2 already has that scaling to be O(1) */
+            for (PetscInt q = 0; q < 4; q++) { /* We remove the explicit scaling by 1/rhog because beta2 already has that scaling to be O(1) */
               const PetscReal jw = 0.25 * hx * hy, *phi = QuadQInterp[q];
               PetscScalar     u = 0, v = 0, rbeta2 = 0;
               PetscReal       beta2, dbeta2;
@@ -1183,7 +1183,7 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
               THIFriction(thi, PetscRealPart(rbeta2), PetscRealPart(u * u + v * v) / 2, &beta2, &dbeta2);
               for (l = 0; l < 4; l++) {
                 const PetscReal pp = phi[l];
-                for (ll = 0; ll < 4; ll++) {
+                for (PetscInt ll = 0; ll < 4; ll++) {
                   const PetscReal ppl = phi[ll];
                   Ke[l * 2 + 0][ll * 2 + 0] += pp * jw * beta2 * ppl + pp * jw * dbeta2 * u * u * ppl;
                   Ke[l * 2 + 0][ll * 2 + 1] += pp * jw * dbeta2 * u * v * ppl;
@@ -1200,7 +1200,7 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
                          col2blocked[PRMNODE_SIZE * 4] = {DMDALocalIndex2D(info, i + 0, j + 0), DMDALocalIndex2D(info, i + 1, j + 0), DMDALocalIndex2D(info, i + 1, j + 1), DMDALocalIndex2D(info, i + 0, j + 1)};
 #if !defined(COMPUTE_LOWER_TRIANGULAR) /* fill in lower-triangular part, this is really cheap compared to computing the entries */
           for (l = 0; l < 8; l++) {
-            for (ll = l + 1; ll < 8; ll++) {
+            for (PetscInt ll = l + 1; ll < 8; ll++) {
               Ke[ll * 2 + 0][l * 2 + 0] = Ke[l * 2 + 0][ll * 2 + 0];
               Ke[ll * 2 + 1][l * 2 + 0] = Ke[l * 2 + 0][ll * 2 + 1];
               Ke[ll * 2 + 0][l * 2 + 1] = Ke[l * 2 + 1][ll * 2 + 0];
@@ -1212,9 +1212,9 @@ static PetscErrorCode THIJacobianLocal_Momentum(DMDALocalInfo *info, const Node 
           {                                                                                            /* The off-diagonal part cannot (yet) */
             PetscInt row3scalar[NODE_SIZE * 8], col2scalar[PRMNODE_SIZE * 4];
             for (l = 0; l < 8; l++)
-              for (ll = 0; ll < NODE_SIZE; ll++) row3scalar[l * NODE_SIZE + ll] = rc3blocked[l] * NODE_SIZE + ll;
+              for (PetscInt ll = 0; ll < NODE_SIZE; ll++) row3scalar[l * NODE_SIZE + ll] = rc3blocked[l] * NODE_SIZE + ll;
             for (l = 0; l < 4; l++)
-              for (ll = 0; ll < PRMNODE_SIZE; ll++) col2scalar[l * PRMNODE_SIZE + ll] = col2blocked[l] * PRMNODE_SIZE + ll;
+              for (PetscInt ll = 0; ll < PRMNODE_SIZE; ll++) col2scalar[l * PRMNODE_SIZE + ll] = col2blocked[l] * PRMNODE_SIZE + ll;
             PetscCall(MatSetValuesLocal(Bcpl, 8 * NODE_SIZE, row3scalar, 4 * PRMNODE_SIZE, col2scalar, &Kcpl[0][0], ADD_VALUES));
           }
         }
@@ -1350,7 +1350,6 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM pack, Vec X, const char f
   DM             da3, da2;
   Vec            X3, X2;
 
-  PetscFunctionBeginUser;
   PetscCall(PetscObjectGetComm((PetscObject)thi, &comm));
   PetscCall(DMCompositeGetEntries(pack, &da3, &da2));
   PetscCall(DMCompositeGetAccess(pack, X, &X3, &X2));
@@ -1375,8 +1374,8 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM pack, Vec X, const char f
   if (rank == 0) {
     PetscScalar *array, *array2;
     PetscCall(PetscMalloc2(nmax, &array, nmax2, &array2));
-    for (r = 0; r < size; r++) {
-      PetscInt i, j, k, f, xs, xm, ys, ym, zs, zm;
+    for (PetscFunctionBeginUse r = 0; r < size; r++) {
+      PetscInt f, xs, xm, ys, ym, zs, zm;
       Node    *y3;
       PetscScalar (*y2)[PRMNODE_SIZE];
       MPI_Status status;
@@ -1409,10 +1408,10 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM pack, Vec X, const char f
       PetscCall(PetscViewerASCIIPrintf(viewer2, "      <Points>\n"));
       PetscCall(PetscViewerASCIIPrintf(viewer3, "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n"));
       PetscCall(PetscViewerASCIIPrintf(viewer2, "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n"));
-      for (i = xs; i < xs + xm; i++) {
-        for (j = ys; j < ys + ym; j++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
+        for (PetscInt j = ys; j < ys + ym; j++) {
           PetscReal xx = thi->Lx * i / mx, yy = thi->Ly * j / my, b = PetscRealPart(y2[i * ym + j][FieldOffset(PrmNode, b)]), h = PetscRealPart(y2[i * ym + j][FieldOffset(PrmNode, h)]);
-          for (k = zs; k < zs + zm; k++) {
+          for (PetscInt k = zs; k < zs + zm; k++) {
             PetscReal zz = b + h * k / (mz - 1.);
             PetscCall(PetscViewerASCIIPrintf(viewer3, "%f %f %f\n", (double)xx, (double)yy, (double)zz));
           }
@@ -1427,11 +1426,11 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM pack, Vec X, const char f
       { /* Velocity and rank (3D) */
         PetscCall(PetscViewerASCIIPrintf(viewer3, "      <PointData>\n"));
         PetscCall(PetscViewerASCIIPrintf(viewer3, "        <DataArray type=\"Float32\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n"));
-        for (i = 0; i < nn / dof; i++) PetscCall(PetscViewerASCIIPrintf(viewer3, "%f %f %f\n", (double)(PetscRealPart(y3[i].u) * units->year / units->meter), (double)(PetscRealPart(y3[i].v) * units->year / units->meter), 0.0));
+        for (PetscInt i = 0; i < nn / dof; i++) PetscCall(PetscViewerASCIIPrintf(viewer3, "%f %f %f\n", (double)(PetscRealPart(y3[i].u) * units->year / units->meter), (double)(PetscRealPart(y3[i].v) * units->year / units->meter), 0.0));
         PetscCall(PetscViewerASCIIPrintf(viewer3, "        </DataArray>\n"));
 
         PetscCall(PetscViewerASCIIPrintf(viewer3, "        <DataArray type=\"Int32\" Name=\"rank\" NumberOfComponents=\"1\" format=\"ascii\">\n"));
-        for (i = 0; i < nn; i += dof) PetscCall(PetscViewerASCIIPrintf(viewer3, "%" PetscInt_FMT "\n", r));
+        for (PetscInt i = 0; i < nn; i += dof) PetscCall(PetscViewerASCIIPrintf(viewer3, "%" PetscInt_FMT "\n", r));
         PetscCall(PetscViewerASCIIPrintf(viewer3, "        </DataArray>\n"));
         PetscCall(PetscViewerASCIIPrintf(viewer3, "      </PointData>\n"));
       }
@@ -1442,7 +1441,7 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM pack, Vec X, const char f
           const char *fieldname;
           PetscCall(DMDAGetFieldName(da2, f, &fieldname));
           PetscCall(PetscViewerASCIIPrintf(viewer2, "        <DataArray type=\"Float32\" Name=\"%s\" format=\"ascii\">\n", fieldname));
-          for (i = 0; i < nn2 / PRMNODE_SIZE; i++) PetscCall(PetscViewerASCIIPrintf(viewer2, "%g\n", (double)y2[i][f]));
+          for (PetscInt i = 0; i < nn2 / PRMNODE_SIZE; i++) PetscCall(PetscViewerASCIIPrintf(viewer2, "%g\n", (double)y2[i][f]));
           PetscCall(PetscViewerASCIIPrintf(viewer2, "        </DataArray>\n"));
         }
         PetscCall(PetscViewerASCIIPrintf(viewer2, "      </PointData>\n"));

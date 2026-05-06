@@ -273,7 +273,7 @@ PetscErrorCode FormInitialSolution(TS ts, Vec U, void *ptr)
   AppCtx      *user = (AppCtx *)ptr;
   PetscReal    c    = user->c;
   DM           da;
-  PetscInt     i, xs, xm, Mx;
+  PetscInt xs, xm, Mx;
   PetscScalar *u;
   PetscReal    hx, x, r;
 
@@ -290,7 +290,7 @@ PetscErrorCode FormInitialSolution(TS ts, Vec U, void *ptr)
   PetscCall(DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL));
 
   /* Compute function over the locally owned part of the grid */
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     x = i * hx;
     r = PetscSqrtReal((x - .5) * (x - .5));
     if (r < .125) u[i] = PetscExpReal(c * r * r * r);

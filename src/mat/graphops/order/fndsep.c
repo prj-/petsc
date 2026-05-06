@@ -39,7 +39,7 @@ PetscErrorCode SPARSEPACKfndsep(PetscInt *root, const PetscInt *inxadj, const Pe
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt node, nlvl, i, j, jstop, jstrt, mp1beg, mp1end, midbeg, midend, midlvl;
+  PetscInt node, nlvl, jstop, jstrt, mp1beg, mp1end, midbeg, midend, midlvl;
   PetscInt nbr;
 
   PetscFunctionBegin;
@@ -57,7 +57,7 @@ PetscErrorCode SPARSEPACKfndsep(PetscInt *root, const PetscInt *inxadj, const Pe
   if (nlvl >= 3) goto L200;
   *nsep = xls[nlvl + 1] - 1;
   i__1  = *nsep;
-  for (i = 1; i <= i__1; ++i) {
+  for (PetscInt i = 1; i <= i__1; ++i) {
     node       = ls[i];
     sep[i]     = node;
     mask[node] = 0;
@@ -75,19 +75,19 @@ L200:
   /*       LEVEL. XADJ IS USED TEMPORARILY TO MARK THOSE*/
   /*       NODES IN THE MIDDLE+1 LEVEL.*/
   i__1 = mp1end;
-  for (i = mp1beg; i <= i__1; ++i) {
+  for (PetscInt i = mp1beg; i <= i__1; ++i) {
     node       = ls[i];
     xadj[node] = -xadj[node];
   }
   *nsep = 0;
   i__1  = midend;
-  for (i = midbeg; i <= i__1; ++i) {
+  for (PetscInt i = midbeg; i <= i__1; ++i) {
     node  = ls[i];
     jstrt = xadj[node];
     i__2  = xadj[node + 1];
     jstop = PetscAbsInt(i__2) - 1;
     i__2  = jstop;
-    for (j = jstrt; j <= i__2; ++j) {
+    for (PetscInt j = jstrt; j <= i__2; ++j) {
       nbr = adjncy[j];
       if (xadj[nbr] > 0) goto L400;
       ++(*nsep);
@@ -100,7 +100,7 @@ L200:
   }
   /*       RESET XADJ TO ITS CORRECT SIGN.*/
   i__1 = mp1end;
-  for (i = mp1beg; i <= i__1; ++i) {
+  for (PetscInt i = mp1beg; i <= i__1; ++i) {
     node       = ls[i];
     xadj[node] = -xadj[node];
   }

@@ -31,7 +31,7 @@ int main(int argc, char **args)
   KSP           ksp;            /* linear solver context */
   PetscInt      n1, n2;         /* parameters */
   PetscReal     h, gamma, beta; /* parameters */
-  PetscInt      i, j, Ii, J, Istart, Iend;
+  PetscInt i, j, J, Istart, Iend;
   PetscScalar   v, co1, co2;
   PetscLogStage stage;
 
@@ -89,7 +89,7 @@ int main(int argc, char **args)
   PetscCall(PetscLogStagePush(stage));
   co1 = gamma * h * h / 2.0;
   co2 = beta * h * h;
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     i = Ii / n2;
     j = Ii - i * n2;
     if (i > 0) {

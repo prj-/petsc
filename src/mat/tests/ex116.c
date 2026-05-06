@@ -194,7 +194,7 @@ int main(int argc, char **args)
 */
 PetscErrorCode CkEigenSolutions(PetscInt cklvl, Mat A, PetscInt il, PetscInt iu, PetscReal *eval, Vec *evec, PetscReal *tols)
 {
-  PetscInt  i, j, nev;
+  PetscInt nev;
   Vec       vt1, vt2; /* tmp vectors */
   PetscReal norm, tmp, dot, norm_max, dot_max;
 
@@ -209,9 +209,9 @@ PetscErrorCode CkEigenSolutions(PetscInt cklvl, Mat A, PetscInt il, PetscInt iu,
   switch (cklvl) {
   case 2:
     dot_max = 0.0;
-    for (i = il; i < iu; i++) {
+    for (PetscInt i = il; i < iu; i++) {
       PetscCall(VecCopy(evec[i], vt1));
-      for (j = il; j < iu; j++) {
+      for (PetscInt j = il; j < iu; j++) {
         PetscCall(VecDot(evec[j], vt1, &dot));
         if (j == i) {
           dot = PetscAbsScalar(dot - 1);
@@ -229,7 +229,7 @@ PetscErrorCode CkEigenSolutions(PetscInt cklvl, Mat A, PetscInt il, PetscInt iu,
     /* fall through */
   case 1:
     norm_max = 0.0;
-    for (i = il; i < iu; i++) {
+    for (PetscInt i = il; i < iu; i++) {
       PetscCall(MatMult(A, evec[i], vt1));
       PetscCall(VecCopy(evec[i], vt2));
       tmp = -eval[i];

@@ -113,14 +113,12 @@ static PetscErrorCode CheckSymmetry(PetscInt dim, PetscInt order, PetscBool tens
 
 int main(int argc, char **argv)
 {
-  PetscInt dim, order, tensor;
-
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
-  for (tensor = 0; tensor < 2; tensor++) {
-    for (dim = 1; dim <= 3; dim++) {
+  for (PetscInt tensor = 0; tensor < 2; tensor++) {
+    for (PetscInt dim = 1; dim <= 3; dim++) {
       if (dim == 1 && tensor) continue;
-      for (order = 0; order <= (tensor ? 5 : 6); order++) PetscCall(CheckSymmetry(dim, order, tensor ? PETSC_TRUE : PETSC_FALSE));
+      for (PetscInt order = 0; order <= (tensor ? 5 : 6); order++) PetscCall(CheckSymmetry(dim, order, tensor ? PETSC_TRUE : PETSC_FALSE));
     }
   }
   PetscCall(PetscFinalize());

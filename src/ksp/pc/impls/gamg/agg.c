@@ -1179,7 +1179,7 @@ static PetscErrorCode PCGAMGCoarsen_AGG(PC a_pc, Mat *a_Gmat1, PetscCoarsenData 
   PC_GAMG_AGG *pc_gamg_agg = (PC_GAMG_AGG *)pc_gamg->subctx;
   Mat          Gmat2, Gmat1 = *a_Gmat1; /* aggressive graph */
   IS           perm;
-  PetscInt     Istart, Iend, Ii, nloc, bs, nn;
+  PetscInt Istart, Iend, nloc, bs, nn;
   PetscInt    *permute, *degree;
   PetscBool   *bIndexSet;
   PetscReal    hashfact;
@@ -1197,17 +1197,17 @@ static PetscErrorCode PCGAMGCoarsen_AGG(PC a_pc, Mat *a_Gmat1, PetscCoarsenData 
   /* get MIS aggs - randomize */
   PetscCall(PetscMalloc2(nloc, &permute, nloc, &degree));
   PetscCall(PetscCalloc1(nloc, &bIndexSet));
-  for (Ii = 0; Ii < nloc; Ii++) permute[Ii] = Ii;
+  for (PetscInt Ii = 0; Ii < nloc; Ii++) permute[Ii] = Ii;
   PetscCall(PetscRandomCreate(PETSC_COMM_SELF, &random));
   PetscCall(MatGetOwnershipRange(Gmat1, &Istart, &Iend));
-  for (Ii = 0; Ii < nloc; Ii++) {
+  for (PetscInt Ii = 0; Ii < nloc; Ii++) {
     PetscInt nc;
 
     PetscCall(MatGetRow(Gmat1, Istart + Ii, &nc, NULL, NULL));
     degree[Ii] = nc;
     PetscCall(MatRestoreRow(Gmat1, Istart + Ii, &nc, NULL, NULL));
   }
-  for (Ii = 0; Ii < nloc; Ii++) {
+  for (PetscInt Ii = 0; Ii < nloc; Ii++) {
     PetscCall(PetscRandomGetValueReal(random, &hashfact));
     iSwapIndex = (PetscInt)(hashfact * nloc) % nloc;
     if (!bIndexSet[iSwapIndex] && iSwapIndex != Ii) {

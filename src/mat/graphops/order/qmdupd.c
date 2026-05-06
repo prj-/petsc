@@ -35,7 +35,7 @@ PetscErrorCode SPARSEPACKqmdupd(const PetscInt *xadj, const PetscInt *adjncy, co
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt inhd, irch, node, mark, j, inode, nabor, jstop, jstrt, il;
+  PetscInt node, mark, inode, nabor, jstop, jstrt;
   PetscInt nhdsze, rchsze, deg0, deg1;
 
   /*       FIND ALL ELIMINATED SUPERNODES THAT ARE ADJACENT*/
@@ -59,13 +59,13 @@ PetscErrorCode SPARSEPACKqmdupd(const PetscInt *xadj, const PetscInt *adjncy, co
   deg0   = 0;
   nhdsze = 0;
   i__1   = *nlist;
-  for (il = 1; il <= i__1; ++il) {
+  for (PetscInt il = 1; il <= i__1; ++il) {
     node = list[il];
     deg0 += qsize[node];
     jstrt = xadj[node];
     jstop = xadj[node + 1] - 1;
     i__2  = jstop;
-    for (j = jstrt; j <= i__2; ++j) {
+    for (PetscInt j = jstrt; j <= i__2; ++j) {
       nabor = adjncy[j];
       if (marker[nabor] != 0 || deg[nabor] >= 0) goto L100;
       marker[nabor] = -1;
@@ -80,7 +80,7 @@ PetscErrorCode SPARSEPACKqmdupd(const PetscInt *xadj, const PetscInt *adjncy, co
   /*       FIND THE NEW DEGREES OF THE NODES THAT HAVE NOT BEEN*/
   /*       MERGED.*/
   i__1 = *nlist;
-  for (il = 1; il <= i__1; ++il) {
+  for (PetscInt il = 1; il <= i__1; ++il) {
     node = list[il];
     mark = marker[node];
     if (mark > 1 || mark < 0) goto L600;
@@ -89,7 +89,7 @@ PetscErrorCode SPARSEPACKqmdupd(const PetscInt *xadj, const PetscInt *adjncy, co
     deg1 = deg0;
     if (rchsze <= 0) goto L400;
     i__2 = rchsze;
-    for (irch = 1; irch <= i__2; ++irch) {
+    for (PetscInt irch = 1; irch <= i__2; ++irch) {
       inode = rchset[irch];
       deg1 += qsize[inode];
       marker[inode] = 0;
@@ -98,7 +98,7 @@ PetscErrorCode SPARSEPACKqmdupd(const PetscInt *xadj, const PetscInt *adjncy, co
     deg[node] = deg1 - 1;
     if (nhdsze <= 0) goto L600;
     i__2 = nhdsze;
-    for (inhd = 1; inhd <= i__2; ++inhd) {
+    for (PetscInt inhd = 1; inhd <= i__2; ++inhd) {
       inode         = nbrhd[inhd];
       marker[inode] = 0;
     }

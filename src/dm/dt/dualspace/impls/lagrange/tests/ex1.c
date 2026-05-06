@@ -214,7 +214,7 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
       PetscQuadrature  intNodes, allNodes;
       Mat              intMat, allMat;
       MatInfo          info;
-      PetscInt         i, j, nodeIdxDim, nodeVecDim, nNodes;
+      PetscInt nodeIdxDim, nodeVecDim, nNodes;
       const PetscInt  *nodeIdx;
       const PetscReal *nodeVec;
 
@@ -231,11 +231,11 @@ PetscErrorCode testLagrange(PetscHashLag lagTable, DM K, PetscInt dim, PetscInt 
       PetscCall(PetscQuadratureView(allNodes, PETSC_VIEWER_STDOUT_SELF));
       PetscCall(PetscViewerASCIIPopTab(PETSC_VIEWER_STDOUT_SELF));
       PetscCall(PetscViewerASCIIPrintf(PETSC_VIEWER_STDOUT_SELF, "All node indices:\n"));
-      for (i = 0; i < spdim; i++) {
+      for (PetscInt i = 0; i < spdim; i++) {
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "("));
-        for (j = 0; j < nodeIdxDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %" PetscInt_FMT ",", nodeIdx[i * nodeIdxDim + j]));
+        for (PetscInt j = 0; j < nodeIdxDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %" PetscInt_FMT ",", nodeIdx[i * nodeIdxDim + j]));
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "): ["));
-        for (j = 0; j < nodeVecDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %g,", (double)nodeVec[i * nodeVecDim + j]));
+        for (PetscInt j = 0; j < nodeVecDim; j++) PetscCall(PetscPrintf(PETSC_COMM_SELF, " %g,", (double)nodeVec[i * nodeVecDim + j]));
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "]\n"));
       }
 
@@ -300,7 +300,7 @@ int main(int argc, char **argv)
   PetscInt     dim;
   PetscHashLag lagTable;
   PetscInt     tensorCell;
-  PetscInt     order, ordermin, ordermax;
+  PetscInt ordermin, ordermax;
   PetscBool    continuous;
   PetscBool    trimmed;
   DM           dm;
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
   }
   ordermin = trimmed ? 1 : 0;
   ordermax = tensorCell == 2 ? 4 : tensorCell == 1 ? 3 : dim + 2;
-  for (order = ordermin; order <= ordermax; order++) {
+  for (PetscInt order = ordermin; order <= ordermax; order++) {
     PetscInt formDegree;
 
     for (formDegree = PetscMin(0, -dim + 1); formDegree <= dim; formDegree++) {

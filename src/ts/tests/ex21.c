@@ -73,7 +73,7 @@ static PetscErrorCode FormIFunctionLocal(DMDALocalInfo *info, PetscReal t, Petsc
 */
 static PetscErrorCode FormIJacobianLocal(DMDALocalInfo *info, PetscReal t, PetscScalar **x, PetscScalar **xdot, PetscScalar shift, Mat jac, Mat jacpre, AppCtx *app)
 {
-  PetscInt    i, j, k;
+  PetscInt k;
   MatStencil  col[5], row;
   PetscScalar v[5], lambda, hx, hy;
 
@@ -85,8 +85,8 @@ static PetscErrorCode FormIJacobianLocal(DMDALocalInfo *info, PetscReal t, Petsc
   /*
      Compute Jacobian entries for the locally owned part of the grid
   */
-  for (j = info->ys; j < info->ys + info->ym; j++) {
-    for (i = info->xs; i < info->xs + info->xm; i++) {
+  for (PetscInt j = info->ys; j < info->ys + info->ym; j++) {
+    for (PetscInt i = info->xs; i < info->xs + info->xm; i++) {
       row.j = j;
       row.i = i;
       k     = 0;

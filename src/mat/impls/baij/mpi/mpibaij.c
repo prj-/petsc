@@ -3576,7 +3576,7 @@ PetscErrorCode MatCreateMPIBAIJWithArrays(MPI_Comm comm, PetscInt bs, PetscInt m
 
 PetscErrorCode MatCreateMPIMatConcatenateSeqMat_MPIBAIJ(MPI_Comm comm, Mat inmat, PetscInt n, MatReuse scall, Mat *outmat)
 {
-  PetscInt     m, N, i, rstart, nnz, Ii, bs, cbs;
+  PetscInt m, N, rstart, nnz, Ii, bs, cbs;
   PetscInt    *indx;
   PetscScalar *values;
 
@@ -3605,7 +3605,7 @@ PetscErrorCode MatCreateMPIMatConcatenateSeqMat_MPIBAIJ(MPI_Comm comm, Mat inmat
     }
 
     rstart = __rstart; /* block rstart of *outmat; see inline function MatPreallocateBegin */
-    for (i = 0; i < mbs; i++) {
+    for (PetscInt i = 0; i < mbs; i++) {
       PetscCall(MatGetRow_SeqBAIJ(inmat, i * bs, &nnz, &indx, NULL)); /* non-blocked nnz and indx */
       nnz = nnz / bs;
       for (j = 0; j < nnz; j++) bindx[j] = indx[j * bs] / bs;
@@ -3628,7 +3628,7 @@ PetscErrorCode MatCreateMPIMatConcatenateSeqMat_MPIBAIJ(MPI_Comm comm, Mat inmat
   PetscCall(MatGetBlockSizes(inmat, &bs, &cbs));
   PetscCall(MatGetOwnershipRange(*outmat, &rstart, NULL));
 
-  for (i = 0; i < m; i++) {
+  for (PetscInt i = 0; i < m; i++) {
     PetscCall(MatGetRow_SeqBAIJ(inmat, i, &nnz, &indx, &values));
     Ii = i + rstart;
     PetscCall(MatSetValues(*outmat, 1, &Ii, nnz, indx, values, INSERT_VALUES));

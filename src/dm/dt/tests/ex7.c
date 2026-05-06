@@ -370,7 +370,7 @@ int main(int argc, char **argv)
         PetscCall(PetscFree3(L, u, x));
       }
       if (k > 0) { /* Interior */
-        PetscInt   Nkm, l, m;
+        PetscInt Nkm, l;
         PetscReal *wIntv0, *wIntv0check, wvcheck, diff, diffMat, normMat;
         PetscReal *intv0mat, *matcheck;
         PetscInt (*indices)[3];
@@ -418,7 +418,7 @@ int main(int argc, char **argv)
         for (l = 0; l < Nkm; l++) {
           PetscReal sum = 0.;
 
-          for (m = 0; m < Nk; m++) sum += intv0mat[l * Nk + m] * w[m];
+          for (PetscInt m = 0; m < Nk; m++) sum += intv0mat[l * Nk + m] * w[m];
           wIntv0check[l] = sum;
 
           diffMat += PetscSqr(PetscAbsReal(wIntv0check[l] - wIntv0[l]));

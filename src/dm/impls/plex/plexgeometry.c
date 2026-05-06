@@ -2490,7 +2490,7 @@ static PetscErrorCode DMPlexComputeCellGeometryFEM_FE(DM dm, PetscFE fe, PetscIn
   PetscQuadrature    feQuad;
   const PetscReal   *quadPoints;
   PetscTabulation    T;
-  PetscInt           dim, cdim, pdim, qdim, Nq, q;
+  PetscInt dim, cdim, pdim, qdim, Nq;
 
   PetscFunctionBegin;
   PetscCall(DMGetDimension(dm, &dim));
@@ -2526,7 +2526,7 @@ static PetscErrorCode DMPlexComputeCellGeometryFEM_FE(DM dm, PetscFE fe, PetscIn
     PetscAssert(dim == T->cdim, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "cdim %" PetscInt_FMT " != %" PetscInt_FMT, dim, T->cdim);
     if (v) {
       PetscCall(PetscArrayzero(v, Nq * cdim));
-      for (q = 0; q < Nq; ++q) {
+      for (PetscInt q = 0; q < Nq; ++q) {
         PetscInt i, k;
 
         for (k = 0; k < pdim; ++k) {
@@ -2538,7 +2538,7 @@ static PetscErrorCode DMPlexComputeCellGeometryFEM_FE(DM dm, PetscFE fe, PetscIn
     }
     if (J) {
       PetscCall(PetscArrayzero(J, Nq * cdim * cdim));
-      for (q = 0; q < Nq; ++q) {
+      for (PetscInt q = 0; q < Nq; ++q) {
         PetscInt i, j, k, c, r;
 
         /* J = dx_i/d\xi_j = sum[k=0,n-1] dN_k/d\xi_j * x_i(k) */
@@ -3788,7 +3788,7 @@ PetscErrorCode DMPlexCoordinatesToReference_FE(DM dm, PetscFE fe, PetscInt cell,
 /* TODO: TOBY please fix this for Nc > 1 */
 PetscErrorCode DMPlexReferenceToCoordinates_FE(DM dm, PetscFE fe, PetscInt cell, PetscInt numPoints, const PetscReal refCoords[], PetscReal realCoords[], Vec coords, PetscInt Nc, PetscInt dimR)
 {
-  PetscInt     numComp, pdim, i, j, k, l, coordSize;
+  PetscInt numComp, pdim, i, coordSize;
   PetscScalar *nodes = NULL;
   PetscReal   *invV, *modes;
   PetscReal   *B;
@@ -3804,16 +3804,16 @@ PetscErrorCode DMPlexReferenceToCoordinates_FE(DM dm, PetscFE fe, PetscInt cell,
   invV = fe->invV;
   for (i = 0; i < pdim; ++i) {
     modes[i] = 0.;
-    for (j = 0; j < pdim; ++j) modes[i] += invV[i * pdim + j] * PetscRealPart(nodes[j]);
+    for (PetscInt j = 0; j < pdim; ++j) modes[i] += invV[i * pdim + j] * PetscRealPart(nodes[j]);
   }
   PetscCall(DMGetWorkArray(dm, numPoints * pdim * Nc, MPIU_REAL, &B));
   PetscCall(PetscSpaceEvaluate(fe->basisSpace, numPoints, refCoords, B, NULL, NULL));
   for (i = 0; i < numPoints * Nc; i++) realCoords[i] = 0.;
-  for (j = 0; j < numPoints; j++) {
+  for (PetscInt j = 0; j < numPoints; j++) {
     PetscReal *mapped = &realCoords[j * Nc];
 
-    for (k = 0; k < pdim; k++) {
-      for (l = 0; l < Nc; l++) mapped[l] += modes[k] * B[(j * pdim + k) * Nc + l];
+    for (PetscInt k = 0; k < pdim; k++) {
+      for (PetscInt l = 0; l < Nc; l++) mapped[l] += modes[k] * B[(j * pdim + k) * Nc + l];
     }
   }
   PetscCall(DMRestoreWorkArray(dm, numPoints * pdim * Nc, MPIU_REAL, &B));
@@ -3932,7 +3932,7 @@ PetscErrorCode DMPlexCoordinatesToReference(DM dm, PetscInt cell, PetscInt numPo
 @*/
 PetscErrorCode DMPlexReferenceToCoordinates(DM dm, PetscInt cell, PetscInt numPoints, const PetscReal refCoords[], PetscReal realCoords[])
 {
-  PetscInt       dimC, dimR, depth, i, cellHeight, height;
+  PetscInt dimC, dimR, depth, cellHeight, height;
   DMPolytopeType ct;
   DM             coordDM = NULL;
   Vec            coords;
@@ -3977,7 +3977,7 @@ PetscErrorCode DMPlexReferenceToCoordinates(DM dm, PetscInt cell, PetscInt numPo
       PetscCall(DMGetWorkArray(dm, dimC + 2 * dimC * dimC, MPIU_REAL, &v0));
       J = &v0[dimC];
       PetscCall(DMPlexComputeCellGeometryAffineFEM(dm, cell, v0, J, NULL, &detJ));
-      for (i = 0; i < numPoints; i++) { /* Apply the affine transformation for each point */
+      for (PetscInt i = 0; i < numPoints; i++) { /* Apply the affine transformation for each point */
         const PetscReal xi0[3] = {-1., -1., -1.};
 
         CoordinatesRefToReal(dimC, dimR, xi0, v0, J, &refCoords[dimR * i], &realCoords[dimC * i]);

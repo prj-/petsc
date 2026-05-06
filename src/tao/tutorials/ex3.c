@@ -182,7 +182,7 @@ PetscErrorCode CreateCtx(DM dm, AppCtx *user)
   PetscFE         fe;
   DMLabel         label;
   PetscSection    section;
-  PetscInt        n, k, p, d;
+  PetscInt n, k, p;
   PetscInt        dof, off;
   IS              is;
   const PetscInt *points;
@@ -242,7 +242,7 @@ PetscErrorCode CreateCtx(DM dm, AppCtx *user)
   for (p = 0, k = 0; p < n; ++p) {
     PetscCall(PetscSectionGetDof(section, points[p], &dof));
     PetscCall(PetscSectionGetOffset(section, points[p], &off));
-    for (d = 0; d < dof; ++d) user->bc_indices[k++] = off + d;
+    for (PetscInt d = 0; d < dof; ++d) user->bc_indices[k++] = off + d;
   }
   PetscCall(ISRestoreIndices(is, &points));
   PetscCall(ISDestroy(&is));

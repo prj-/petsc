@@ -22,7 +22,7 @@ int main(int argc, char **argv)
   KSP           ksp;     /* linear solver context */
   PetscRandom   rctx;    /* random number generator context */
   PetscReal     norm;    /* norm of solution error */
-  PetscInt      i, j, its;
+  PetscInt its;
   PetscBool     flg = PETSC_FALSE;
   PetscLogStage stage;
   DMDALocalInfo info;
@@ -59,8 +59,8 @@ int main(int argc, char **argv)
   PetscCall(PetscLogStageRegister("Assembly", &stage));
   PetscCall(PetscLogStagePush(stage));
   PetscCall(DMDAGetLocalInfo(da, &info));
-  for (j = info.ys; j < info.ys + info.ym; j++) {
-    for (i = info.xs; i < info.xs + info.xm; i++) {
+  for (PetscInt j = info.ys; j < info.ys + info.ym; j++) {
+    for (PetscInt i = info.xs; i < info.xs + info.xm; i++) {
       PetscReal   hx = 1. / info.mx, hy = 1. / info.my;
       MatStencil  row = {0}, col[5] = {{0}};
       PetscScalar v[5];

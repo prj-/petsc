@@ -126,7 +126,7 @@ PetscErrorCode PetscSectionView_HDF5_Internal(PetscSection s, PetscViewer viewer
 static PetscErrorCode PetscSectionLoad_HDF5_SingleField_SetConstraintIndices(PetscSection s, IS cindIS, IS coffIS)
 {
   MPI_Comm        comm;
-  PetscInt        pStart, pEnd, p, M, m, i, cdof;
+  PetscInt pStart, pEnd, p, M, m, cdof;
   const PetscInt *data;
   PetscInt       *cinds;
   const PetscInt *coffs;
@@ -143,7 +143,7 @@ static PetscErrorCode PetscSectionLoad_HDF5_SingleField_SetConstraintIndices(Pet
   PetscCall(ISGetIndices(coffIS, &coffs));
   for (p = pStart, m = 0; p < pEnd; ++p) {
     PetscCall(PetscSectionGetConstraintDof(s, p, &cdof));
-    for (i = 0; i < cdof; ++i) coffsets[m++] = coffs[p - pStart] + i;
+    for (PetscInt i = 0; i < cdof; ++i) coffsets[m++] = coffs[p - pStart] + i;
   }
   PetscCall(ISRestoreIndices(coffIS, &coffs));
   PetscCall(PetscSFCreate(comm, &sf));
@@ -273,7 +273,7 @@ static PetscErrorCode PetscSectionLoad_HDF5_SingleField(PetscSection s, PetscVie
 PetscErrorCode PetscSectionLoad_HDF5_Internal(PetscSection s, PetscViewer viewer)
 {
   MPI_Comm comm;
-  PetscInt N, n, numFields, f;
+  PetscInt N, n, numFields;
 
   PetscFunctionBegin;
   PetscCall(PetscObjectGetComm((PetscObject)s, &comm));
@@ -290,7 +290,7 @@ PetscErrorCode PetscSectionLoad_HDF5_Internal(PetscSection s, PetscViewer viewer
   if (n == PETSC_DECIDE) PetscCall(PetscSplitOwnership(comm, &n, &N));
   PetscCall(PetscSectionSetChart(s, 0, n));
   PetscCall(PetscSectionLoad_HDF5_SingleField(s, viewer));
-  for (f = 0; f < numFields; ++f) {
+  for (PetscInt f = 0; f < numFields; ++f) {
     char     fname[PETSC_MAX_PATH_LEN];
     char    *fieldName;
     PetscInt fieldComponents;

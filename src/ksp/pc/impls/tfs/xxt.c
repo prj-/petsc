@@ -162,7 +162,7 @@ static PetscErrorCode do_xxt_factor(xxt_ADT xxt_handle)
 
 static PetscErrorCode xxt_generate(xxt_ADT xxt_handle)
 {
-  PetscInt      i, j, k, idex;
+  PetscInt i, j, idex;
   PetscInt      dim, col;
   PetscScalar  *u, *uu, *v, *z, *w, alpha, alpha_w;
   PetscInt     *segs;
@@ -283,7 +283,7 @@ static PetscErrorCode xxt_generate(xxt_ADT xxt_handle)
     PetscCall(PCTFS_rvec_zero(uu, m));
     x_ptr = x;
     iptr  = col_indices;
-    for (k = 0; k < i; k++) {
+    for (PetscInt k = 0; k < i; k++) {
       off = *iptr++;
       len = *iptr++;
       PetscCall(PetscBLASIntCast(len, &dlen));
@@ -298,7 +298,7 @@ static PetscErrorCode xxt_generate(xxt_ADT xxt_handle)
     PetscCall(PCTFS_rvec_zero(z, n));
     x_ptr = x;
     iptr  = col_indices;
-    for (k = 0; k < i; k++) {
+    for (PetscInt k = 0; k < i; k++) {
       off = *iptr++;
       len = *iptr++;
       PetscCall(PetscBLASIntCast(len, &dlen));
@@ -334,7 +334,7 @@ static PetscErrorCode xxt_generate(xxt_ADT xxt_handle)
     /* add newly generated column, v_l, to X */
     flag = 1;
     off = len = 0;
-    for (k = 0; k < n; k++) {
+    for (PetscInt k = 0; k < n; k++) {
       if (v[k] != 0.0) {
         len = k;
         if (flag) {

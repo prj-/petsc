@@ -1041,7 +1041,7 @@ static PetscErrorCode THIJacobianLocal_2D(DMDALocalInfo *info, Node **x, Mat J, 
 
 static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B, THI thi, THIAssemblyMode amode)
 {
-  PetscInt  xs, ys, xm, ym, zm, i, j, k, q, l, ll;
+  PetscInt xs, ys, xm, ym, zm, i, j, k;
   PetscReal hx, hy;
   PrmNode **prm;
 
@@ -1072,10 +1072,10 @@ static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B,
         HexExtract(x, i, j, k, n);
         PetscCall(PetscMemzero(Ke, sizeof(Ke)));
         if (thi->no_slip && k == 0) {
-          for (l = 0; l < 4; l++) n[l].u = n[l].v = 0;
+          for (PetscInt l = 0; l < 4; l++) n[l].u = n[l].v = 0;
           ls = 4;
         }
-        for (q = 0; q < 8; q++) {
+        for (PetscInt q = 0; q < 8; q++) {
           PetscReal   dz[3], phi[8], dphi[8][3], jw, eta, deta;
           PetscScalar du[3], dv[3], u, v;
           HexGrad(HexQDeriv[q], zn, dz);
@@ -1083,7 +1083,7 @@ static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B,
           PointwiseNonlinearity(thi, n, phi, dphi, &u, &v, du, dv, &eta, &deta);
           jw /= thi->rhog; /* residuals are scaled by this factor */
           if (q == 0) etabase = eta;
-          for (l = ls; l < 8; l++) { /* test functions */
+          for (PetscInt l = ls; l < 8; l++) { /* test functions */
             const PetscReal *PETSC_RESTRICT dp = dphi[l];
 #if USE_SSE2_KERNELS
             /* gcc (up to my 4.5 snapshot) is really bad at hoisting intrinsics so we do it manually */
@@ -1096,9 +1096,9 @@ static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B,
 
 #endif
 #if defined(COMPUTE_LOWER_TRIANGULAR)     /* The element matrices are always symmetric so computing the lower-triangular part is not necessary */
-            for (ll = ls; ll < 8; ll++) { /* trial functions */
+            for (PetscInt ll = ls; ll < 8; ll++) { /* trial functions */
 #else
-            for (ll = l; ll < 8; ll++) {
+            for (PetscInt ll = l; ll < 8; ll++) {
 #endif
               const PetscReal *PETSC_RESTRICT dpl = dphi[ll];
               if (amode == THIASSEMBLY_TRIDIAGONAL && (l - ll) % 4) continue; /* these entries would not be inserted */
@@ -1144,19 +1144,19 @@ static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B,
             Ke[0][0] = thi->dirichlet_scale * diagu;
             Ke[1][1] = thi->dirichlet_scale * diagv;
           } else {
-            for (q = 0; q < 4; q++) {
+            for (PetscInt q = 0; q < 4; q++) {
               const PetscReal jw = 0.25 * hx * hy / thi->rhog, *phi = QuadQInterp[q];
               PetscScalar     u = 0, v = 0, rbeta2 = 0;
               PetscReal       beta2, dbeta2;
-              for (l = 0; l < 4; l++) {
+              for (PetscInt l = 0; l < 4; l++) {
                 u += phi[l] * n[l].u;
                 v += phi[l] * n[l].v;
                 rbeta2 += phi[l] * pn[l].beta2;
               }
               THIFriction(thi, PetscRealPart(rbeta2), PetscRealPart(u * u + v * v) / 2, &beta2, &dbeta2);
-              for (l = 0; l < 4; l++) {
+              for (PetscInt l = 0; l < 4; l++) {
                 const PetscReal pp = phi[l];
-                for (ll = 0; ll < 4; ll++) {
+                for (PetscInt ll = 0; ll < 4; ll++) {
                   const PetscReal ppl = phi[ll];
                   Ke[l * 2 + 0][ll * 2 + 0] += pp * jw * beta2 * ppl + pp * jw * dbeta2 * u * u * ppl;
                   Ke[l * 2 + 0][ll * 2 + 1] += pp * jw * dbeta2 * u * v * ppl;
@@ -1179,7 +1179,7 @@ static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B,
             {i,     j + 1, k + 1, 0}
           };
           if (amode == THIASSEMBLY_TRIDIAGONAL) {
-            for (l = 0; l < 4; l++) { /* Copy out each of the blocks, discarding horizontal coupling */
+            for (PetscInt l = 0; l < 4; l++) { /* Copy out each of the blocks, discarding horizontal coupling */
               const PetscInt   l4     = l + 4;
               const MatStencil rcl[2] = {
                 {rc[l].k,  rc[l].j,  rc[l].i,  0},
@@ -1205,8 +1205,8 @@ static PetscErrorCode THIJacobianLocal_3D(DMDALocalInfo *info, Node ***x, Mat B,
             }
           } else {
 #if !defined(COMPUTE_LOWER_TRIANGULAR) /* fill in lower-triangular part, this is really cheap compared to computing the entries */
-            for (l = 0; l < 8; l++) {
-              for (ll = l + 1; ll < 8; ll++) {
+            for (PetscInt l = 0; l < 8; l++) {
+              for (PetscInt ll = l + 1; ll < 8; ll++) {
                 Ke[ll * 2 + 0][l * 2 + 0] = Ke[l * 2 + 0][ll * 2 + 0];
                 Ke[ll * 2 + 1][l * 2 + 0] = Ke[l * 2 + 0][ll * 2 + 1];
                 Ke[ll * 2 + 0][l * 2 + 1] = Ke[l * 2 + 1][ll * 2 + 0];
@@ -1382,7 +1382,7 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM da, Vec X, const char fil
     PetscScalar *array;
     PetscCall(PetscMalloc1(nmax, &array));
     for (PetscMPIInt r = 0; r < size; r++) {
-      PetscInt           i, j, k, xs, xm, ys, ym, zs, zm;
+      PetscInt xs, xm, ys, ym, zs, zm;
       const PetscScalar *ptr;
       MPI_Status         status;
       if (r) PetscCallMPI(MPIU_Recv(range, 6, MPIU_INT, r, tag, comm, MPI_STATUS_IGNORE));
@@ -1403,9 +1403,9 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM da, Vec X, const char fil
 
       PetscCall(PetscViewerASCIIPrintf(viewer, "      <Points>\n"));
       PetscCall(PetscViewerASCIIPrintf(viewer, "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n"));
-      for (i = xs; i < xs + xm; i++) {
-        for (j = ys; j < ys + ym; j++) {
-          for (k = zs; k < zs + zm; k++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
+        for (PetscInt j = ys; j < ys + ym; j++) {
+          for (PetscInt k = zs; k < zs + zm; k++) {
             PrmNode   p;
             PetscReal xx = thi->Lx * i / mx, yy = thi->Ly * j / my, zz;
             thi->initialize(thi, xx, yy, &p);
@@ -1419,11 +1419,11 @@ static PetscErrorCode THIDAVecView_VTK_XML(THI thi, DM da, Vec X, const char fil
 
       PetscCall(PetscViewerASCIIPrintf(viewer, "      <PointData>\n"));
       PetscCall(PetscViewerASCIIPrintf(viewer, "        <DataArray type=\"Float32\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n"));
-      for (i = 0; i < nn; i += dof) PetscCall(PetscViewerASCIIPrintf(viewer, "%f %f %f\n", (double)(PetscRealPart(ptr[i]) * units->year / units->meter), (double)(PetscRealPart(ptr[i + 1]) * units->year / units->meter), 0.0));
+      for (PetscInt i = 0; i < nn; i += dof) PetscCall(PetscViewerASCIIPrintf(viewer, "%f %f %f\n", (double)(PetscRealPart(ptr[i]) * units->year / units->meter), (double)(PetscRealPart(ptr[i + 1]) * units->year / units->meter), 0.0));
       PetscCall(PetscViewerASCIIPrintf(viewer, "        </DataArray>\n"));
 
       PetscCall(PetscViewerASCIIPrintf(viewer, "        <DataArray type=\"Int32\" Name=\"rank\" NumberOfComponents=\"1\" format=\"ascii\">\n"));
-      for (i = 0; i < nn; i += dof) PetscCall(PetscViewerASCIIPrintf(viewer, "%d\n", r));
+      for (PetscInt i = 0; i < nn; i += dof) PetscCall(PetscViewerASCIIPrintf(viewer, "%d\n", r));
       PetscCall(PetscViewerASCIIPrintf(viewer, "        </DataArray>\n"));
       PetscCall(PetscViewerASCIIPrintf(viewer, "      </PointData>\n"));
 

@@ -314,11 +314,11 @@ static PetscErrorCode TSStepRefine_RK_MultirateSplit(TS ts)
   const PetscInt   s = tab->s;
   const PetscReal *A = tab->A, *c = tab->c;
   PetscScalar     *w = rk->work;
-  PetscInt         i, j, k;
+  PetscInt i, j;
   PetscReal        t = ts->ptime, h = ts->time_step;
 
   PetscFunctionBegin;
-  for (k = 0; k < rk->dtratio; k++) {
+  for (PetscInt k = 0; k < rk->dtratio; k++) {
     PetscCall(VecGetSubVector(ts->vec_sol, rk->is_fast, &Xfast));
     for (i = 0; i < s; i++) PetscCall(VecGetSubVector(YdotRHS[i], rk->is_fast, &YdotRHS_fast[i]));
     /* propagate fast component using small time steps */

@@ -2456,7 +2456,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
 {
   DM_Network     *network = (DM_Network *)dm->data;
   PetscInt        eStart, eEnd, vStart, vEnd, rstart, nrows, *rows, localSize;
-  PetscInt        cstart, ncols, j, e, v;
+  PetscInt cstart, ncols, j;
   PetscBool       ghost, ghost_vc, ghost2, isNest;
   Mat             Juser;
   PetscSection    sectionGlobal;
@@ -2503,7 +2503,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   PetscCall(DMNetworkGetEdgeRange(dm, &eStart, &eEnd));
 
   PetscCall(PetscMalloc1(localSize, &rows));
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, e, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, e, &nrows));
@@ -2512,7 +2512,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
 
       /* Set preallocation for connected vertices */
       PetscCall(DMNetworkGetConnectedVertices(dm, e, &cone));
-      for (v = 0; v < 2; v++) {
+      for (PetscInt v = 0; v < 2; v++) {
         PetscCall(PetscSectionGetDof(network->DofSection, cone[v], &ncols));
 
         if (network->Je) Juser = network->Je[3 * e + 1 + v]; /* Jacobian(e,v) */
@@ -2533,7 +2533,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   PetscCall(DMNetworkGetVertexRange(dm, &vStart, &vEnd));
   if (vEnd - vStart) vptr = network->Jvptr;
 
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, v, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, v, &nrows));
@@ -2548,7 +2548,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
     /* Get supporting edges and connected vertices */
     PetscCall(DMNetworkGetSupportingEdges(dm, v, &nedges, &edges));
 
-    for (e = 0; e < nedges; e++) {
+    for (PetscInt e = 0; e < nedges; e++) {
       /* Supporting edges */
       PetscCall(DMNetworkGetGlobalVecOffset(dm, edges[e], ALL_COMPONENTS, &cstart));
       PetscCall(PetscSectionGetDof(network->DofSection, edges[e], &ncols));
@@ -2608,7 +2608,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   PetscCall(PetscFree2(dnnz, onnz));
 
   /* (2) Set matrix entries for edges */
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, e, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, e, &nrows));
@@ -2617,7 +2617,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
 
       /* Set matrix entries for connected vertices */
       PetscCall(DMNetworkGetConnectedVertices(dm, e, &cone));
-      for (v = 0; v < 2; v++) {
+      for (PetscInt v = 0; v < 2; v++) {
         PetscCall(DMNetworkGetGlobalVecOffset(dm, cone[v], ALL_COMPONENTS, &cstart));
         PetscCall(PetscSectionGetDof(network->DofSection, cone[v], &ncols));
 
@@ -2635,7 +2635,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
   }
 
   /* Set matrix entries for vertices */
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     /* Get row indices */
     PetscCall(DMNetworkGetGlobalVecOffset(dm, v, ALL_COMPONENTS, &rstart));
     PetscCall(PetscSectionGetDof(network->DofSection, v, &nrows));
@@ -2649,7 +2649,7 @@ PetscErrorCode DMCreateMatrix_Network(DM dm, Mat *J)
     /* Get supporting edges and connected vertices */
     PetscCall(DMNetworkGetSupportingEdges(dm, v, &nedges, &edges));
 
-    for (e = 0; e < nedges; e++) {
+    for (PetscInt e = 0; e < nedges; e++) {
       /* Supporting edges */
       PetscCall(DMNetworkGetGlobalVecOffset(dm, edges[e], ALL_COMPONENTS, &cstart));
       PetscCall(PetscSectionGetDof(network->DofSection, edges[e], &ncols));

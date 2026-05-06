@@ -130,13 +130,13 @@ static PetscErrorCode PetscDualSpaceRefinedView_Ascii(PetscDualSpace sp, PetscVi
   PetscFunctionBegin;
   if (sp->dm && sp->pointSpaces) {
     PetscInt pStart, pEnd;
-    PetscInt cStart, cEnd, c;
+    PetscInt cStart, cEnd;
 
     PetscCall(DMPlexGetChart(sp->dm, &pStart, &pEnd));
     PetscCall(DMPlexGetHeightStratum(sp->dm, 0, &cStart, &cEnd));
     PetscCall(PetscViewerASCIIPrintf(viewer, "Refined dual space:\n"));
     PetscCall(PetscViewerASCIIPushTab(viewer));
-    for (c = cStart; c < cEnd; c++) {
+    for (PetscInt c = cStart; c < cEnd; c++) {
       if (!sp->pointSpaces[c - pStart]) {
         PetscCall(PetscViewerASCIIPrintf(viewer, "Cell space %" PetscInt_FMT " not set yet\n", c));
       } else {

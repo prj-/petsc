@@ -688,7 +688,7 @@ int main(int argc, char **argv)
       Vec          coord;
       DM           cda;
       PetscScalar *x_coord;
-      PetscInt     xs, xm, i;
+      PetscInt xs, xm;
 
       /* Ensure coordinates are set */
       PetscCall(DMDASetUniformCoordinates(da_state, 0.0, L, 0.0, 0.0, 0.0, 0.0));
@@ -697,7 +697,7 @@ int main(int argc, char **argv)
       PetscCall(DMGetCoordinates(da_state, &coord));
       PetscCall(DMDAGetCorners(cda, &xs, NULL, NULL, &xm, NULL, NULL));
       PetscCall(DMDAVecGetArray(cda, coord, &x_coord));
-      for (i = xs; i < xs + xm; i++) x_coord[i] = ((PetscReal)i + 0.5) * L / n_vert;
+      for (PetscInt i = xs; i < xs + xm; i++) x_coord[i] = ((PetscReal)i + 0.5) * L / n_vert;
       PetscCall(DMDAVecRestoreArray(cda, coord, &x_coord));
 
       /* Create Vecxyz[0] */

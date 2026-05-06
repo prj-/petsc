@@ -11,7 +11,6 @@ int main(int argc, char **argv)
   PetscBool   inv = PETSC_FALSE, subset = PETSC_FALSE, flg;
   Vec         x, y;
 
-  PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
   PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD, &size));
   bs = size;
@@ -29,7 +28,7 @@ int main(int argc, char **argv)
 
   if (subset) PetscCall(VecSetOption(x, VEC_SUBSET_OFF_PROC_ENTRIES, PETSC_TRUE));
 
-  for (r = 0; r < repeat; r++) {
+  for (PetscFunctionBeginUse r = 0; r < repeat; r++) {
     /* Assemble the full vector on the first and last iteration, otherwise don't set any values */
     for (i = 0; i < n * bs * (!r || !(repeat - 1 - r)); i++) {
       val = i * 1.0;
@@ -52,7 +51,7 @@ int main(int argc, char **argv)
   /* Now do the blocksetvalues */
   PetscCall(VecSet(x, zero));
   PetscCall(PetscMalloc1(bs, &vals));
-  for (r = 0; r < repeat; r++) {
+  for (PetscFunctionBeginUse r = 0; r < repeat; r++) {
     PetscInt up = n * (!r || !(repeat - 1 - r));
     /* Assemble the full vector on the first and last iteration, otherwise don't set any values */
     for (i = 0; i < up; i++) {

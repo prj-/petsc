@@ -568,7 +568,7 @@ static PetscErrorCode PetscSpaceTensorSetSubspace_Tensor(PetscSpace space, Petsc
 static PetscErrorCode PetscSpaceGetHeightSubspace_Tensor(PetscSpace sp, PetscInt height, PetscSpace *subsp)
 {
   PetscSpace_Tensor *tens = (PetscSpace_Tensor *)sp->data;
-  PetscInt           Nc, dim, order, i;
+  PetscInt Nc, dim, order;
   PetscSpace         bsp;
 
   PetscFunctionBegin;
@@ -592,7 +592,7 @@ static PetscErrorCode PetscSpaceGetHeightSubspace_Tensor(PetscSpace sp, PetscInt
       PetscCall(PetscSpaceSetDegree(sub, order, PETSC_DETERMINE));
       PetscCall(PetscSpaceSetNumVariables(sub, dim - height));
       PetscCall(PetscSpaceTensorSetNumSubspaces(sub, dim - height));
-      for (i = 0; i < dim - height; i++) PetscCall(PetscSpaceTensorSetSubspace(sub, i, bsp));
+      for (PetscInt i = 0; i < dim - height; i++) PetscCall(PetscSpaceTensorSetSubspace(sub, i, bsp));
       PetscCall(PetscSpaceSetUp(sub));
       tens->heightsubspaces[height - 1] = sub;
     }

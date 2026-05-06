@@ -406,7 +406,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal t, Vec globalin, Vec globalout, Pets
   PetscReal          a, epsilon;
   PetscScalar       *outptr;
   const PetscScalar *inptr;
-  PetscInt           i, j, len;
+  PetscInt len;
   IS                 from, to;
   PetscInt          *idx;
   VecScatter         scatter;
@@ -432,7 +432,7 @@ PetscErrorCode RHSFunction(TS ts, PetscReal t, Vec globalin, Vec globalout, Pets
 
   /* Set the index sets */
   PetscCall(PetscMalloc1(len, &idx));
-  for (i = 0; i < len; i++) idx[i] = i;
+  for (PetscInt i = 0; i < len; i++) idx[i] = i;
 
   /* Create local sequential vectors */
   PetscCall(VecCreateSeq(PETSC_COMM_SELF, len, &tmp_in));
@@ -454,17 +454,17 @@ PetscErrorCode RHSFunction(TS ts, PetscReal t, Vec globalin, Vec globalout, Pets
 
   outptr[0]     = xc * inptr[0] + xr * inptr[1] + yr * inptr[m];
   outptr[m - 1] = 2.0 * xl * inptr[m - 2] + xc * inptr[m - 1] + yr * inptr[m - 1 + m];
-  for (i = 1; i < m - 1; i++) outptr[i] = xc * inptr[i] + xl * inptr[i - 1] + xr * inptr[i + 1] + yr * inptr[i + m];
+  for (PetscInt i = 1; i < m - 1; i++) outptr[i] = xc * inptr[i] + xl * inptr[i - 1] + xr * inptr[i + 1] + yr * inptr[i + m];
 
-  for (j = 1; j < n - 1; j++) {
+  for (PetscInt j = 1; j < n - 1; j++) {
     outptr[j * m]         = xc * inptr[j * m] + xr * inptr[j * m + 1] + yl * inptr[j * m - m] + yr * inptr[j * m + m];
     outptr[j * m + m - 1] = xc * inptr[j * m + m - 1] + 2.0 * xl * inptr[j * m + m - 1 - 1] + yl * inptr[j * m + m - 1 - m] + yr * inptr[j * m + m - 1 + m];
-    for (i = 1; i < m - 1; i++) outptr[j * m + i] = xc * inptr[j * m + i] + xl * inptr[j * m + i - 1] + xr * inptr[j * m + i + 1] + yl * inptr[j * m + i - m] + yr * inptr[j * m + i + m];
+    for (PetscInt i = 1; i < m - 1; i++) outptr[j * m + i] = xc * inptr[j * m + i] + xl * inptr[j * m + i - 1] + xr * inptr[j * m + i + 1] + yl * inptr[j * m + i - m] + yr * inptr[j * m + i + m];
   }
 
   outptr[mn - m] = xc * inptr[mn - m] + xr * inptr[mn - m + 1] + 2.0 * yl * inptr[mn - m - m];
   outptr[mn - 1] = 2.0 * xl * inptr[mn - 2] + xc * inptr[mn - 1] + 2.0 * yl * inptr[mn - 1 - m];
-  for (i = 1; i < m - 1; i++) outptr[mn - m + i] = xc * inptr[mn - m + i] + xl * inptr[mn - m + i - 1] + xr * inptr[mn - m + i + 1] + 2 * yl * inptr[mn - m + i - m];
+  for (PetscInt i = 1; i < m - 1; i++) outptr[mn - m + i] = xc * inptr[mn - m + i] + xl * inptr[mn - m + i - 1] + xr * inptr[mn - m + i + 1] + 2 * yl * inptr[mn - m + i - m];
 
   PetscCall(VecRestoreArrayRead(tmp_in, &inptr));
   PetscCall(VecRestoreArrayWrite(tmp_out, &outptr));

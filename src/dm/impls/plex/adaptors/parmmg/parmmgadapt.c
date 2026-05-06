@@ -30,9 +30,9 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
   PetscInt          *cells, *cellsNew, *cellTags, *cellTagsNew, *verTags, *verTagsNew;
   PetscInt          *bdFaces, *faceTags, *facesNew, *faceTagsNew;
   PetscInt          *corners, *requiredCells, *requiredVer, *ridges, *requiredFaces;
-  PetscInt           cStart, cEnd, c, numCells, fStart, fEnd, f, numFaceTags, vStart, vEnd, v, numVertices;
+  PetscInt cStart, cEnd, c, numCells, fStart, fEnd, f, numFaceTags, vStart, vEnd, numVertices;
   PetscInt           numCellsNotShared, *cIsLeaf, numUsedVertices, *vertexNumber, *fIsIncluded;
-  PetscInt           dim, off, coff, maxConeSize, bdSize, i, j, k, Neq, verbosity, numIter;
+  PetscInt dim, off, coff, maxConeSize, bdSize, i, k, Neq, verbosity, numIter;
   PetscInt          *interfaces_lv, *interfaces_gv, *interfacesOffset;
   PetscMPIInt        niranks, nrranks, numNgbRanks;
   PetscInt           r, lv, gv;
@@ -121,7 +121,7 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
   PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
   PetscCall(VecGetArrayRead(coordinates, &coords));
   PetscCall(PetscMalloc2(numUsedVertices * Neq, &metric, dim * numUsedVertices, &vertices));
-  for (v = 0; v < vEnd - vStart; ++v) {
+  for (PetscInt v = 0; v < vEnd - vStart; ++v) {
     PetscCall(PetscSectionGetOffset(coordSection, v + vStart, &off));
     if (vertexNumber[v]) {
       for (i = 0; i < dim; ++i) vertices[dim * (vertexNumber[v] - 1) + i] = PetscRealPart(coords[off + i]);
@@ -189,11 +189,11 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
   PetscCall(VecGetArrayRead(vertexMetric, &met));
   PetscCall(DMPlexMetricIsIsotropic(dm, &isotropic));
   PetscCall(DMPlexMetricIsUniform(dm, &uniform));
-  for (v = 0; v < (vEnd - vStart); ++v) {
+  for (PetscInt v = 0; v < (vEnd - vStart); ++v) {
     PetscInt vv = vertexNumber[v];
     if (!vv--) continue;
     for (i = 0, k = 0; i < dim; ++i) {
-      for (j = i; j < dim; ++j, ++k) {
+      for (PetscInt j = i; j < dim; ++j, ++k) {
         if (isotropic) {
           if (i == j) {
             if (uniform) metric[Neq * vv + k] = PetscRealPart(met[0]);
@@ -238,7 +238,7 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
     PetscCall(PetscCalloc1(pEnd - pStart, &usedCopies));
     for (i = 0, mrl = 0; i < vStart - pStart; i++) mrl += degree[i];
     for (i = vStart - pStart; i < vEnd - pStart; ++i) {
-      for (j = 0; j < degree[i]; j++, mrl++) {
+      for (PetscInt j = 0; j < degree[i]; j++, mrl++) {
         if (rankOfUsedMultiRootLeaves[mrl] != -1) usedCopies[i]++;
       }
       if (vertexNumber[i - vStart + pStart]) usedCopies[i]++;
@@ -263,7 +263,7 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
       if (usedCopies[i] > 1 && degree[i]) {
         PetscCall(PetscSectionGetOffset(rankSection, k, &offset));
         if (vertexNumber[i - vStart + pStart]) rankGlobalArray[k++] = rank;
-        for (j = 0; j < degree[i]; j++, mrl++) {
+        for (PetscInt j = 0; j < degree[i]; j++, mrl++) {
           if (rankOfUsedMultiRootLeaves[mrl] != -1) rankGlobalArray[k++] = rankOfUsedMultiRootLeaves[mrl];
         }
       } else mrl += degree[i];
@@ -289,12 +289,12 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
 
     /* Count the number of interfaces per rank, not including those on the root */
     PetscCall(PetscCalloc1(numProcs, &interfacesPerRank));
-    for (v = vStart; v < vEnd; v++) {
+    for (PetscInt v = vStart; v < vEnd; v++) {
       if (vertexNumber[v - vStart]) {
         PetscCall(PetscSectionGetDof(rankSection, v, &shareCnt));
         if (shareCnt) {
           PetscCall(PetscSectionGetOffset(rankSection, v, &offset));
-          for (j = 0; j < shareCnt; j++) interfacesPerRank[rankArray[offset + j]]++;
+          for (PetscInt j = 0; j < shareCnt; j++) interfacesPerRank[rankArray[offset + j]]++;
         }
       }
     }
@@ -312,12 +312,12 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
     /* Get the local and global vertex numbers at interfaces */
     PetscCall(DMPlexGetVertexNumbering(dm, &globalVertexNum));
     PetscCall(ISGetIndices(globalVertexNum, &gV));
-    for (v = vStart; v < vEnd; v++) {
+    for (PetscInt v = vStart; v < vEnd; v++) {
       if (vertexNumber[v - vStart]) {
         PetscCall(PetscSectionGetDof(rankSection, v, &shareCnt));
         if (shareCnt) {
           PetscCall(PetscSectionGetOffset(rankSection, v, &offset));
-          for (j = 0; j < shareCnt; j++) {
+          for (PetscInt j = 0; j < shareCnt; j++) {
             r = rankArray[offset + j];
             if (r == rank) continue;
             k                = interfacesOffset[r] + interfacesPerRank[r]++;
@@ -396,7 +396,7 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
   PetscCall(PetscMalloc1(numVerticesNewLoc * dim, &verticesNewLoc));
   for (i = 0, c = 0; i < numVerticesNew; i++) {
     if (owners[i] == rank) {
-      for (j = 0; j < dim; ++j) verticesNewLoc[dim * c + j] = verticesNew[dim * i + j];
+      for (PetscInt j = 0; j < dim; ++j) verticesNewLoc[dim * c + j] = verticesNew[dim * i + j];
       c++;
     }
   }
@@ -422,14 +422,14 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_ParMmg_Plex(DM dm, Vec vertexMetric, D
     PetscInt        numCoveredPoints, numFaces = 0, facePoints[3];
     const PetscInt *coveredPoints = NULL;
 
-    for (j = 0; j < dim; ++j) {
+    for (PetscInt j = 0; j < dim; ++j) {
       lv = facesNew[i * dim + j];
       gv = gv_new[lv] - 1;
       PetscCall(PetscFindInt(gv, numVerticesNew, verticesNewSorted, &lv));
       facePoints[j] = lv + vStart;
     }
     PetscCall(DMPlexGetFullJoin(*dmNew, dim, facePoints, &numCoveredPoints, &coveredPoints));
-    for (j = 0; j < numCoveredPoints; ++j) {
+    for (PetscInt j = 0; j < numCoveredPoints; ++j) {
       if (coveredPoints[j] >= fStart && coveredPoints[j] < fEnd) {
         numFaces++;
         f = j;

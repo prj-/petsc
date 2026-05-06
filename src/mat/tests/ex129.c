@@ -182,7 +182,7 @@ PetscErrorCode ComputeRHSMatrix(PetscInt m, PetscInt nrhs, Mat *C)
 
 PetscErrorCode ComputeMatrix(DM da, Mat B)
 {
-  PetscInt     i, j, k, mx, my, mz, xm, ym, zm, xs, ys, zs, dof, k1, k2, k3;
+  PetscInt mx, my, mz, xm, ym, zm, xs, ys, zs, dof, k3;
   PetscScalar *v, *v_neighbor, Hx, Hy, Hz, HxHydHz, HyHzdHx, HxHzdHy, r1, r2;
   MatStencil   row, col;
   PetscRandom  rand;
@@ -208,8 +208,8 @@ PetscErrorCode ComputeMatrix(DM da, Mat B)
   v_neighbor = v + dof * dof;
   PetscCall(PetscArrayzero(v, 2 * dof * dof + 1));
   k3 = 0;
-  for (k1 = 0; k1 < dof; k1++) {
-    for (k2 = 0; k2 < dof; k2++) {
+  for (PetscInt k1 = 0; k1 < dof; k1++) {
+    for (PetscInt k2 = 0; k2 < dof; k2++) {
       if (k1 == k2) {
         v[k3]          = 2.0 * (HxHydHz + HxHzdHy + HyHzdHx);
         v_neighbor[k3] = -HxHydHz;
@@ -225,9 +225,9 @@ PetscErrorCode ComputeMatrix(DM da, Mat B)
   }
   PetscCall(DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm));
 
-  for (k = zs; k < zs + zm; k++) {
-    for (j = ys; j < ys + ym; j++) {
-      for (i = xs; i < xs + xm; i++) {
+  for (PetscInt k = zs; k < zs + zm; k++) {
+    for (PetscInt j = ys; j < ys + ym; j++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
         row.i = i;
         row.j = j;
         row.k = k;

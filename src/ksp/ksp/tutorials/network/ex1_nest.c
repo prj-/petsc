@@ -140,7 +140,7 @@ PetscErrorCode FormOperator(DM networkdm, Mat A, Vec b)
   Vec             localb;
   Branch         *branch;
   Node           *node;
-  PetscInt        v, vStart, vEnd;
+  PetscInt vStart, vEnd;
   PetscInt        eStart, eEnd;
   PetscBool       ghost;
   const PetscInt *cone;
@@ -217,7 +217,7 @@ PetscErrorCode FormOperator(DM networkdm, Mat A, Vec b)
     barr[lofst] = branch->bat;
   }
 
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     PetscCall(DMNetworkIsGhostVertex(networkdm, v, &ghost));
     if (!ghost) {
       PetscCall(DMNetworkGetComponent(networkdm, v, 0, &key, (void **)&node, NULL));

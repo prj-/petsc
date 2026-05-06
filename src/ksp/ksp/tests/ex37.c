@@ -16,7 +16,7 @@ int main(int argc, char **args)
   PetscViewer  fd;
   char         file[PETSC_MAX_PATH_LEN];
   PetscBool    flg;
-  PetscInt     i, m, n, its;
+  PetscInt m, n, its;
   PetscReal    norm;
   PetscMPIInt  rank, size;
   MPI_Comm     comm, subcomm;
@@ -153,11 +153,11 @@ int main(int argc, char **args)
   if (flg && rank == id) {
     PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%d] subb:\n", rank));
     PetscCall(VecGetArray(subb, &array));
-    for (i = 0; i < m; i++) PetscCall(PetscPrintf(PETSC_COMM_SELF, "%g\n", (double)PetscRealPart(array[i])));
+    for (PetscInt i = 0; i < m; i++) PetscCall(PetscPrintf(PETSC_COMM_SELF, "%g\n", (double)PetscRealPart(array[i])));
     PetscCall(VecRestoreArray(subb, &array));
     PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%d] subx:\n", rank));
     PetscCall(VecGetArray(subx, &array));
-    for (i = 0; i < m; i++) PetscCall(PetscPrintf(PETSC_COMM_SELF, "%g\n", (double)PetscRealPart(array[i])));
+    for (PetscInt i = 0; i < m; i++) PetscCall(PetscPrintf(PETSC_COMM_SELF, "%g\n", (double)PetscRealPart(array[i])));
     PetscCall(VecRestoreArray(subx, &array));
   }
 

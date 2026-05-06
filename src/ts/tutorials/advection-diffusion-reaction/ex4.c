@@ -217,7 +217,7 @@ PetscErrorCode IFunction(TS ts, PetscReal ftime, Vec U, Vec Udot, Vec F, void *p
 /* ------------------------------------------------------------------- */
 PetscErrorCode InitialConditions(DM da, Vec U)
 {
-  PetscInt  i, xs, xm, Mx;
+  PetscInt xs, xm, Mx;
   Field    *u;
   PetscReal hx, x;
 
@@ -239,7 +239,7 @@ PetscErrorCode InitialConditions(DM da, Vec U)
   /*
      Compute function over the locally owned part of the grid
   */
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     x = i * hx;
     if (i < Mx - 1) u[i].rho = 0.0;
     else u[i].rho = 1.0;

@@ -138,7 +138,7 @@ static PetscErrorCode StarGraphCreate(MPI_Comm comm, PetscInt numdofvert, PetscI
 static PetscErrorCode CoordinatePrint(DM dm)
 {
   DM                 dmclone;
-  PetscInt           cdim, v, off, vglobal, vStart, vEnd;
+  PetscInt cdim, off, vglobal, vStart, vEnd;
   const PetscScalar *carray;
   Vec                coords;
   MPI_Comm           comm;
@@ -157,7 +157,7 @@ static PetscErrorCode CoordinatePrint(DM dm)
 
   PetscCall(PetscPrintf(MPI_COMM_WORLD, "\nCoordinatePrint, cdim %" PetscInt_FMT ":\n", cdim));
   PetscCall(PetscSynchronizedPrintf(MPI_COMM_WORLD, "[%d]\n", rank));
-  for (v = vStart; v < vEnd; v++) {
+  for (PetscInt v = vStart; v < vEnd; v++) {
     PetscCall(DMNetworkGetLocalVecOffset(dmclone, v, 0, &off));
     PetscCall(DMNetworkGetGlobalVertexIndex(dmclone, v, &vglobal));
     switch (cdim) {

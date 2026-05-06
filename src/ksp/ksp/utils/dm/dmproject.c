@@ -518,7 +518,7 @@ static PetscErrorCode DMSwarmProjectField_ApproxQ1_DA_2D(DM swarm, PetscReal *sw
   DMSwarmCellDM      celldm;
   Vec                v_field_l, denom_l, coor_l, denom;
   PetscScalar       *_field_l, *_denom_l;
-  PetscInt           k, p, e, npoints, nel, npe, Nfc;
+  PetscInt p, e, npoints, nel, npe, Nfc;
   PetscInt          *mpfield_cell;
   PetscReal         *mpfield_coor;
   const PetscInt    *element_list;
@@ -579,7 +579,7 @@ static PetscErrorCode DMSwarmProjectField_ApproxQ1_DA_2D(DM swarm, PetscReal *sw
     Ni[2] = 0.25 * (1.0 + xi_p[0]) * (1.0 + xi_p[1]);
     Ni[3] = 0.25 * (1.0 - xi_p[0]) * (1.0 + xi_p[1]);
 
-    for (k = 0; k < npe; k++) {
+    for (PetscInt k = 0; k < npe; k++) {
       _field_l[element[k]] += Ni[k] * swarm_field[p];
       _denom_l[element[k]] += Ni[k];
     }

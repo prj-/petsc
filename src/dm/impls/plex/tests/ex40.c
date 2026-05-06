@@ -8,7 +8,7 @@ static const char help[] = "Tests for Plex transforms, including regular refinem
 static PetscErrorCode LabelPoints(DM dm)
 {
   DMLabel   label;
-  PetscInt  pStart, pEnd, p;
+  PetscInt pStart, pEnd;
   PetscBool flg = PETSC_FALSE;
 
   PetscFunctionBegin;
@@ -17,7 +17,7 @@ static PetscErrorCode LabelPoints(DM dm)
   PetscCall(DMCreateLabel(dm, "test"));
   PetscCall(DMGetLabel(dm, "test", &label));
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
-  for (p = pStart; p < pEnd; ++p) PetscCall(DMLabelSetValue(label, p, p));
+  for (PetscInt p = pStart; p < pEnd; ++p) PetscCall(DMLabelSetValue(label, p, p));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

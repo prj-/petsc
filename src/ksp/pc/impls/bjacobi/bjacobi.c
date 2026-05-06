@@ -1007,7 +1007,7 @@ static PetscErrorCode PCApplyTranspose_BJacobi_Multiblock(PC pc, Vec x, Vec y)
 static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
 {
   PC_BJacobi            *jac = (PC_BJacobi *)pc->data;
-  PetscInt               m, n_local, N, M, start, i;
+  PetscInt m, n_local, N, M, start;
   const char            *prefix;
   KSP                    ksp;
   Vec                    x, y;
@@ -1053,7 +1053,7 @@ static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
       jac->data = (void *)bjac;
       PetscCall(PetscMalloc1(n_local, &bjac->is));
 
-      for (i = 0; i < n_local; i++) {
+      for (PetscInt i = 0; i < n_local; i++) {
         PetscCall(KSPCreate(PETSC_COMM_SELF, &ksp));
         PetscCall(PCGetKSPNestLevel(pc, &nestlevel));
         PetscCall(KSPSetNestLevel(ksp, nestlevel + 1));
@@ -1073,7 +1073,7 @@ static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
 
     start = 0;
     PetscCall(MatGetVecType(pmat, &vectype));
-    for (i = 0; i < n_local; i++) {
+    for (PetscInt i = 0; i < n_local; i++) {
       m = jac->l_lens[i];
       /*
       The reason we need to generate these vectors is to serve
@@ -1123,7 +1123,7 @@ static PetscErrorCode PCSetUp_BJacobi_Multiblock(PC pc, Mat mat, Mat pmat)
      different boundary conditions for the submatrices than for the global problem) */
   PetscCall(PCModifySubMatrices(pc, n_local, bjac->is, bjac->is, bjac->pmat, pc->modifysubmatricesP));
 
-  for (i = 0; i < n_local; i++) {
+  for (PetscInt i = 0; i < n_local; i++) {
     PetscCall(KSPGetOptionsPrefix(jac->ksp[i], &prefix));
     if (pc->useAmat) {
       PetscCall(KSPSetOperators(jac->ksp[i], bjac->mat[i], bjac->pmat[i]));

@@ -2003,11 +2003,11 @@ PetscErrorCode DMCreateFieldIS(DM dm, PetscInt *numFields, char ***fieldNames, I
       if (gdof > 0) {
         PetscCall(PetscSectionGetOffset(sectionGlobal, p, &goff));
         for (f = 0; f < nF; ++f) {
-          PetscInt fdof, fcdof, fc;
+          PetscInt fdof, fcdof;
 
           PetscCall(PetscSectionGetFieldDof(section, p, f, &fdof));
           PetscCall(PetscSectionGetFieldConstraintDof(section, p, f, &fcdof));
-          for (fc = 0; fc < fdof - fcdof; ++fc, ++fieldSizes[f]) fieldIndices[f][fieldSizes[f]] = goff++;
+          for (PetscInt fc = 0; fc < fdof - fcdof; ++fc, ++fieldSizes[f]) fieldIndices[f][fieldSizes[f]] = goff++;
         }
       }
     }
@@ -9204,7 +9204,7 @@ PetscErrorCode DMComputeError(DM dm, Vec sol, PetscReal errors[], Vec *errorVec)
   PetscErrorCode (**exactSol)(PetscInt, PetscReal, const PetscReal[], PetscInt, PetscScalar[], void *);
   void    **ctxs;
   PetscReal time;
-  PetscInt  Nf, f, Nds, s;
+  PetscInt Nf, Nds, s;
 
   PetscFunctionBegin;
   PetscCall(DMGetNumFields(dm, &Nf));
@@ -9220,13 +9220,13 @@ PetscErrorCode DMComputeError(DM dm, Vec sol, PetscReal errors[], Vec *errorVec)
     PetscCall(DMGetRegionNumDS(dm, s, &label, &fieldIS, &ds, NULL));
     PetscCall(PetscDSGetNumFields(ds, &dsNf));
     if (fieldIS) PetscCall(ISGetIndices(fieldIS, &fields));
-    for (f = 0; f < dsNf; ++f) {
+    for (PetscInt f = 0; f < dsNf; ++f) {
       const PetscInt field = fields[f];
       PetscCall(PetscDSGetExactSolution(ds, field, &exactSol[field], &ctxs[field]));
     }
     if (fieldIS) PetscCall(ISRestoreIndices(fieldIS, &fields));
   }
-  for (f = 0; f < Nf; ++f) PetscCheck(exactSol[f], PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "DS must contain exact solution functions in order to calculate error, missing for field %" PetscInt_FMT, f);
+  for (PetscInt f = 0; f < Nf; ++f) PetscCheck(exactSol[f], PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "DS must contain exact solution functions in order to calculate error, missing for field %" PetscInt_FMT, f);
   PetscCall(DMGetOutputSequenceNumber(dm, NULL, &time));
   if (errors) PetscCall(DMComputeL2FieldDiff(dm, time, exactSol, ctxs, sol, errors));
   if (errorVec) {
@@ -9241,7 +9241,7 @@ PetscErrorCode DMComputeError(DM dm, Vec sol, PetscReal errors[], Vec *errorVec)
     PetscCall(DMPlexGetCellType(dm, cStart, &ct));
     simplex = DMPolytopeTypeGetNumVertices(ct) == DMPolytopeTypeGetDim(ct) + 1 ? PETSC_TRUE : PETSC_FALSE;
     PetscCall(DMGetNumFields(dm, &Nf));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       PetscFE         fe, efe;
       PetscQuadrature q;
       const char     *name;

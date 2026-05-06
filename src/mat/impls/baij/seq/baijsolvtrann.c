@@ -72,7 +72,7 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_N(Mat A, Vec bb, Vec xx)
   IS                 iscol = a->col, isrow = a->row;
   const PetscInt    *r, *c, *rout, *cout;
   const PetscInt     n = a->mbs, *ai = a->i, *aj = a->j, *vi, *diag = a->diag;
-  PetscInt           i, j, nz;
+  PetscInt nz;
   const PetscInt     bs = A->rmap->bs, bs2 = a->bs2;
   const MatScalar   *aa = a->a, *v;
   PetscScalar       *x, *t, *ls;
@@ -90,38 +90,38 @@ PetscErrorCode MatSolveTranspose_SeqBAIJ_N(Mat A, Vec bb, Vec xx)
   c = cout;
 
   /* copy the b into temp work space according to permutation */
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < bs; j++) t[i * bs + j] = b[c[i] * bs + j];
+  for (PetscInt i = 0; i < n; i++) {
+    for (PetscInt j = 0; j < bs; j++) t[i * bs + j] = b[c[i] * bs + j];
   }
 
   /* forward solve the upper triangular transpose */
   ls = a->solve_work + A->cmap->n;
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     PetscCall(PetscArraycpy(ls, t + i * bs, bs));
     PetscKernel_w_gets_transA_times_v(bs, ls, aa + bs2 * diag[i], t + i * bs);
     v  = aa + bs2 * (diag[i] - 1);
     vi = aj + diag[i] - 1;
     nz = diag[i] - diag[i + 1] - 1;
-    for (j = 0; j > -nz; j--) {
+    for (PetscInt j = 0; j > -nz; j--) {
       PetscKernel_v_gets_v_minus_transA_times_w(bs, t + bs * (vi[j]), v, t + i * bs);
       v -= bs2;
     }
   }
 
   /* backward solve the lower triangular transpose */
-  for (i = n - 1; i >= 0; i--) {
+  for (PetscInt i = n - 1; i >= 0; i--) {
     v  = aa + bs2 * ai[i];
     vi = aj + ai[i];
     nz = ai[i + 1] - ai[i];
-    for (j = 0; j < nz; j++) {
+    for (PetscInt j = 0; j < nz; j++) {
       PetscKernel_v_gets_v_minus_transA_times_w(bs, t + bs * (vi[j]), v, t + i * bs);
       v += bs2;
     }
   }
 
   /* copy t into x according to permutation */
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < bs; j++) x[bs * r[i] + j] = t[bs * i + j];
+  for (PetscInt i = 0; i < n; i++) {
+    for (PetscInt j = 0; j < bs; j++) x[bs * r[i] + j] = t[bs * i + j];
   }
 
   PetscCall(ISRestoreIndices(isrow, &rout));

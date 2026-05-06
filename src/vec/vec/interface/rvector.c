@@ -3657,7 +3657,7 @@ PetscErrorCode VecRestoreArray3dRead(Vec x, PetscInt m, PetscInt n, PetscInt p, 
 @*/
 PetscErrorCode VecGetArray4dRead(Vec x, PetscInt m, PetscInt n, PetscInt p, PetscInt q, PetscInt mstart, PetscInt nstart, PetscInt pstart, PetscInt qstart, PetscScalar ****a[])
 {
-  PetscInt           i, N, j, k;
+  PetscInt i, N, j;
   const PetscScalar *aa;
   PetscScalar     ***b, **c;
 
@@ -3677,7 +3677,7 @@ PetscErrorCode VecGetArray4dRead(Vec x, PetscInt m, PetscInt n, PetscInt p, Pets
     for (j = 0; j < n; j++) b[i * n + j] = c + i * n * p + j * p - pstart;
   for (i = 0; i < m; i++)
     for (j = 0; j < n; j++)
-      for (k = 0; k < p; k++) c[i * n * p + j * p + k] = (PetscScalar *)aa + i * n * p * q + j * p * q + k * q - qstart;
+      for (PetscInt k = 0; k < p; k++) c[i * n * p + j * p + k] = (PetscScalar *)aa + i * n * p * q + j * p * q + k * q - qstart;
   *a -= mstart;
   PetscFunctionReturn(PETSC_SUCCESS);
 }

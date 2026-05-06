@@ -149,7 +149,7 @@ static PetscErrorCode TSStep_Mimex_Split(TS ts)
   Vec                sol = ts->vec_sol, update = mimex->update;
   const PetscScalar *aupdate;
   PetscScalar       *asol, dt = ts->time_step;
-  PetscInt           Nf, f, pStart, pEnd, p;
+  PetscInt Nf, pStart, pEnd;
 
   PetscFunctionBegin;
   PetscCall(TSGetDM(ts, &dm));
@@ -164,12 +164,12 @@ static PetscErrorCode TSStep_Mimex_Split(TS ts)
   PetscCall(SNESSolve(ts->snes, NULL, update));
   PetscCall(VecGetArrayRead(update, &aupdate));
   PetscCall(VecGetArray(sol, &asol));
-  for (f = 0; f < Nf; ++f) {
+  for (PetscInt f = 0; f < Nf; ++f) {
     PetscBool implicit;
 
     PetscCall(PetscDSGetImplicit(prob, f, &implicit));
     if (!implicit) continue;
-    for (p = pStart; p < pEnd; ++p) {
+    for (PetscInt p = pStart; p < pEnd; ++p) {
       PetscScalar *au, *as;
       PetscInt     fdof, fcdof, d;
 
@@ -186,20 +186,20 @@ static PetscErrorCode TSStep_Mimex_Split(TS ts)
   PetscCall(TSComputeRHSFunction(ts, ts->ptime, sol, update));
   PetscCall(VecGetArrayRead(update, &aupdate));
   PetscCall(VecGetArray(sol, &asol));
-  for (f = 0; f < Nf; ++f) {
+  for (PetscInt f = 0; f < Nf; ++f) {
     PetscBool implicit;
 
     PetscCall(PetscDSGetImplicit(prob, f, &implicit));
     if (implicit) continue;
-    for (p = pStart; p < pEnd; ++p) {
+    for (PetscInt p = pStart; p < pEnd; ++p) {
       PetscScalar *au, *as;
-      PetscInt     fdof, fcdof, d;
+      PetscInt fdof, fcdof;
 
       PetscCall(PetscSectionGetFieldDof(s, p, f, &fdof));
       PetscCall(PetscSectionGetFieldConstraintDof(s, p, f, &fcdof));
       PetscCall(DMPlexPointGlobalFieldRead(dm, p, f, aupdate, &au));
       PetscCall(DMPlexPointGlobalFieldRef(dm, p, f, asol, &as));
-      for (d = 0; d < fdof - fcdof; ++d) as[d] += dt * au[d];
+      for (PetscInt d = 0; d < fdof - fcdof; ++d) as[d] += dt * au[d];
     }
   }
   PetscCall(VecRestoreArrayRead(update, &aupdate));

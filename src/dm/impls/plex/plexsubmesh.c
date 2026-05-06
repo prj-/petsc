@@ -1820,11 +1820,11 @@ static PetscErrorCode DMPlexConstructCohesiveCells_Internal(DM dm, DMLabel label
             coneNew[2 + q] = v + pMaxNew[dep - 1];
             if (dep > 1) {
               const PetscInt *econe;
-              PetscInt        econeSize, r, vs, vu;
+              PetscInt econeSize, vs, vu;
 
               PetscCall(DMPlexGetConeSize(dm, cone[q], &econeSize));
               PetscCall(DMPlexGetCone(dm, cone[q], &econe));
-              for (r = 0; r < econeSize; ++r) {
+              for (PetscInt r = 0; r < econeSize; ++r) {
                 PetscCall(PetscFindInt(econe[r], numSplitPoints[dep - 2], splitPoints[dep - 2], &vs));
                 PetscCall(PetscFindInt(econe[r], numUnsplitPoints[dep - 2], unsplitPoints[dep - 2], &vu));
                 if (vs >= 0) continue;
@@ -2173,12 +2173,12 @@ static PetscErrorCode DMPlexConstructCohesiveCells_Internal(DM dm, DMLabel label
   for (v = 0; v < (numSplitPoints ? numSplitPoints[0] : 0); ++v) {
     const PetscInt newp   = DMPlexShiftPoint_Internal(splitPoints[0][v], depth, depthShift) /*depthOffset[0] + splitPoints[0][v]*/;
     const PetscInt splitp = pMaxNew[0] + v;
-    PetscInt       dof, off, soff, d;
+    PetscInt dof, off, soff;
 
     PetscCall(PetscSectionGetDof(coordSection, newp, &dof));
     PetscCall(PetscSectionGetOffset(coordSection, newp, &off));
     PetscCall(PetscSectionGetOffset(coordSection, splitp, &soff));
-    for (d = 0; d < dof; ++d) coords[soff + d] = coords[off + d];
+    for (PetscInt d = 0; d < dof; ++d) coords[soff + d] = coords[off + d];
   }
   PetscCall(VecRestoreArray(coordinates, &coords));
   /* Step 8: SF, if I can figure this out we can split the mesh in parallel */
@@ -2229,7 +2229,7 @@ static PetscErrorCode DMPlexConstructCohesiveCells_Internal(DM dm, DMLabel label
     PetscCall(ISRestoreIndices(valueIS, &values));
     PetscCall(ISDestroy(&valueIS));
   }
-  for (d = 0; d <= depth; ++d) {
+  for (PetscInt d = 0; d <= depth; ++d) {
     PetscCall(DMPlexGetDepthStratum(sdm, d, NULL, &pEnd));
     pMaxNew[d] = pEnd - numHybridPoints[d] - numHybridPointsOld[d];
   }
@@ -2643,7 +2643,7 @@ PetscErrorCode DMPlexLabelCohesiveComplete(DM dm, DMLabel label, DMLabel blabel,
       PetscCall(DMLabelGetValue(blabel, point, &bval));
       if (bval >= 0) {
         const PetscInt *cone, *support;
-        PetscInt        coneSize, supportSize, s, valA, valB, valE;
+        PetscInt coneSize, supportSize, valA, valB, valE;
 
         /* Mark as unsplit */
         PetscCall(DMLabelGetValue(label, point, &val));
@@ -2655,7 +2655,7 @@ PetscErrorCode DMPlexLabelCohesiveComplete(DM dm, DMLabel label, DMLabel blabel,
         if (val != 0) continue;
         PetscCall(DMPlexGetSupport(dm, point, &support));
         PetscCall(DMPlexGetSupportSize(dm, point, &supportSize));
-        for (s = 0; s < supportSize; ++s) {
+        for (PetscInt s = 0; s < supportSize; ++s) {
           PetscCall(DMPlexGetCone(dm, support[s], &cone));
           PetscCall(DMPlexGetConeSize(dm, support[s], &coneSize));
           PetscCheck(coneSize == 2, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Edge %" PetscInt_FMT " has %" PetscInt_FMT " vertices != 2", support[s], coneSize);
@@ -3959,11 +3959,11 @@ static PetscErrorCode DMPlexCreateSubmeshGeneric_Interpolated(DM dm, DMLabel lab
 
       if (d == sdim - 1) {
         const PetscInt *support, *cone, *ornt;
-        PetscInt        supportSize, coneSize, s, subc;
+        PetscInt supportSize, coneSize, subc;
 
         PetscCall(DMPlexGetSupport(dm, point, &support));
         PetscCall(DMPlexGetSupportSize(dm, point, &supportSize));
-        for (s = 0; s < supportSize; ++s) {
+        for (PetscInt s = 0; s < supportSize; ++s) {
           PetscBool isHybrid = PETSC_FALSE;
 
           PetscCall(DMPlexCellIsHybrid_Internal(dm, support[s], &isHybrid));
@@ -4119,7 +4119,7 @@ static PetscErrorCode DMPlexCreateSubmeshGeneric_Interpolated(DM dm, DMLabel lab
       for (p = 0; p < numSubPoints[d]; ++p) {
         const PetscInt point    = subpoints[d][p];
         const PetscInt subpoint = firstSubPoint[d] + p;
-        PetscInt       dof, off, sdof, soff, d;
+        PetscInt dof, off, sdof, soff;
 
         if (point >= firstP && point < lastP) {
           PetscCall(PetscSectionGetDof(coordSection, point, &dof));
@@ -4127,7 +4127,7 @@ static PetscErrorCode DMPlexCreateSubmeshGeneric_Interpolated(DM dm, DMLabel lab
           PetscCall(PetscSectionGetDof(subCoordSection, subpoint, &sdof));
           PetscCall(PetscSectionGetOffset(subCoordSection, subpoint, &soff));
           PetscCheck(dof == sdof, comm, PETSC_ERR_PLIB, "Coordinate dimension %" PetscInt_FMT " on subpoint %" PetscInt_FMT ", point %" PetscInt_FMT " should be %" PetscInt_FMT, sdof, subpoint, point, dof);
-          for (d = 0; d < dof; ++d) subCoords[soff + d] = coords[off + d];
+          for (PetscInt d = 0; d < dof; ++d) subCoords[soff + d] = coords[off + d];
         }
       }
     }
@@ -4195,7 +4195,7 @@ static PetscErrorCode DMPlexCreateSubmeshGeneric_Interpolated(DM dm, DMLabel lab
       if (sanitizeSubmesh) {
         /* A subpoint is forced to be owned by a rank that owns */
         /* a subcell that contains the subpoint in its closure. */
-        PetscInt  cStart, cEnd, c, clSize, cl;
+        PetscInt cStart, cEnd, c, clSize;
         PetscInt *ownedCells, *closure = NULL;
 
         /* claim ownership */
@@ -4220,7 +4220,7 @@ static PetscErrorCode DMPlexCreateSubmeshGeneric_Interpolated(DM dm, DMLabel lab
         for (c = cStart; c < cEnd; ++c) {
           if (ownedCells[c - cStart] == 0) continue;
           PetscCall(DMPlexGetTransitiveClosure(dm, c, PETSC_TRUE, &clSize, &closure));
-          for (cl = 0; cl < clSize * 2; cl += 2) {
+          for (PetscInt cl = 0; cl < clSize * 2; cl += 2) {
             p = closure[cl];
             if (newLocalPoints[p - pStart].rank < size) newLocalPoints[p - pStart].rank += size;
           }
@@ -4481,7 +4481,7 @@ static PetscErrorCode DMPlexCreateCohesiveSubmesh_Uninterpolated(DM dm, PetscBoo
     PetscSection coordSection, subCoordSection;
     Vec          coordinates, subCoordinates;
     PetscScalar *coords, *subCoords;
-    PetscInt     cdim, numComp, coordSize, v;
+    PetscInt cdim, numComp, coordSize;
     const char  *name;
 
     PetscCall(DMGetCoordinateDim(dm, &cdim));
@@ -4492,7 +4492,7 @@ static PetscErrorCode DMPlexCreateCohesiveSubmesh_Uninterpolated(DM dm, PetscBoo
     PetscCall(PetscSectionGetFieldComponents(coordSection, 0, &numComp));
     PetscCall(PetscSectionSetFieldComponents(subCoordSection, 0, numComp));
     PetscCall(PetscSectionSetChart(subCoordSection, firstSubVertex, firstSubVertex + numSubVertices));
-    for (v = 0; v < numSubVertices; ++v) {
+    for (PetscInt v = 0; v < numSubVertices; ++v) {
       const PetscInt vertex    = subVertices[v];
       const PetscInt subvertex = firstSubVertex + v;
       PetscInt       dof;
@@ -4511,17 +4511,17 @@ static PetscErrorCode DMPlexCreateCohesiveSubmesh_Uninterpolated(DM dm, PetscBoo
     PetscCall(VecSetType(subCoordinates, VECSTANDARD));
     PetscCall(VecGetArray(coordinates, &coords));
     PetscCall(VecGetArray(subCoordinates, &subCoords));
-    for (v = 0; v < numSubVertices; ++v) {
+    for (PetscInt v = 0; v < numSubVertices; ++v) {
       const PetscInt vertex    = subVertices[v];
       const PetscInt subvertex = firstSubVertex + v;
-      PetscInt       dof, off, sdof, soff, d;
+      PetscInt dof, off, sdof, soff;
 
       PetscCall(PetscSectionGetDof(coordSection, vertex, &dof));
       PetscCall(PetscSectionGetOffset(coordSection, vertex, &off));
       PetscCall(PetscSectionGetDof(subCoordSection, subvertex, &sdof));
       PetscCall(PetscSectionGetOffset(subCoordSection, subvertex, &soff));
       PetscCheck(dof == sdof, comm, PETSC_ERR_PLIB, "Coordinate dimension %" PetscInt_FMT " on subvertex %" PetscInt_FMT ", vertex %" PetscInt_FMT " should be %" PetscInt_FMT, sdof, subvertex, vertex, dof);
-      for (d = 0; d < dof; ++d) subCoords[soff + d] = coords[off + d];
+      for (PetscInt d = 0; d < dof; ++d) subCoords[soff + d] = coords[off + d];
     }
     PetscCall(VecRestoreArray(coordinates, &coords));
     PetscCall(VecRestoreArray(subCoordinates, &subCoords));
@@ -4841,7 +4841,7 @@ static PetscErrorCode DMPlexCreateSubpointIS_Internal(DM dm, IS *subpointIS)
   if (spmap && depth >= 0) {
     DM_Plex  *mesh = (DM_Plex *)dm->data;
     PetscInt *points, *depths;
-    PetscInt  pStart, pEnd, p, off;
+    PetscInt pStart, pEnd, off;
 
     PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
     PetscCheck(!pStart, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Submeshes must start the point numbering at 0, not %" PetscInt_FMT, pStart);
@@ -4862,10 +4862,10 @@ static PetscErrorCode DMPlexCreateSubpointIS_Internal(DM dm, IS *subpointIS)
         if (!n) {
           if (d == 0) {
             /* Missing cells */
-            for (p = 0; p < depEnd - depStart; ++p, ++off) points[off] = -1;
+            for (PetscInt p = 0; p < depEnd - depStart; ++p, ++off) points[off] = -1;
           } else {
             /* Missing faces */
-            for (p = 0; p < depEnd - depStart; ++p, ++off) points[off] = PETSC_INT_MAX;
+            for (PetscInt p = 0; p < depEnd - depStart; ++p, ++off) points[off] = PETSC_INT_MAX;
           }
         }
       }
@@ -4875,7 +4875,7 @@ static PetscErrorCode DMPlexCreateSubpointIS_Internal(DM dm, IS *subpointIS)
 
         PetscCall(DMLabelGetStratumIS(spmap, dep, &is));
         PetscCall(ISGetIndices(is, &opoints));
-        for (p = 0; p < n; ++p, ++off) points[off] = opoints[p];
+        for (PetscInt p = 0; p < n; ++p, ++off) points[off] = opoints[p];
         PetscCall(ISRestoreIndices(is, &opoints));
         PetscCall(ISDestroy(&is));
       }

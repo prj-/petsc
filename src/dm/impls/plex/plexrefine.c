@@ -23,7 +23,7 @@
 @*/
 PetscErrorCode DMPlexCreateProcessSF(DM dm, PetscSF sfPoint, IS *processRanks, PetscSF *sfProcess)
 {
-  PetscInt           numRoots, numLeaves, l;
+  PetscInt numRoots, numLeaves;
   const PetscInt    *localPoints;
   const PetscSFNode *remotePoints;
   PetscInt          *localPointsNew;
@@ -40,12 +40,12 @@ PetscErrorCode DMPlexCreateProcessSF(DM dm, PetscSF sfPoint, IS *processRanks, P
   PetscCallMPI(MPI_Comm_size(PetscObjectComm((PetscObject)dm), &size));
   PetscCall(PetscSFGetGraph(sfPoint, &numRoots, &numLeaves, &localPoints, &remotePoints));
   PetscCall(PetscMalloc1(numLeaves, &ranks));
-  for (l = 0; l < numLeaves; ++l) ranks[l] = (PetscMPIInt)remotePoints[l].rank;
+  for (PetscInt l = 0; l < numLeaves; ++l) ranks[l] = (PetscMPIInt)remotePoints[l].rank;
   PetscCall(PetscSortRemoveDupsMPIInt(&numLeaves, ranks));
   PetscCall(PetscMalloc1(numLeaves, &ranksNew));
   PetscCall(PetscMalloc1(numLeaves, &localPointsNew));
   PetscCall(PetscMalloc1(numLeaves, &remotePointsNew));
-  for (l = 0; l < numLeaves; ++l) {
+  for (PetscInt l = 0; l < numLeaves; ++l) {
     ranksNew[l]              = ranks[l];
     localPointsNew[l]        = l;
     remotePointsNew[l].index = 0;
@@ -82,7 +82,7 @@ PetscErrorCode DMPlexCreateCoarsePointIS(DM dm, IS *fpointIS)
 {
   DMPlexTransform tr;
   PetscInt       *fpoints;
-  PetscInt        pStart, pEnd, p, vStart, vEnd, v;
+  PetscInt pStart, pEnd, vStart, vEnd;
 
   PetscFunctionBegin;
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
@@ -90,8 +90,8 @@ PetscErrorCode DMPlexCreateCoarsePointIS(DM dm, IS *fpointIS)
   PetscCall(DMPlexTransformCreate(PetscObjectComm((PetscObject)dm), &tr));
   PetscCall(DMPlexTransformSetUp(tr));
   PetscCall(PetscMalloc1(pEnd - pStart, &fpoints));
-  for (p = 0; p < pEnd - pStart; ++p) fpoints[p] = -1;
-  for (v = vStart; v < vEnd; ++v) {
+  for (PetscInt p = 0; p < pEnd - pStart; ++p) fpoints[p] = -1;
+  for (PetscInt v = vStart; v < vEnd; ++v) {
     PetscInt vNew = -1; /* quiet overzealous may be used uninitialized check */
 
     PetscCall(DMPlexTransformGetTargetPoint(tr, DM_POLYTOPE_POINT, DM_POLYTOPE_POINT, p, 0, &vNew));

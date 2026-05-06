@@ -347,25 +347,25 @@ PetscErrorCode MatColoringCreateWeights(MatColoring mc, PetscReal **weights, Pet
 
 PetscErrorCode MatColoringSetWeights(MatColoring mc, PetscReal *weights, PetscInt *lperm)
 {
-  PetscInt i, s, e, n;
+  PetscInt s, e, n;
 
   PetscFunctionBegin;
   PetscCall(MatGetOwnershipRange(mc->mat, &s, &e));
   n = e - s;
   if (weights) {
     PetscCall(PetscMalloc2(n, &mc->user_weights, n, &mc->user_lperm));
-    for (i = 0; i < n; i++) mc->user_weights[i] = weights[i];
+    for (PetscInt i = 0; i < n; i++) mc->user_weights[i] = weights[i];
     if (!lperm) {
-      for (i = 0; i < n; i++) mc->user_lperm[i] = i;
+      for (PetscInt i = 0; i < n; i++) mc->user_lperm[i] = i;
       PetscCall(PetscSortRealWithPermutation(n, mc->user_weights, mc->user_lperm));
-      for (i = 0; i < n / 2; i++) {
+      for (PetscInt i = 0; i < n / 2; i++) {
         PetscInt swp;
         swp                       = mc->user_lperm[i];
         mc->user_lperm[i]         = mc->user_lperm[n - 1 - i];
         mc->user_lperm[n - 1 - i] = swp;
       }
     } else {
-      for (i = 0; i < n; i++) mc->user_lperm[i] = lperm[i];
+      for (PetscInt i = 0; i < n; i++) mc->user_lperm[i] = lperm[i];
     }
   } else {
     mc->user_weights = NULL;

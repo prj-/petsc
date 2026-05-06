@@ -15,7 +15,7 @@ PetscErrorCode FillLocalSubdomain(DM da, Vec gvec)
 {
   DMDALocalInfo info;
   PetscMPIInt   rank;
-  PetscInt      i, j, k, l;
+  PetscInt i, j, k;
 
   PetscFunctionBeginUser;
   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
@@ -42,7 +42,7 @@ PetscErrorCode FillLocalSubdomain(DM da, Vec gvec)
     /* loop over ghosts */
     for (j = info.ys; j < info.ys + info.ym; j++) {
       for (i = info.xs; i < info.xs + info.xm; i++) {
-        for (l = 0; l < info.dof; l++) {
+        for (PetscInt l = 0; l < info.dof; l++) {
           g[j][info.dof * i + 0] = i;
           g[j][info.dof * i + 1] = j;
           g[j][info.dof * i + 2] = rank;

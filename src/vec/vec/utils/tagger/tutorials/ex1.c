@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   Vec           vec, tagged, untagged;
   VecScatter    taggedScatter, untaggedScatter;
   PetscInt      bs;
-  PetscInt      n, nloc, nint, i, j, k, localStart, localEnd, ntagged, nuntagged;
+  PetscInt n, nloc, nint, i, k, localStart, localEnd, ntagged, nuntagged;
   MPI_Comm      comm;
   VecTagger     tagger;
   PetscScalar  *array;
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
         PetscCall(PetscViewerASCIIPushTab(viewer));
         for (i = 0, k = 0; i < nint; i++) {
           PetscCall(PetscViewerASCIIPrintf(viewer, "%" PetscInt_FMT ": ", i));
-          for (j = 0; j < bs; j++, k++) {
+          for (PetscInt j = 0; j < bs; j++, k++) {
             if (j) PetscCall(PetscViewerASCIIPrintf(viewer, " x "));
 #if !defined(PETSC_USE_COMPLEX)
             PetscCall(PetscViewerASCIIPrintf(viewer, "[%g,%g]", (double)boxes[k].min, (double)boxes[k].max));

@@ -8,7 +8,7 @@ PetscErrorCode MINPACKdegr(PetscInt *n, const PetscInt *indrow, const PetscInt *
   PetscInt i__1, i__2, i__3;
 
   /* Local variables */
-  PetscInt jcol, ic, ip, jp, ir;
+  PetscInt jcol, ic, ir;
 
   /*     subroutine degr */
   /*     Given the sparsity pattern of an m by n matrix A, */
@@ -60,7 +60,7 @@ PetscErrorCode MINPACKdegr(PetscInt *n, const PetscInt *indrow, const PetscInt *
 
   /* Function Body */
   i__1 = *n;
-  for (jp = 1; jp <= i__1; ++jp) {
+  for (PetscInt jp = 1; jp <= i__1; ++jp) {
     ndeg[jp] = 0;
     iwa[jp]  = 0;
   }
@@ -77,14 +77,14 @@ PetscErrorCode MINPACKdegr(PetscInt *n, const PetscInt *indrow, const PetscInt *
     /*        to non-zeroes in the matrix. */
 
     i__2 = jpntr[jcol + 1] - 1;
-    for (jp = jpntr[jcol]; jp <= i__2; ++jp) {
+    for (PetscInt jp = jpntr[jcol]; jp <= i__2; ++jp) {
       ir = indrow[jp];
 
       /*           For each row ir, determine all positions (ir,ic) */
       /*           which correspond to non-zeroes in the matrix. */
 
       i__3 = ipntr[ir + 1] - 1;
-      for (ip = ipntr[ir]; ip <= i__3; ++ip) {
+      for (PetscInt ip = ipntr[ir]; ip <= i__3; ++ip) {
         ic = indcol[ip];
 
         /*              Array iwa marks columns which have contributed to */

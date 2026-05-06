@@ -303,7 +303,7 @@ static PetscErrorCode Test2_2d(DM dm)
 static PetscErrorCode Test2_3d(DM dm)
 {
   Vec             vecLocal, vecLocalCheck, vecGlobal;
-  PetscInt        i, j, k, startx, starty, startz, nx, ny, nz, nExtrax, nExtray, nExtraz, dof0, dof1, dof2, dof3, c, idxLeft, idxDown, idxDownLeft, idxBackDownLeft, idxBackDown, idxBack, idxBackLeft, idxElement;
+  PetscInt startx, starty, startz, nx, ny, nz, nExtrax, nExtray, nExtraz, dof0, dof1, dof2, dof3, idxLeft, idxDown, idxDownLeft, idxBackDownLeft, idxBackDown, idxBack, idxBackLeft, idxElement;
   PetscScalar ****arr;
 
   PetscFunctionBeginUser;
@@ -324,51 +324,51 @@ static PetscErrorCode Test2_3d(DM dm)
     PetscCall(DMStagGetLocationSlot(dm, DMSTAG_BACK, 0, &idxBack));
   }
   if (dof3 > 0) PetscCall(DMStagGetLocationSlot(dm, DMSTAG_ELEMENT, 0, &idxElement));
-  for (k = startz; k < startz + nz + nExtraz; ++k) {
-    for (j = starty; j < starty + ny + nExtray; ++j) {
-      for (i = startx; i < startx + nx + nExtrax; ++i) {
-        for (c = 0; c < dof0; ++c) {
+  for (PetscInt k = startz; k < startz + nz + nExtraz; ++k) {
+    for (PetscInt j = starty; j < starty + ny + nExtray; ++j) {
+      for (PetscInt i = startx; i < startx + nx + nExtrax; ++i) {
+        for (PetscInt c = 0; c < dof0; ++c) {
           const PetscScalar valRef          = TEST_FUNCTION(i, j, k, idxBackDownLeft, c);
           arr[k][j][i][idxBackDownLeft + c] = valRef;
         }
         if (k < startz + nz) {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef      = TEST_FUNCTION(i, j, k, idxDownLeft, c);
             arr[k][j][i][idxDownLeft + c] = valRef;
           }
         }
         if (j < starty + ny) {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef      = TEST_FUNCTION(i, j, k, idxBackLeft, c);
             arr[k][j][i][idxBackLeft + c] = valRef;
           }
         }
         if (i < startx + nx) {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef      = TEST_FUNCTION(i, j, k, idxBackDown, c);
             arr[k][j][i][idxBackDown + c] = valRef;
           }
         }
         if (j < starty + ny && k < startz + nz) {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef  = TEST_FUNCTION(i, j, k, idxLeft, c);
             arr[k][j][i][idxLeft + c] = valRef;
           }
         }
         if (i < startx + nx && k < startz + nz) {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef  = TEST_FUNCTION(i, j, k, idxDown, c);
             arr[k][j][i][idxDown + c] = valRef;
           }
         }
         if (i < startx + nx && j < starty + ny) {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef  = TEST_FUNCTION(i, j, k, idxBack, c);
             arr[k][j][i][idxBack + c] = valRef;
           }
         }
         if (i < startx + nx && j < starty + ny && k < startz + nz) {
-          for (c = 0; c < dof3; ++c) {
+          for (PetscInt c = 0; c < dof3; ++c) {
             const PetscScalar valRef     = TEST_FUNCTION(i, j, k, idxElement, c);
             arr[k][j][i][idxElement + c] = valRef;
           }
@@ -383,100 +383,100 @@ static PetscErrorCode Test2_3d(DM dm)
   PetscCall(VecSet(vecLocalCheck, -1.0));
   PetscCall(DMGlobalToLocal(dm, vecGlobal, INSERT_VALUES, vecLocalCheck));
   PetscCall(DMStagVecGetArrayRead(dm, vecLocalCheck, &arr));
-  for (k = startz; k < startz + nz + nExtraz; ++k) {
-    for (j = starty; j < starty + ny + nExtray; ++j) {
-      for (i = startx; i < startx + nx + nExtrax; ++i) {
-        for (c = 0; c < dof0; ++c) {
+  for (PetscInt k = startz; k < startz + nz + nExtraz; ++k) {
+    for (PetscInt j = starty; j < starty + ny + nExtray; ++j) {
+      for (PetscInt i = startx; i < startx + nx + nExtrax; ++i) {
+        for (PetscInt c = 0; c < dof0; ++c) {
           const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxBackDownLeft, c);
           const PetscScalar val    = arr[k][j][i][idxBackDownLeft + c];
           PetscCall(CompareValues(i, j, k, c, val, valRef));
         }
         if (k < startz + nz) {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxDownLeft, c);
             const PetscScalar val    = arr[k][j][i][idxDownLeft + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxDownLeft + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         }
         if (j < starty + ny) {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxBackLeft, c);
             const PetscScalar val    = arr[k][j][i][idxBackLeft + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxBackLeft + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         }
         if (i < startx + nx) {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxBackDown, c);
             const PetscScalar val    = arr[k][j][i][idxBackDown + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof1; ++c) {
+          for (PetscInt c = 0; c < dof1; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxBackDown + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         }
         if (j < starty + ny && k < startz + nz) {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxLeft, c);
             const PetscScalar val    = arr[k][j][i][idxLeft + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxLeft + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         }
         if (i < startx + nx && k < startz + nz) {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxDown, c);
             const PetscScalar val    = arr[k][j][i][idxDown + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxDown + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         }
         if (i < startx + nx && j < starty + ny) {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxBack, c);
             const PetscScalar val    = arr[k][j][i][idxBack + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof2; ++c) {
+          for (PetscInt c = 0; c < dof2; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxBack + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         }
         if (i < startx + nx && j < starty + ny && k < startz + nz) {
-          for (c = 0; c < dof3; ++c) {
+          for (PetscInt c = 0; c < dof3; ++c) {
             const PetscScalar valRef = TEST_FUNCTION(i, j, k, idxElement, c);
             const PetscScalar val    = arr[k][j][i][idxElement + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));
           }
         } else {
-          for (c = 0; c < dof3; ++c) {
+          for (PetscInt c = 0; c < dof3; ++c) {
             const PetscScalar valRef = -1.0;
             const PetscScalar val    = arr[k][j][i][idxElement + c];
             PetscCall(CompareValues(i, j, k, c, val, valRef));

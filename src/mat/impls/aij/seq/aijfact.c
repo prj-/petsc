@@ -927,7 +927,7 @@ PetscErrorCode MatMatSolveTranspose_SeqAIJ(Mat A, Mat B, Mat X)
   IS                 iscol = a->col, isrow = a->row;
   PetscInt           i, n = A->rmap->n, *vi, *ai = a->i, *aj = a->j, j;
   const PetscInt    *adiag = a->diag;
-  PetscInt           nz, neq, ldb, ldx;
+  PetscInt nz, ldb, ldx;
   const PetscInt    *rout, *cout, *r, *c;
   PetscScalar       *x, *tmp = a->solve_work, s1;
   const PetscScalar *b, *aa, *v;
@@ -951,7 +951,7 @@ PetscErrorCode MatMatSolveTranspose_SeqAIJ(Mat A, Mat B, Mat X)
   r = rout;
   PetscCall(ISGetIndices(iscol, &cout));
   c = cout;
-  for (neq = 0; neq < B->cmap->n; neq++) {
+  for (PetscInt neq = 0; neq < B->cmap->n; neq++) {
     /* copy the b into temp work space according to permutation */
     for (i = 0; i < n; i++) tmp[i] = b[c[i]];
 

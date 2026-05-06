@@ -52,7 +52,7 @@ static PetscErrorCode DivideDomain(DM dm, AppCtx *user)
 {
   DMLabel   top, bottom;
   PetscReal low[3], high[3], midy;
-  PetscInt  cStart, cEnd, c;
+  PetscInt cStart, cEnd;
 
   PetscFunctionBeginUser;
   PetscCall(DMCreateLabel(dm, "top"));
@@ -63,7 +63,7 @@ static PetscErrorCode DivideDomain(DM dm, AppCtx *user)
   PetscCall(DMGetBoundingBox(dm, low, high));
   midy = 0.5 * (high[1] - low[1]);
   PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
-  for (c = cStart; c < cEnd; ++c) {
+  for (PetscInt c = cStart; c < cEnd; ++c) {
     PetscReal centroid[3];
 
     PetscCall(DMPlexComputeCellGeometryFVM(dm, c, NULL, centroid, NULL));

@@ -1038,7 +1038,7 @@ PetscErrorCode VecPow(Vec v, PetscScalar p)
 @*/
 PetscErrorCode VecMedian(Vec Vec1, Vec Vec2, Vec Vec3, Vec VMedian)
 {
-  PetscInt           i, n, low1, high1;
+  PetscInt n, low1, high1;
   const PetscScalar *v1, *v2, *v3;
   PetscScalar       *vmed;
 
@@ -1096,7 +1096,7 @@ PetscErrorCode VecMedian(Vec Vec1, Vec Vec2, Vec Vec3, Vec VMedian)
       v3 = vmed;
     }
 
-    for (i = 0; i < n; ++i) vmed[i] = PetscMax(PetscMax(PetscMin(PetscRealPart(v1[i]), PetscRealPart(v2[i])), PetscMin(PetscRealPart(v1[i]), PetscRealPart(v3[i]))), PetscMin(PetscRealPart(v2[i]), PetscRealPart(v3[i])));
+    for (PetscInt i = 0; i < n; ++i) vmed[i] = PetscMax(PetscMax(PetscMin(PetscRealPart(v1[i]), PetscRealPart(v2[i])), PetscMin(PetscRealPart(v1[i]), PetscRealPart(v3[i]))), PetscMin(PetscRealPart(v2[i]), PetscRealPart(v3[i])));
 
     PetscCall(VecRestoreArray(VMedian, &vmed));
     if (VMedian != Vec1) PetscCall(VecRestoreArrayRead(Vec1, &v1));

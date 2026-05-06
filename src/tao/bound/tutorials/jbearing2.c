@@ -208,7 +208,7 @@ PetscErrorCode ComputeB(AppCtx *user)
 PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn, Vec G, void *ptr)
 {
   AppCtx    *user = (AppCtx *)ptr;
-  PetscInt   i, j, k, kk;
+  PetscInt i, j, k;
   PetscInt   col[5], row, nx, ny, xs, xm, gxs, gxm, ys, ym, gys, gym;
   PetscReal  one = 1.0, two = 2.0, six = 6.0, pi = 4.0 * atan(1.0);
   PetscReal  hx, hy, hxhy, hxhx, hyhy;
@@ -295,7 +295,7 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn, Vec G, void 
         k++;
       }
       tt = 0;
-      for (kk = 0; kk < k; kk++) tt += v[kk] * x[col[kk]];
+      for (PetscInt kk = 0; kk < k; kk++) tt += v[kk] * x[col[kk]];
       row    = (j - ys) * xm + (i - xs);
       g[row] = tt;
     }
@@ -323,7 +323,7 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *fcn, Vec G, void 
 PetscErrorCode FormHessian(Tao tao, Vec X, Mat hes, Mat Hpre, void *ptr)
 {
   AppCtx   *user = (AppCtx *)ptr;
-  PetscInt  i, j, k;
+  PetscInt j, k;
   PetscInt  col[5], row, nx, ny, xs, xm, gxs, gxm, ys, ym, gys, gym;
   PetscReal one = 1.0, two = 2.0, six = 6.0, pi = 4.0 * atan(1.0);
   PetscReal hx, hy, hxhy, hxhx, hyhy;
@@ -349,7 +349,7 @@ PetscErrorCode FormHessian(Tao tao, Vec X, Mat hes, Mat Hpre, void *ptr)
   PetscCall(MatAssembled(hes, &assembled));
   if (assembled) PetscCall(MatZeroEntries(hes));
 
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     xi     = (i + 1) * hx;
     trule1 = hxhy * (p(xi, ecc) + p(xi + hx, ecc) + p(xi, ecc)) / six;      /* L(i,j) */
     trule2 = hxhy * (p(xi, ecc) + p(xi - hx, ecc) + p(xi, ecc)) / six;      /* U(i,j) */

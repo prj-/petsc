@@ -655,7 +655,7 @@ PetscErrorCode Gather_i(Vec y, Vec *yi, VecScatter *scat, PetscInt nt)
 
 PetscErrorCode ParabolicInitialize(AppCtx *user)
 {
-  PetscInt    m, n, i, j, k, linear_index, istart, iend, iblock, lo, hi, lo2, hi2;
+  PetscInt m, n, i, j, k, istart, iend, iblock, lo, hi, lo2, hi2;
   Vec         XX, YY, ZZ, XXwork, YYwork, ZZwork, UTwork, yi, di, bc;
   PetscReal  *x, *y, *z;
   PetscReal   h, stime;
@@ -717,7 +717,7 @@ PetscErrorCode ParabolicInitialize(AppCtx *user)
   neg_hinv = -hinv;
 
   PetscCall(VecGetOwnershipRange(XX, &istart, &iend));
-  for (linear_index = istart; linear_index < iend; linear_index++) {
+  for (PetscInt linear_index = istart; linear_index < iend; linear_index++) {
     i  = linear_index % user->mx;
     j  = ((linear_index - i) / user->mx) % user->mx;
     k  = ((linear_index - i) / user->mx - j) / user->mx;

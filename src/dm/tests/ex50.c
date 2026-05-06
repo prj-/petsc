@@ -54,7 +54,6 @@ static PetscErrorCode test_3d(PetscInt cells[], PetscBool plex, PetscBool ho)
     DMDACoor3d ***_coords;
     PetscScalar   shift[3], *cptr;
     PetscInt      nel, dof = 3, nex, ney, nez, gx = 0, gy = 0, gz = 0;
-    PetscInt      i, j, k, pi, pj, pk;
     PetscReal    *nodes, *weights;
     char          name[256];
 
@@ -86,9 +85,9 @@ static PetscErrorCode test_3d(PetscInt cells[], PetscBool plex, PetscBool ho)
     PetscCall(VecSetType(v, VECSTANDARD));
     PetscCall(VecGetArray(v, &c));
     cptr = c;
-    for (k = gz; k < gz + nez; k++) {
-      for (j = gy; j < gy + ney; j++) {
-        for (i = gx; i < gx + nex; i++) {
+    for (PetscInt k = gz; k < gz + nez; k++) {
+      for (PetscInt j = gy; j < gy + ney; j++) {
+        for (PetscInt i = gx; i < gx + nex; i++) {
           if (plex) {
             PetscScalar *t = NULL;
 
@@ -102,13 +101,13 @@ static PetscErrorCode test_3d(PetscInt cells[], PetscBool plex, PetscBool ho)
             shift[1] = _coords[k][j][i].y;
             shift[2] = _coords[k][j][i].z;
           }
-          for (pk = 0; pk < dof; pk++) {
+          for (PetscInt pk = 0; pk < dof; pk++) {
             PetscScalar xyz[3];
 
             xyz[2] = nodes[pk];
-            for (pj = 0; pj < dof; pj++) {
+            for (PetscInt pj = 0; pj < dof; pj++) {
               xyz[1] = nodes[pj];
-              for (pi = 0; pi < dof; pi++) {
+              for (PetscInt pi = 0; pi < dof; pi++) {
                 xyz[0] = nodes[pi];
                 PetscCall(MapPoint(xyz, cptr));
                 cptr[0] += shift[0];
@@ -134,7 +133,7 @@ static PetscErrorCode test_3d(PetscInt cells[], PetscBool plex, PetscBool ho)
     PetscCall(DMGetCoordinates(dm, &v));
     PetscCall(VecGetLocalSize(v, &nl));
     PetscCall(VecGetArray(v, &c));
-    for (i = 0; i < nl / 3; i++) PetscCall(MapPoint(c + 3 * i, c + 3 * i));
+    for (PetscInt i = 0; i < nl / 3; i++) PetscCall(MapPoint(c + 3 * i, c + 3 * i));
     PetscCall(VecRestoreArray(v, &c));
     PetscCall(DMSetCoordinates(dm, v));
     PetscCall(DMViewFromOptions(dm, NULL, "-view"));

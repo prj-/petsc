@@ -8,7 +8,7 @@ static PetscErrorCode CheckLocal(Mat A, Mat B, PetscScalar *a, PetscScalar *b)
 {
   PetscBool wA = PETSC_FALSE, wB = PETSC_FALSE;
   PetscBool wAv = PETSC_FALSE, wBv = PETSC_FALSE;
-  PetscInt  lda, i, j, m, n;
+  PetscInt lda, i, m, n;
 
   PetscFunctionBegin;
   if (a) {
@@ -17,7 +17,7 @@ static PetscErrorCode CheckLocal(Mat A, Mat B, PetscScalar *a, PetscScalar *b)
     wA = (PetscBool)(a != Aa);
     PetscCall(MatDenseGetLDA(A, &lda));
     PetscCall(MatGetLocalSize(A, &m, &n));
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       for (i = m; i < lda; i++) {
         if (Aa[j * lda + i] != MAGIC_NUMBER) wAv = PETSC_TRUE;
       }
@@ -30,7 +30,7 @@ static PetscErrorCode CheckLocal(Mat A, Mat B, PetscScalar *a, PetscScalar *b)
     wB = (PetscBool)(b != Bb);
     PetscCall(MatDenseGetLDA(B, &lda));
     PetscCall(MatGetLocalSize(B, &m, &n));
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       for (i = m; i < lda; i++) {
         if (Bb[j * lda + i] != MAGIC_NUMBER) wBv = PETSC_TRUE;
       }

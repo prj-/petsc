@@ -573,7 +573,7 @@ static PetscErrorCode affpoints(TAO_POUNDERS *mfqP, PetscReal *xmin, PetscReal c
 static PetscErrorCode TaoSolve_POUNDERS(Tao tao)
 {
   TAO_POUNDERS    *mfqP = (TAO_POUNDERS *)tao->data;
-  PetscInt         i, ii, j, k, l;
+  PetscInt i, ii, j;
   PetscReal        step = 1.0;
   PetscInt         low, high;
   PetscReal        minnorm;
@@ -782,9 +782,9 @@ static PetscErrorCode TaoSolve_POUNDERS(Tao tao)
       for (j = 0; j < mfqP->m; j++) {
         /* C(j) = C(j) + work*G(:,j) + .5*work*H(:,:,j)*work';
          G(:,j) = G(:,j) + H(:,:,j)*work' */
-        for (k = 0; k < mfqP->n; k++) {
+        for (PetscInt k = 0; k < mfqP->n; k++) {
           mfqP->work2[k] = 0.0;
-          for (l = 0; l < mfqP->n; l++) mfqP->work2[k] += mfqP->H[j + mfqP->m * (k + l * mfqP->n)] * mfqP->work[l];
+          for (PetscInt l = 0; l < mfqP->n; l++) mfqP->work2[k] += mfqP->H[j + mfqP->m * (k + l * mfqP->n)] * mfqP->work[l];
         }
         for (i = 0; i < mfqP->n; i++) {
           mfqP->C[j] += mfqP->work[i] * (mfqP->Fdiff[i + mfqP->n * j] + 0.5 * mfqP->work2[i]);
@@ -853,9 +853,9 @@ static PetscErrorCode TaoSolve_POUNDERS(Tao tao)
       PetscCall(VecRestoreArray(mfqP->Xhist[mfqP->model_indices[i]], &x));
       PetscCall(VecGetArray(mfqP->Fhist[mfqP->model_indices[i]], &f));
       for (j = 0; j < mfqP->m; j++) {
-        for (k = 0; k < mfqP->n; k++) {
+        for (PetscInt k = 0; k < mfqP->n; k++) {
           mfqP->work[k] = 0.0;
-          for (l = 0; l < mfqP->n; l++) mfqP->work[k] += mfqP->H[j + mfqP->m * (k + mfqP->n * l)] * mfqP->Disp[i + mfqP->npmax * l];
+          for (PetscInt l = 0; l < mfqP->n; l++) mfqP->work[k] += mfqP->H[j + mfqP->m * (k + mfqP->n * l)] * mfqP->Disp[i + mfqP->npmax * l];
         }
         PetscCallBLAS("BLASdot", mfqP->RES[j * mfqP->npmax + i] = -mfqP->C[j] - BLASdot_(&blasn, &mfqP->Fdiff[j * mfqP->n], &ione, &mfqP->Disp[i], &blasnpmax) - 0.5 * BLASdot_(&blasn, mfqP->work, &ione, &mfqP->Disp[i], &blasnpmax) + f[j]);
       }

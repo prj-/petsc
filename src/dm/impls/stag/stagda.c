@@ -372,7 +372,6 @@ static PetscErrorCode DMStagTransferCoordinatesToDMDA(DM dmstag, DMStagStencilLo
     } else SETERRQ(PetscObjectComm((PetscObject)dmstag), PETSC_ERR_SUP, "Stag to DA coordinate transfer only supported for DMStag coordinate DM of type DMstag or DMProduct");
     PetscCall(DMDAVecRestoreArrayDOF(dmdaCoord, daCoord, &cArrDa));
   } else if (dim == 3) {
-    PetscInt        ex, ey, ez;
     PetscScalar ****cArrDa;
     PetscCall(DMDAVecGetArrayDOF(dmdaCoord, daCoord, &cArrDa));
     if (daCoordIsStag) {
@@ -380,9 +379,9 @@ static PetscErrorCode DMStagTransferCoordinatesToDMDA(DM dmstag, DMStagStencilLo
       PetscScalar ****cArrStag;
       PetscCall(DMStagGetLocationSlot(dmstagCoord, loc, 0, &slot));
       PetscCall(DMStagVecGetArrayRead(dmstagCoord, stagCoord, &cArrStag));
-      for (ez = start[2]; ez < start[2] + n[2] + extraPoint[2]; ++ez) {
-        for (ey = start[1]; ey < start[1] + n[1] + extraPoint[1]; ++ey) {
-          for (ex = start[0]; ex < start[0] + n[0] + extraPoint[0]; ++ex) {
+      for (PetscInt ez = start[2]; ez < start[2] + n[2] + extraPoint[2]; ++ez) {
+        for (PetscInt ey = start[1]; ey < start[1] + n[1] + extraPoint[1]; ++ey) {
+          for (PetscInt ex = start[0]; ex < start[0] + n[0] + extraPoint[0]; ++ex) {
             for (d = 0; d < 3; ++d) cArrDa[ez][ey][ex][d] = cArrStag[ez][ey][ex][slot + d];
           }
         }
@@ -391,9 +390,9 @@ static PetscErrorCode DMStagTransferCoordinatesToDMDA(DM dmstag, DMStagStencilLo
     } else if (daCoordIsProduct) {
       PetscScalar **cArrX, **cArrY, **cArrZ;
       PetscCall(DMStagGetProductCoordinateArraysRead(dmstag, &cArrX, &cArrY, &cArrZ));
-      for (ez = start[2]; ez < start[2] + n[2] + extraPoint[2]; ++ez) {
-        for (ey = start[1]; ey < start[1] + n[1] + extraPoint[1]; ++ey) {
-          for (ex = start[0]; ex < start[0] + n[0] + extraPoint[0]; ++ex) {
+      for (PetscInt ez = start[2]; ez < start[2] + n[2] + extraPoint[2]; ++ez) {
+        for (PetscInt ey = start[1]; ey < start[1] + n[1] + extraPoint[1]; ++ey) {
+          for (PetscInt ex = start[0]; ex < start[0] + n[0] + extraPoint[0]; ++ex) {
             cArrDa[ez][ey][ex][0] = cArrX[ex][0];
             cArrDa[ez][ey][ex][1] = cArrY[ey][0];
             cArrDa[ez][ey][ex][2] = cArrZ[ez][0];

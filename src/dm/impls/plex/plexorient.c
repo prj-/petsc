@@ -618,13 +618,13 @@ PetscErrorCode DMPlexOrient(DM dm)
         while (pTop < pBottom) {
           const PetscScalar *ornt;
           const PetscInt    *neighbors;
-          PetscInt           proc, nproc, seen, flippedA, flippedB, mismatch, numNeighbors, n;
+          PetscInt proc, nproc, seen, flippedA, flippedB, mismatch, numNeighbors;
 
           proc     = procFIFO[pTop++];
           flippedA = PetscBTLookup(flippedProcs, proc) ? 1 : 0;
           PetscCall(MatGetRow(G, proc, &numNeighbors, &neighbors, &ornt));
           /* Loop over neighboring procs */
-          for (n = 0; n < numNeighbors; ++n) {
+          for (PetscInt n = 0; n < numNeighbors; ++n) {
             nproc    = neighbors[n];
             mismatch = PetscRealPart(ornt[n]) > 0.5 ? 0 : 1;
             seen     = PetscBTLookup(seenProcs, nproc);

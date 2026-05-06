@@ -373,7 +373,7 @@ PetscErrorCode ex1_4(void)
   /* set values within the swarm */
   {
     PetscReal   *array_x, *array_y;
-    PetscInt     npoints, i, j, cnt;
+    PetscInt npoints, cnt;
     DMDACoor2d **LA_coor;
     Vec          coor;
     DM           dmcellcdm;
@@ -385,8 +385,8 @@ PetscErrorCode ex1_4(void)
     PetscCall(DMSwarmGetField(dms, "coorx", NULL, NULL, (void **)&array_x));
     PetscCall(DMSwarmGetField(dms, "coory", NULL, NULL, (void **)&array_y));
     cnt = 0;
-    for (j = js; j < js + nj; j++) {
-      for (i = is; i < is + ni; i++) {
+    for (PetscInt j = js; j < js + nj; j++) {
+      for (PetscInt i = is; i < is + ni; i++) {
         PetscReal xp, yp;
 
         xp                   = PetscRealPart(LA_coor[j][i].x);

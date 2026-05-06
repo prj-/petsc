@@ -439,7 +439,7 @@ static PetscErrorCode MatProjMultEqual_Private(Mat A, Mat B, Mat C, PetscInt n, 
 {
   Vec         x, v1, v2, v3, v4, Cx, Bx;
   PetscReal   norm_abs, norm_rel, tol = PETSC_SQRT_MACHINE_EPSILON;
-  PetscInt    i, am, an, bm, bn, cm, cn;
+  PetscInt am, an, bm, bn, cm, cn;
   PetscRandom rdm;
 
   PetscFunctionBegin;
@@ -469,7 +469,7 @@ static PetscErrorCode MatProjMultEqual_Private(Mat A, Mat B, Mat C, PetscInt n, 
   PetscCall(PetscRandomSetFromOptions(rdm));
 
   *flg = PETSC_TRUE;
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     PetscCall(VecSetRandom(x, rdm));
     PetscCall(VecCopy(x, Cx));
     PetscCall(MatMult(C, Cx, v4)); /* v4 = C*x   */

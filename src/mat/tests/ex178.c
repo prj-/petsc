@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
 PetscErrorCode MatIsDiagonal(Mat A)
 {
-  PetscInt           ncols, i, j, rstart, rend;
+  PetscInt ncols, i, rstart, rend;
   const PetscInt    *cols;
   const PetscScalar *vals;
   PetscBool          founddiag;
@@ -111,7 +111,7 @@ PetscErrorCode MatIsDiagonal(Mat A)
   for (i = rstart; i < rend; i++) {
     founddiag = PETSC_FALSE;
     PetscCall(MatGetRow(A, i, &ncols, &cols, &vals));
-    for (j = 0; j < ncols; j++) {
+    for (PetscInt j = 0; j < ncols; j++) {
       if (cols[j] == i) {
         PetscCheck(PetscAbsScalar(vals[j] - 1) < PETSC_SMALL, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Row %" PetscInt_FMT " does not have 1 on the diagonal, it has %g", i, (double)PetscAbsScalar(vals[j]));
         founddiag = PETSC_TRUE;

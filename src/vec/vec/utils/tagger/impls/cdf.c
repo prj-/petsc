@@ -154,7 +154,7 @@ static PetscErrorCode VecTaggerComputeBox_CDF_SortedArray_Iterative(VecTagger ta
 {
   MPI_Comm       comm;
   VecTagger_CDF *cdf;
-  PetscInt       maxit, i, j, k, l, M;
+  PetscInt maxit, i, j, M;
   PetscInt       bounds[2][2];
   PetscInt       offsets[2];
   PetscReal      intervalLen = cdfBox->max - cdfBox->min;
@@ -205,7 +205,7 @@ static PetscErrorCode VecTaggerComputeBox_CDF_SortedArray_Iterative(VecTagger ta
     for (i = 0; i < 2; i++) PetscCall(CDFUtilInverseEstimate(&stats[i], i ? cdfBox->max : cdfBox->min, i ? &absBox->max : &absBox->min));
   }
   /* refine the estimates by computing how close they come to the desired box and refining */
-  for (k = 0; k < maxit; k++) {
+  for (PetscInt k = 0; k < maxit; k++) {
     PetscReal maxDiff = 0.;
 
     CDFStats stats[2][2];
@@ -214,7 +214,7 @@ static PetscErrorCode VecTaggerComputeBox_CDF_SortedArray_Iterative(VecTagger ta
       for (j = 0; j < 2; j++) {
         stats[i][j].min = PETSC_MAX_REAL;
         stats[i][j].max = PETSC_MIN_REAL;
-        for (l = 0; l < 3; l++) stats[i][j].moment[l] = 0.;
+        for (PetscInt l = 0; l < 3; l++) stats[i][j].moment[l] = 0.;
         newBounds[i][j][0] = PetscMax(bounds[i][0], bounds[i][1]);
         newBounds[i][j][1] = PetscMin(bounds[i][0], bounds[i][1]);
       }
@@ -272,7 +272,7 @@ static PetscErrorCode VecTaggerComputeBoxes_CDF_Iterative(VecTagger tagger, Vec 
   VecTagger_CDF    *cdf  = (VecTagger_CDF *)tagger->data;
   VecTagger_Simple *smpl = &cdf->smpl;
   Vec               vComp;
-  PetscInt          i, N, M, n, m, rstart;
+  PetscInt N, M, n, m, rstart;
 #if defined(PETSC_USE_COMPLEX)
   PetscReal *cReal, *cImag;
 #endif
@@ -295,7 +295,7 @@ static PetscErrorCode VecTaggerComputeBoxes_CDF_Iterative(VecTagger tagger, Vec 
   PetscCallMPI(MPI_Type_contiguous(5, MPIU_REAL, &statType));
   PetscCallMPI(MPI_Type_commit(&statType));
   PetscCallMPI(MPI_Op_create(VecTaggerCDFStatsReduce, 1, &statReduce));
-  for (i = 0; i < bs; i++) {
+  for (PetscInt i = 0; i < bs; i++) {
     IS           isStride;
     VecScatter   vScat;
     PetscScalar *cArray;

@@ -16,7 +16,7 @@ static PetscErrorCode KSPSetUp_FBCGSR(KSP ksp)
 
 static PetscErrorCode KSPSolve_FBCGSR(KSP ksp)
 {
-  PetscInt                    i, j, N;
+  PetscInt i, N;
   PetscScalar                 tau, sigma, alpha, omega, beta;
   PetscReal                   rho;
   PetscScalar                 xi1, xi2, xi3, xi4;
@@ -108,7 +108,7 @@ static PetscErrorCode KSPSolve_FBCGSR(KSP ksp)
     } else {
       PetscCall(PetscLogEventBegin(VEC_ReduceArithmetic, 0, 0, 0, 0));
       tau = sigma = 0.0;
-      for (j = 0; j < N; j++) {
+      for (PetscInt j = 0; j < N; j++) {
         tau += r[j] * rp[j];   /* tau <- (r,rp) */
         sigma += v[j] * rp[j]; /* sigma <- (v,rp) */
       }
@@ -136,7 +136,7 @@ static PetscErrorCode KSPSolve_FBCGSR(KSP ksp)
     /* inner products */
     PetscCall(PetscLogEventBegin(VEC_ReduceArithmetic, 0, 0, 0, 0));
     xi1 = xi2 = xi3 = xi4 = 0.0;
-    for (j = 0; j < N; j++) {
+    for (PetscInt j = 0; j < N; j++) {
       xi1 += s[j] * s[j];  /* xi1 <- (s,s) */
       xi2 += t[j] * s[j];  /* xi2 <- (t,s) */
       xi3 += t[j] * t[j];  /* xi3 <- (t,t) */
@@ -187,7 +187,7 @@ static PetscErrorCode KSPSolve_FBCGSR(KSP ksp)
 
     /* vector updates */
     PetscCall(PetscLogEventBegin(VEC_Ops, 0, 0, 0, 0));
-    for (j = 0; j < N; j++) {
+    for (PetscInt j = 0; j < N; j++) {
       r[j] = s[j] - omega * t[j];                 /* r <- s - omega t */
       p[j] = r[j] + beta * (p[j] - omega * v[j]); /* p <- r + beta * (p - omega v) */
     }

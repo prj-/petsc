@@ -666,7 +666,7 @@ PetscErrorCode MatMatMultNumeric_MPIAIJ_MPIAIJ(Mat A, Mat P, Mat C)
   const PetscScalar   *dummy;
   PetscInt            *api, *apj, *apJ, i, j, k, row;
   PetscInt             cstart = C->cmap->rstart;
-  PetscInt             cdnz, conz, k0, k1, nextp;
+  PetscInt cdnz, conz, k0, nextp;
   MPI_Comm             comm;
   PetscMPIInt          size;
 
@@ -775,7 +775,7 @@ PetscErrorCode MatMatMultNumeric_MPIAIJ_MPIAIJ(Mat A, Mat P, Mat C)
 
     /* diagonal part of C */
     ca = cda + cd->i[i];
-    for (k1 = 0; k1 < cdnz; k1++) {
+    for (PetscInt k1 = 0; k1 < cdnz; k1++) {
       ca[k1]        = apa_sparse[k];
       apa_sparse[k] = 0.0;
       k++;

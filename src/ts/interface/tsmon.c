@@ -1857,7 +1857,7 @@ PetscErrorCode TSDMSwarmMonitorMoments(TS ts, PetscInt step, PetscReal t, Vec U,
   DM                 sw;
   const PetscScalar *u;
   PetscReal          m = 1.0, totE = 0., totMom[3] = {0., 0., 0.};
-  PetscInt           dim, d, Np, p;
+  PetscInt dim, Np;
   MPI_Comm           comm;
 
   PetscFunctionBeginUser;
@@ -1870,17 +1870,17 @@ PetscErrorCode TSDMSwarmMonitorMoments(TS ts, PetscInt step, PetscReal t, Vec U,
   PetscCall(VecGetLocalSize(U, &Np));
   Np /= dim;
   PetscCall(VecGetArrayRead(U, &u));
-  for (p = 0; p < Np; ++p) {
-    for (d = 0; d < dim; ++d) {
+  for (PetscInt p = 0; p < Np; ++p) {
+    for (PetscInt d = 0; d < dim; ++d) {
       totE += PetscRealPart(u[p * dim + d] * u[p * dim + d]);
       totMom[d] += PetscRealPart(u[p * dim + d]);
     }
   }
   PetscCall(VecRestoreArrayRead(U, &u));
-  for (d = 0; d < dim; ++d) totMom[d] *= m;
+  for (PetscInt d = 0; d < dim; ++d) totMom[d] *= m;
   totE *= 0.5 * m;
   PetscCall(PetscPrintf(comm, "Step %4" PetscInt_FMT " Total Energy: %10.8lf", step, (double)totE));
-  for (d = 0; d < dim; ++d) PetscCall(PetscPrintf(comm, "    Total Momentum %c: %10.8lf", (char)('x' + d), (double)totMom[d]));
+  for (PetscInt d = 0; d < dim; ++d) PetscCall(PetscPrintf(comm, "    Total Momentum %c: %10.8lf", (char)('x' + d), (double)totMom[d]));
   PetscCall(PetscPrintf(comm, "\n"));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

@@ -326,7 +326,7 @@ PetscErrorCode FormFunctionGradient(Tao tao, Vec X, PetscReal *f, Vec G, void *p
 PetscErrorCode FormHessian(Tao tao, Vec X, Mat A, Mat Hpre, PetscCtx ctx)
 {
   AppCtx   *user = (AppCtx *)ctx;
-  PetscInt  i, j, k;
+  PetscInt k;
   PetscInt  col[5], row;
   PetscInt  xs, xm, gxs, gxm, ys, ym, gys, gym;
   PetscReal v[5];
@@ -342,8 +342,8 @@ PetscErrorCode FormHessian(Tao tao, Vec X, Mat A, Mat Hpre, PetscCtx ctx)
   PetscCall(DMDAGetCorners(user->dm, &xs, &ys, NULL, &xm, &ym, NULL));
   PetscCall(DMDAGetGhostCorners(user->dm, &gxs, &gys, NULL, &gxm, &gym, NULL));
 
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       row = (j - gys) * gxm + (i - gxs);
 
       k = 0;

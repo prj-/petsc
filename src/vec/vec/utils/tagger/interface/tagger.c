@@ -423,7 +423,7 @@ PetscErrorCode VecTaggerComputeIS_FromBoxes(VecTagger tagger, Vec vec, IS *is, P
   VecTaggerBox      *boxes;
   PetscInt           numTagged, offset;
   PetscInt          *tagged;
-  PetscInt           bs, b, i, j, k, n;
+  PetscInt bs, b, k, n;
   PetscBool          invert;
   const PetscScalar *vecArray;
   PetscBool          boxlisted;
@@ -443,9 +443,9 @@ PetscErrorCode VecTaggerComputeIS_FromBoxes(VecTagger tagger, Vec vec, IS *is, P
   tagged    = NULL;
   PetscCheck(n % bs == 0, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "blocksize %" PetscInt_FMT " does not divide vector length %" PetscInt_FMT, bs, n);
   n /= bs;
-  for (i = 0; i < 2; i++) {
+  for (PetscInt i = 0; i < 2; i++) {
     if (i) PetscCall(PetscMalloc1(numTagged, &tagged));
-    for (j = 0; j < n; j++) {
+    for (PetscInt j = 0; j < n; j++) {
       for (k = 0; k < numBoxes; k++) {
         for (b = 0; b < bs; b++) {
           PetscScalar  val = vecArray[j * bs + b];

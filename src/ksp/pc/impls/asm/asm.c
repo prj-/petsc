@@ -1566,7 +1566,7 @@ PetscErrorCode PCASMDestroySubdomains(PetscInt n, IS *is[], IS *is_local[])
 @*/
 PetscErrorCode PCASMCreateSubdomains2D(PetscInt m, PetscInt n, PetscInt M, PetscInt N, PetscInt dof, PetscInt overlap, PetscInt *Nsub, IS *is[], IS *is_local[])
 {
-  PetscInt i, j, height, width, ystart, xstart, yleft, yright, xleft, xright, loc_outer;
+  PetscInt height, width, ystart, xstart, yleft, yright, xleft, xright, loc_outer;
   PetscInt nidx, *idx, loc, ii, jj, count;
 
   PetscFunctionBegin;
@@ -1577,7 +1577,7 @@ PetscErrorCode PCASMCreateSubdomains2D(PetscInt m, PetscInt n, PetscInt M, Petsc
   PetscCall(PetscMalloc1(*Nsub, is_local));
   ystart    = 0;
   loc_outer = 0;
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     height = n / N + ((n % N) > i); /* height of subdomain */
     PetscCheck(height >= 2, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Too many N subdomains for mesh dimension n");
     yleft = ystart - overlap;
@@ -1585,7 +1585,7 @@ PetscErrorCode PCASMCreateSubdomains2D(PetscInt m, PetscInt n, PetscInt M, Petsc
     yright = ystart + height + overlap;
     if (yright > n) yright = n;
     xstart = 0;
-    for (j = 0; j < M; j++) {
+    for (PetscInt j = 0; j < M; j++) {
       width = m / M + ((m % M) > j); /* width of subdomain */
       PetscCheck(width >= 2, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Too many M subdomains for mesh dimension m");
       xleft = xstart - overlap;
@@ -1616,7 +1616,7 @@ PetscErrorCode PCASMCreateSubdomains2D(PetscInt m, PetscInt n, PetscInt M, Petsc
     }
     ystart += height;
   }
-  for (i = 0; i < *Nsub; i++) PetscCall(ISSort((*is)[i]));
+  for (PetscInt i = 0; i < *Nsub; i++) PetscCall(ISSort((*is)[i]));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

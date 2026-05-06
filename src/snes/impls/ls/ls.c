@@ -124,7 +124,7 @@ static PetscErrorCode SNESNEWTONLSCheckResidual_Private(SNES snes, Mat A, Vec F,
 */
 static PetscErrorCode SNESSolve_NEWTONLS(SNES snes)
 {
-  PetscInt             maxits, i, lits;
+  PetscInt maxits, lits;
   SNESLineSearchReason lsreason;
   PetscReal            fnorm, xnorm, ynorm;
   Vec                  Y, X, F;
@@ -185,7 +185,7 @@ static PetscErrorCode SNESSolve_NEWTONLS(SNES snes)
   PetscCall(KSPGetPC(snes->ksp, &pc));
   PetscCall(PCLMVMSetUpdateVec(pc, X));
 
-  for (i = 0; i < maxits; i++) {
+  for (PetscInt i = 0; i < maxits; i++) {
     /* Call general purpose update function */
     PetscTryTypeMethod(snes, update, snes->iter);
     PetscCall(VecNorm(snes->vec_func, NORM_2, &fnorm)); /* no-op unless update() function changed f() */

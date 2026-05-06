@@ -60,7 +60,7 @@ int main(int argc, char **args)
    to match the blocksize then create a new padded vector
   */
   {
-    PetscInt     m, n, j, mvec, start, end, indx;
+    PetscInt m, n, mvec, start, end, indx;
     Vec          tmp;
     PetscScalar *bold;
 
@@ -71,7 +71,7 @@ int main(int argc, char **args)
     PetscCall(VecGetOwnershipRange(b, &start, &end));
     PetscCall(VecGetLocalSize(b, &mvec));
     PetscCall(VecGetArray(b, &bold));
-    for (j = 0; j < mvec; j++) {
+    for (PetscInt j = 0; j < mvec; j++) {
       indx = start + j;
       PetscCall(VecSetValues(tmp, 1, &indx, bold + j, INSERT_VALUES));
     }

@@ -39,7 +39,7 @@ static PetscErrorCode PCSetUp_PARMS(PC pc)
   Mat                pmat;
   PC_PARMS          *parms = (PC_PARMS *)pc->data;
   const PetscInt    *mapptr0;
-  PetscInt           n, lsize, low, high, i, pos, ncols, length;
+  PetscInt n, lsize, low, high, pos, ncols, length;
   int               *maptmp, *mapptr, *ia, *ja, *ja1, *im;
   PetscScalar       *aa, *aa1;
   const PetscInt    *cols;
@@ -62,8 +62,8 @@ static PetscErrorCode PCSetUp_PARMS(PC pc)
   high  = mapptr0[rank + 1];
   lsize = high - low;
 
-  for (i = 0; i < npro + 1; i++) mapptr[i] = mapptr0[i] + 1;
-  for (i = 0; i < n; i++) maptmp[i] = i + 1;
+  for (PetscInt i = 0; i < npro + 1; i++) mapptr[i] = mapptr0[i] + 1;
+  for (PetscInt i = 0; i < n; i++) maptmp[i] = i + 1;
 
   /* if created, destroy the previous map */
   if (parms->map) {
@@ -91,7 +91,7 @@ static PetscErrorCode PCSetUp_PARMS(PC pc)
   PetscCall(PetscMalloc1(length, &ja));
   PetscCall(PetscMalloc1(length, &aa));
 
-  for (i = low; i < high; i++) {
+  for (PetscInt i = low; i < high; i++) {
     pos = ia[i - low] - 1;
     PetscCall(MatGetRow(pmat, i, &ncols, &cols, &values));
     ia[i - low + 1] = ia[i - low] + ncols;
@@ -117,7 +117,7 @@ static PetscErrorCode PCSetUp_PARMS(PC pc)
   PetscCall(PetscArraycpy(im, &maptmp[mapptr[rank] - 1], lsize));
 
   /* 1-based indexing */
-  for (i = 0; i < ia[lsize] - 1; i++) ja[i] = ja[i] + 1;
+  for (PetscInt i = 0; i < ia[lsize] - 1; i++) ja[i] = ja[i] + 1;
 
   /* Now copy csr matrix to parms_mat object */
   parms_MatSetValues(parms->A, (int)lsize, im, ia, ja, aa, INSERT);
@@ -175,7 +175,7 @@ static PetscErrorCode PCSetUp_PARMS(PC pc)
   parms_PCSetTolInd(parms->pc, parms->indtol);
   parms_PCSetInnerKSize(parms->pc, parms->maxdim);
   parms_PCSetInnerMaxits(parms->pc, parms->maxits);
-  for (i = 0; i < 8; i++) meth[i] = parms->meth[i] ? 1 : 0;
+  for (PetscInt i = 0; i < 8; i++) meth[i] = parms->meth[i] ? 1 : 0;
   parms_PCSetPermScalOptions(parms->pc, &meth[0], 1);
   parms_PCSetPermScalOptions(parms->pc, &meth[4], 0);
   parms_PCSetFill(parms->pc, parms->lfil);

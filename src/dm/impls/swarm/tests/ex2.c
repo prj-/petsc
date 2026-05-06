@@ -336,10 +336,10 @@ static PetscErrorCode computeParticleMoments(DM sw, PetscReal moments[3], AppCtx
   PetscCall(DMSwarmGetField(sw, "w_q", NULL, NULL, (void **)&w));
   for (cell = cStart; cell < cEnd; ++cell) {
     PetscInt *pidx;
-    PetscInt  Np, p, d;
+    PetscInt Np, d;
 
     PetscCall(DMSwarmSortGetPointsPerCell(sw, cell, &Np, &pidx));
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       const PetscInt   idx = pidx[p];
       const PetscReal *c   = &coords[idx * dim];
 
@@ -484,11 +484,11 @@ static PetscErrorCode InterpolateGradient(DM dm, Vec locX, Vec locC)
   PetscCall(DMPlexGetSimplexOrBoxCells(dm, 0, &cStart, &cEnd));
   for (v = vStart; v < vEnd; ++v) {
     PetscInt *star = NULL;
-    PetscInt  starSize, st, d, fc;
+    PetscInt starSize;
 
     PetscCall(PetscArrayzero(gradsum, coordDim * numComponents));
     PetscCall(DMPlexGetTransitiveClosure(dm, v, PETSC_FALSE, &starSize, &star));
-    for (st = 0; st < starSize * 2; st += 2) {
+    for (PetscInt st = 0; st < starSize * 2; st += 2) {
       const PetscInt cell = star[st];
       PetscScalar   *grad = &gradsum[coordDim * numComponents];
       PetscScalar   *x    = NULL;
@@ -515,22 +515,22 @@ static PetscErrorCode InterpolateGradient(DM dm, Vec locX, Vec locC)
           PetscCheck(fegeom.detJ[q] > 0.0, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Invalid determinant %g for element %" PetscInt_FMT ", quadrature points %" PetscInt_FMT, (double)fegeom.detJ[q], cell, q);
           if (id == PETSCFE_CLASSID) PetscCall(PetscFEInterpolateGradient_Static((PetscFE)obj, 1, &x[fieldOffset], &fegeom, q, interpolant));
           else SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "Unknown discretization type for field %" PetscInt_FMT, field);
-          for (fc = 0; fc < Nc; ++fc) {
+          for (PetscInt fc = 0; fc < Nc; ++fc) {
             const PetscReal wt = quadWeights[q * qNc + qc + fc];
 
-            for (d = 0; d < coordDim; ++d) grad[fc * coordDim + d] += interpolant[fc * dim + d] * wt * fegeom.detJ[q];
+            for (PetscInt d = 0; d < coordDim; ++d) grad[fc * coordDim + d] += interpolant[fc * dim + d] * wt * fegeom.detJ[q];
           }
         }
         fieldOffset += Nb;
       }
       PetscCall(DMPlexVecRestoreClosure(dm, NULL, locX, cell, NULL, &x));
-      for (fc = 0; fc < numComponents; ++fc) {
-        for (d = 0; d < coordDim; ++d) gradsum[fc * coordDim + d] += grad[fc * coordDim + d];
+      for (PetscInt fc = 0; fc < numComponents; ++fc) {
+        for (PetscInt d = 0; d < coordDim; ++d) gradsum[fc * coordDim + d] += grad[fc * coordDim + d];
       }
       if (debug) {
         PetscCall(PetscPrintf(PETSC_COMM_SELF, "Cell %" PetscInt_FMT " gradient: [", cell));
-        for (fc = 0; fc < numComponents; ++fc) {
-          for (d = 0; d < coordDim; ++d) {
+        for (PetscInt fc = 0; fc < numComponents; ++fc) {
+          for (PetscInt d = 0; d < coordDim; ++d) {
             if (fc || d > 0) PetscCall(PetscPrintf(PETSC_COMM_SELF, ", "));
             PetscCall(PetscPrintf(PETSC_COMM_SELF, "%g", (double)PetscRealPart(grad[fc * coordDim + d])));
           }

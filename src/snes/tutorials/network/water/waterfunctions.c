@@ -158,7 +158,7 @@ PetscErrorCode WaterSetInitialGuess(DM networkdm, Vec X)
 
 PetscErrorCode GetListofEdges_Water(WATERDATA *water, PetscInt *edgelist)
 {
-  PetscInt  i, j, node1, node2;
+  PetscInt i, node1, node2;
   Pipe     *pipe;
   Pump     *pump;
   PetscBool netview = PETSC_FALSE;
@@ -178,14 +178,14 @@ PetscErrorCode GetListofEdges_Water(WATERDATA *water, PetscInt *edgelist)
       if (netview) PetscCall(PetscPrintf(PETSC_COMM_SELF, "edge %" PetscInt_FMT ", pump v[%" PetscInt_FMT "] -> v[%" PetscInt_FMT "]\n", i, node1, node2));
     }
 
-    for (j = 0; j < water->nvertex; j++) {
+    for (PetscInt j = 0; j < water->nvertex; j++) {
       if (water->vertex[j].id == node1) {
         edgelist[2 * i] = j;
         break;
       }
     }
 
-    for (j = 0; j < water->nvertex; j++) {
+    for (PetscInt j = 0; j < water->nvertex; j++) {
       if (water->vertex[j].id == node2) {
         edgelist[2 * i + 1] = j;
         break;
@@ -197,14 +197,14 @@ PetscErrorCode GetListofEdges_Water(WATERDATA *water, PetscInt *edgelist)
 
 PetscErrorCode SetInitialGuess_Water(DM networkdm, Vec localX, PetscInt nv, PetscInt ne, const PetscInt *vtx, const PetscInt *edges, void *appctx)
 {
-  PetscInt     i, offset, key;
+  PetscInt offset, key;
   PetscBool    ghostvtex, sharedv;
   VERTEX_Water vertex;
   PetscScalar *xarr;
 
   PetscFunctionBegin;
   PetscCall(VecGetArray(localX, &xarr));
-  for (i = 0; i < nv; i++) {
+  for (PetscInt i = 0; i < nv; i++) {
     PetscCall(DMNetworkIsGhostVertex(networkdm, vtx[i], &ghostvtex));
     PetscCall(DMNetworkIsSharedVertex(networkdm, vtx[i], &sharedv));
     if (ghostvtex || sharedv) continue;

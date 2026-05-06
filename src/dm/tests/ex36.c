@@ -268,7 +268,6 @@ PetscErrorCode DADefineXLinearField2D(DM da, Vec field)
 
 PetscErrorCode DADefineXLinearField3D(DM da, Vec field)
 {
-  PetscInt       i, j, k;
   PetscInt       sx, nx, sy, ny, sz, nz;
   Vec            Gcoords;
   DMDACoor3d  ***XX;
@@ -284,9 +283,9 @@ PetscErrorCode DADefineXLinearField3D(DM da, Vec field)
 
   PetscCall(DMDAGetCorners(da, &sx, &sy, &sz, &nx, &ny, &nz));
 
-  for (k = sz; k < sz + nz; k++) {
-    for (j = sy; j < sy + ny; j++) {
-      for (i = sx; i < sx + nx; i++) {
+  for (PetscInt k = sz; k < sz + nz; k++) {
+    for (PetscInt j = sy; j < sy + ny; j++) {
+      for (PetscInt i = sx; i < sx + nx; i++) {
         FF[k][j][i] = 10.0 + 4.05 * XX[k][j][i].x + 5.50 * XX[k][j][i].y + 1.33 * XX[k][j][i].z + 2.03 * XX[k][j][i].x * XX[k][j][i].y + 0.03 * XX[k][j][i].x * XX[k][j][i].z + 0.83 * XX[k][j][i].y * XX[k][j][i].z +
                       3.79 * XX[k][j][i].x * XX[k][j][i].y * XX[k][j][i].z;
       }

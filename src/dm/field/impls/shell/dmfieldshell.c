@@ -109,16 +109,16 @@ PetscErrorCode DMFieldShellEvaluateFEDefault(DMField field, IS pointIS, PetscQua
         for (PetscInt q = 0; q < Nc; q++) {
           PetscReal d[3][3];
 
-          PetscInt i, j, k, l;
+          PetscInt i;
 
           for (i = 0; i < dimC; i++)
-            for (j = 0; j < dimC; j++) d[i][j] = rH[((p * Nc + q) * dimC + i) * dimC + j];
+            for (PetscInt j = 0; j < dimC; j++) d[i][j] = rH[((p * Nc + q) * dimC + i) * dimC + j];
           for (i = 0; i < dimC; i++)
-            for (j = 0; j < dimC; j++) rH[((p * Nc + q) * dimC + i) * dimC + j] = 0.;
+            for (PetscInt j = 0; j < dimC; j++) rH[((p * Nc + q) * dimC + i) * dimC + j] = 0.;
           for (i = 0; i < dimC; i++) {
-            for (j = 0; j < dimC; j++) {
-              for (k = 0; k < dimC; k++) {
-                for (l = 0; l < dimC; l++) rH[((p * Nc + q) * dimC + i) * dimC + j] += geom->J[(p * dimC + k) * dimC + i] * geom->J[(p * dimC + l) * dimC + j] * d[k][l];
+            for (PetscInt j = 0; j < dimC; j++) {
+              for (PetscInt k = 0; k < dimC; k++) {
+                for (PetscInt l = 0; l < dimC; l++) rH[((p * Nc + q) * dimC + i) * dimC + j] += geom->J[(p * dimC + k) * dimC + i] * geom->J[(p * dimC + l) * dimC + j] * d[k][l];
               }
             }
           }
@@ -138,7 +138,7 @@ PetscErrorCode DMFieldShellEvaluateFVDefault(DMField field, IS pointIS, PetscDat
   DMField         coordField;
   PetscFEGeom    *geom;
   Vec             pushforward;
-  PetscInt        dimC, dim, numPoints, Nq, p;
+  PetscInt dimC, dim, numPoints, Nq;
   PetscScalar    *pfArray;
   PetscQuadrature quad;
   MPI_Comm        comm;
@@ -155,7 +155,7 @@ PetscErrorCode DMFieldShellEvaluateFVDefault(DMField field, IS pointIS, PetscDat
   PetscCall(DMFieldCreateFEGeom(coordField, pointIS, quad, PETSC_FEGEOM_BASIC, &geom));
   PetscCall(ISGetLocalSize(pointIS, &numPoints));
   PetscCall(PetscMalloc1(dimC * numPoints, &pfArray));
-  for (p = 0; p < numPoints * dimC; p++) pfArray[p] = geom->v[p];
+  for (PetscInt p = 0; p < numPoints * dimC; p++) pfArray[p] = geom->v[p];
   PetscCall(VecCreateMPIWithArray(PetscObjectComm((PetscObject)pointIS), dimC, dimC * numPoints, PETSC_DETERMINE, pfArray, &pushforward));
   PetscCall(DMFieldEvaluate(field, pushforward, type, B, D, H));
   PetscCall(PetscQuadratureDestroy(&quad));

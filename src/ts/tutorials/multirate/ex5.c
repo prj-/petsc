@@ -508,7 +508,7 @@ PetscErrorCode FVRHSFunctionslow2(TS ts, PetscReal time, Vec X, Vec F, void *vct
 PetscErrorCode FVRHSFunctionfast2(TS ts, PetscReal time, Vec X, Vec F, void *vctx)
 {
   FVCtx       *ctx = (FVCtx *)vctx;
-  PetscInt     i, j, k, Mx, dof, xs, xm, len_slow1, len_slow2;
+  PetscInt i, k, Mx, dof, xs, xm, len_slow1, len_slow2;
   PetscReal    hx, cfl_idt = 0;
   PetscScalar *x, *f, *slope;
   Vec          Xloc;
@@ -531,10 +531,10 @@ PetscErrorCode FVRHSFunctionfast2(TS ts, PetscReal time, Vec X, Vec F, void *vct
 
   if (ctx->bctype == FVBC_OUTFLOW) {
     for (i = xs - 2; i < 0; i++) {
-      for (j = 0; j < dof; j++) x[i * dof + j] = x[j];
+      for (PetscInt j = 0; j < dof; j++) x[i * dof + j] = x[j];
     }
     for (i = Mx; i < xs + xm + 2; i++) {
-      for (j = 0; j < dof; j++) x[i * dof + j] = x[(xs + xm - 1) * dof + j];
+      for (PetscInt j = 0; j < dof; j++) x[i * dof + j] = x[(xs + xm - 1) * dof + j];
     }
   }
   for (i = xs - 1; i < xs + xm + 1; i++) {
@@ -545,7 +545,7 @@ PetscErrorCode FVRHSFunctionfast2(TS ts, PetscReal time, Vec X, Vec F, void *vct
       PetscCall(PetscArrayzero(ctx->cjmpLR, 2 * dof));
       cjmpL = &ctx->cjmpLR[0];
       cjmpR = &ctx->cjmpLR[dof];
-      for (j = 0; j < dof; j++) {
+      for (PetscInt j = 0; j < dof; j++) {
         PetscScalar jmpL, jmpR;
         jmpL = x[(i + 0) * dof + j] - x[(i - 1) * dof + j];
         jmpR = x[(i + 1) * dof + j] - x[(i + 0) * dof + j];
@@ -558,8 +558,8 @@ PetscErrorCode FVRHSFunctionfast2(TS ts, PetscReal time, Vec X, Vec F, void *vct
       info.m  = dof;
       info.hx = hx;
       (*ctx->limit)(&info, cjmpL, cjmpR, ctx->cslope);
-      for (j = 0; j < dof; j++) ctx->cslope[j] /= hx; /* rescale to a slope */
-      for (j = 0; j < dof; j++) {
+      for (PetscInt j = 0; j < dof; j++) ctx->cslope[j] /= hx; /* rescale to a slope */
+      for (PetscInt j = 0; j < dof; j++) {
         PetscScalar tmp = 0;
         for (k = 0; k < dof; k++) tmp += ctx->R[j + k * dof] * ctx->cslope[k];
         slope[i * dof + j] = tmp;
@@ -573,30 +573,30 @@ PetscErrorCode FVRHSFunctionfast2(TS ts, PetscReal time, Vec X, Vec F, void *vct
     if (i > len_slow1 + len_slow2) {
       uL = &ctx->uLR[0];
       uR = &ctx->uLR[dof];
-      for (j = 0; j < dof; j++) {
+      for (PetscInt j = 0; j < dof; j++) {
         uL[j] = x[(i - 1) * dof + j] + slope[(i - 1) * dof + j] * hx / 2;
         uR[j] = x[(i - 0) * dof + j] - slope[(i - 0) * dof + j] * hx / 2;
       }
       PetscCall((*ctx->physics.riemann)(ctx->physics.user, dof, uL, uR, ctx->flux, &maxspeed, ctx->xmin + hx * i, ctx->xmin, ctx->xmax));
       cfl_idt = PetscMax(cfl_idt, PetscAbsScalar(maxspeed / hx)); /* Max allowable value of 1/Delta t */
       if (i > xs) {
-        for (j = 0; j < dof; j++) f[(i - len_slow1 - len_slow2 - 1) * dof + j] -= ctx->flux[j] / hx;
+        for (PetscInt j = 0; j < dof; j++) f[(i - len_slow1 - len_slow2 - 1) * dof + j] -= ctx->flux[j] / hx;
       }
       if (i < xs + xm) {
-        for (j = 0; j < dof; j++) f[(i - len_slow1 - len_slow2) * dof + j] += ctx->flux[j] / hx;
+        for (PetscInt j = 0; j < dof; j++) f[(i - len_slow1 - len_slow2) * dof + j] += ctx->flux[j] / hx;
       }
     }
     if (i == len_slow1 + len_slow2) {
       uL = &ctx->uLR[0];
       uR = &ctx->uLR[dof];
-      for (j = 0; j < dof; j++) {
+      for (PetscInt j = 0; j < dof; j++) {
         uL[j] = x[(i - 1) * dof + j] + slope[(i - 1) * dof + j] * hx / 2;
         uR[j] = x[(i - 0) * dof + j] - slope[(i - 0) * dof + j] * hx / 2;
       }
       PetscCall((*ctx->physics.riemann)(ctx->physics.user, dof, uL, uR, ctx->flux, &maxspeed, ctx->xmin + hx * i, ctx->xmin, ctx->xmax));
       cfl_idt = PetscMax(cfl_idt, PetscAbsScalar(maxspeed / hx)); /* Max allowable value of 1/Delta t */
       if (i < xs + xm) {
-        for (j = 0; j < dof; j++) f[(i - len_slow1 - len_slow2) * dof + j] += ctx->flux[j] / hx;
+        for (PetscInt j = 0; j < dof; j++) f[(i - len_slow1 - len_slow2) * dof + j] += ctx->flux[j] / hx;
       }
     }
   }

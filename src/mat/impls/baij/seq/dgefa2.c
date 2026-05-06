@@ -316,7 +316,7 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_9(MatScalar *a, PetscReal shift, Pet
 
 PetscErrorCode PetscKernel_A_gets_inverse_A_15(MatScalar *a, PetscInt *ipvt, MatScalar *work, PetscReal shift, PetscBool allowzeropivot, PetscBool *zeropivotdetected)
 {
-  PetscInt   i__2, i__3, kp1, j, k, l, ll, i, kb, k3;
+  PetscInt i__2, i__3, kp1, k, l, k3;
   PetscInt   k4, j3;
   MatScalar *aa, *ax, *ay, stmp;
   MatReal    tmp, max;
@@ -337,7 +337,7 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_15(MatScalar *a, PetscInt *ipvt, Mat
     aa   = &a[k4];
     max  = PetscAbsScalar(aa[0]);
     l    = 1;
-    for (ll = 1; ll < i__2; ll++) {
+    for (PetscInt ll = 1; ll < i__2; ll++) {
       tmp = PetscAbsScalar(aa[ll]);
       if (tmp > max) {
         max = tmp;
@@ -368,11 +368,11 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_15(MatScalar *a, PetscInt *ipvt, Mat
     stmp = -1. / a[k4];
     i__2 = 15 - k;
     aa   = &a[1 + k4];
-    for (ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
+    for (PetscInt ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
 
     /* row elimination with column indexing */
     ax = &a[k4 + 1];
-    for (j = kp1; j <= 15; ++j) {
+    for (PetscInt j = kp1; j <= 15; ++j) {
       j3   = 15 * j;
       stmp = a[l + j3];
       if (l != k) {
@@ -382,7 +382,7 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_15(MatScalar *a, PetscInt *ipvt, Mat
 
       i__3 = 15 - k;
       ay   = &a[1 + k + j3];
-      for (ll = 0; ll < i__3; ll++) ay[ll] += stmp * ax[ll];
+      for (PetscInt ll = 0; ll < i__3; ll++) ay[ll] += stmp * ax[ll];
     }
   }
   ipvt[14] = 15;
@@ -401,30 +401,30 @@ PetscErrorCode PetscKernel_A_gets_inverse_A_15(MatScalar *a, PetscInt *ipvt, Mat
     stmp  = -a[k4];
     i__2  = k - 1;
     aa    = &a[k3 + 1];
-    for (ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
+    for (PetscInt ll = 0; ll < i__2; ll++) aa[ll] *= stmp;
     kp1 = k + 1;
     if (15 < kp1) continue;
     ax = aa;
-    for (j = kp1; j <= 15; ++j) {
+    for (PetscInt j = kp1; j <= 15; ++j) {
       j3        = 15 * j;
       stmp      = a[k + j3];
       a[k + j3] = 0.0;
       ay        = &a[j3 + 1];
-      for (ll = 0; ll < k; ll++) ay[ll] += stmp * ax[ll];
+      for (PetscInt ll = 0; ll < k; ll++) ay[ll] += stmp * ax[ll];
     }
   }
 
   /* form inverse(u)*inverse(l) */
-  for (kb = 1; kb <= 14; ++kb) {
+  for (PetscInt kb = 1; kb <= 14; ++kb) {
     k   = 15 - kb;
     k3  = 15 * k;
     kp1 = k + 1;
     aa  = a + k3;
-    for (i = kp1; i <= 15; ++i) {
+    for (PetscInt i = kp1; i <= 15; ++i) {
       work[i - 1] = aa[i];
       aa[i]       = 0.0;
     }
-    for (j = kp1; j <= 15; ++j) {
+    for (PetscInt j = kp1; j <= 15; ++j) {
       stmp = work[j - 1];
       ax   = &a[15 * j + 1];
       ay   = &a[k3 + 1];

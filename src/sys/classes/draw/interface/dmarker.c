@@ -43,9 +43,9 @@ PetscErrorCode PetscDrawMarker(PetscDraw draw, PetscReal xl, PetscReal yl, int c
     } else PetscUseTypeMethod(draw, string, xl, yl, cl, "+");
   } else if (draw->markertype == PETSC_DRAW_MARKER_CIRCLE) {
     if (draw->ops->coordinatetopixel && draw->ops->pointpixel) {
-      int i, j, k;
+      int i, j;
       PetscUseTypeMethod(draw, coordinatetopixel, xl, yl, &i, &j);
-      for (k = -1; k <= 1; k++) {
+      for (int k = -1; k <= 1; k++) {
         PetscUseTypeMethod(draw, pointpixel, i + 2, j + k, cl);
         PetscUseTypeMethod(draw, pointpixel, i - 2, j + k, cl);
         PetscUseTypeMethod(draw, pointpixel, i + k, j + 2, cl);

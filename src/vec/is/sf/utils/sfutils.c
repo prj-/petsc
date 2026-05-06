@@ -483,11 +483,11 @@ PetscErrorCode PetscSFCreateSectionSF(PetscSF sf, PetscSection rootSection, Pets
 
     if ((localPoint >= lpStart) && (localPoint < lpEnd)) {
       PetscInt remoteOffset = remoteOffsets[localPoint - lpStart];
-      PetscInt loff, dof, d;
+      PetscInt loff, dof;
 
       PetscCall(PetscSectionGetOffset(leafSection, localPoint, &loff));
       PetscCall(PetscSectionGetDof(leafSection, localPoint, &dof));
-      for (d = 0; d < dof; ++d, ++ind) {
+      for (PetscInt d = 0; d < dof; ++d, ++ind) {
         localIndices[ind]        = loff + d;
         remoteIndices[ind].rank  = rank;
         remoteIndices[ind].index = remoteOffset + d;

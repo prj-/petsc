@@ -8,7 +8,7 @@ int main(int argc, char **args)
 {
   Mat           C, LU;
   MatInfo       info;
-  PetscInt      i, j, m, n, Ii, J;
+  PetscInt m, n, Ii, J;
   PetscScalar   v, one = 1.0;
   IS            perm, iperm;
   Vec           x, u, b;
@@ -33,8 +33,8 @@ int main(int argc, char **args)
   PetscCall(MatSetSizes(C, PETSC_DECIDE, PETSC_DECIDE, m * n, m * n));
   PetscCall(MatSetFromOptions(C));
   PetscCall(MatSetUp(C));
-  for (i = 0; i < m; i++) {
-    for (j = 0; j < n; j++) {
+  for (PetscInt i = 0; i < m; i++) {
+    for (PetscInt j = 0; j < n; j++) {
       v  = -1.0;
       Ii = j + n * i;
       if (i > 0) {

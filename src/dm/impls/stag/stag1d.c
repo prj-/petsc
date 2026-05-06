@@ -277,7 +277,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
   /* Create global->local VecScatter and ISLocalToGlobalMapping */
   {
     PetscInt *idxLocal, *idxGlobal, *idxGlobalAll;
-    PetscInt  i, iLocal, d, entriesToTransferTotal, ghostOffsetStart, ghostOffsetEnd, nNonDummyGhost;
+    PetscInt i, iLocal, entriesToTransferTotal, ghostOffsetStart, ghostOffsetEnd, nNonDummyGhost;
     IS        isLocal, isGlobal;
 
     /* The offset on the right (may not be equal to the stencil width, as we
@@ -309,7 +309,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
       PetscInt count = 0, countAll = 0;
       /* Left ghost points and native points */
       for (i = stag->startGhost[0], iLocal = 0; iLocal < nNonDummyGhost; ++i, ++iLocal) {
-        for (d = 0; d < stag->entriesPerElement; ++d, ++count, ++countAll) {
+        for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++count, ++countAll) {
           idxLocal[count]        = iLocal * stag->entriesPerElement + d;
           idxGlobal[count]       = i * stag->entriesPerElement + d;
           idxGlobalAll[countAll] = i * stag->entriesPerElement + d;
@@ -321,12 +321,12 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
         i      = stag->N[0];
         iLocal = (stag->nGhost[0] - ghostOffsetEnd);
         /* Only vertex (0-cell) dofs in global representation */
-        for (d = 0; d < stag->dof[0]; ++d, ++count, ++countAll) {
+        for (PetscInt d = 0; d < stag->dof[0]; ++d, ++count, ++countAll) {
           idxGlobal[count]       = i * stag->entriesPerElement + d;
           idxLocal[count]        = iLocal * stag->entriesPerElement + d;
           idxGlobalAll[countAll] = i * stag->entriesPerElement + d;
         }
-        for (d = stag->dof[0]; d < stag->entriesPerElement; ++d, ++countAll) { /* Additional dummy entries */
+        for (PetscInt d = stag->dof[0]; d < stag->entriesPerElement; ++d, ++countAll) { /* Additional dummy entries */
           idxGlobalAll[countAll] = -1;
         }
       }
@@ -337,7 +337,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
       /* Ghost points on the left */
       if (stag->firstRank[0]) {
         for (i = stag->N[0] - stag->stencilWidth; iLocal < stag->stencilWidth; ++i, ++iLocal) {
-          for (d = 0; d < stag->entriesPerElement; ++d, ++count) {
+          for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++count) {
             idxGlobal[count]    = i * stag->entriesPerElement + d;
             idxLocal[count]     = iLocal * stag->entriesPerElement + d;
             idxGlobalAll[count] = idxGlobal[count];
@@ -346,7 +346,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
       }
       /* Native points */
       for (i = iMin; i < iMax; ++i, ++iLocal) {
-        for (d = 0; d < stag->entriesPerElement; ++d, ++count) {
+        for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++count) {
           idxGlobal[count]    = i * stag->entriesPerElement + d;
           idxLocal[count]     = iLocal * stag->entriesPerElement + d;
           idxGlobalAll[count] = idxGlobal[count];
@@ -355,7 +355,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
       /* Ghost points on the right */
       if (stag->lastRank[0]) {
         for (i = 0; iLocal < stag->nGhost[0]; ++i, ++iLocal) {
-          for (d = 0; d < stag->entriesPerElement; ++d, ++count) {
+          for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++count) {
             idxGlobal[count]    = i * stag->entriesPerElement + d;
             idxLocal[count]     = iLocal * stag->entriesPerElement + d;
             idxGlobalAll[count] = idxGlobal[count];
@@ -368,7 +368,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
       if (stag->firstRank[0]) {
         for (iLocal = 0; iLocal < ghostOffsetStart; ++iLocal) {
           /* Complete elements full of dummy entries */
-          for (d = 0; d < stag->entriesPerElement; ++d, ++countAll) idxGlobalAll[countAll] = -1;
+          for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++countAll) idxGlobalAll[countAll] = -1;
         }
         i = 0; /* nonDummy entries start with global entry 0 */
       } else {
@@ -381,7 +381,7 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
       {
         PetscInt iLocalNonDummyMax = stag->firstRank[0] ? nNonDummyGhost + ghostOffsetStart : nNonDummyGhost;
         for (; iLocal < iLocalNonDummyMax; ++i, ++iLocal) {
-          for (d = 0; d < stag->entriesPerElement; ++d, ++count, ++countAll) {
+          for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++count, ++countAll) {
             idxLocal[count]        = iLocal * stag->entriesPerElement + d;
             idxGlobal[count]       = i * stag->entriesPerElement + d;
             idxGlobalAll[countAll] = i * stag->entriesPerElement + d;
@@ -394,17 +394,17 @@ PETSC_INTERN PetscErrorCode DMSetUp_Stag_1d(DM dm)
         /* First one is partial dummy */
         i      = stag->N[0];
         iLocal = (stag->nGhost[0] - ghostOffsetEnd);
-        for (d = 0; d < stag->dof[0]; ++d, ++count, ++countAll) { /* Only vertex (0-cell) dofs in global representation */
+        for (PetscInt d = 0; d < stag->dof[0]; ++d, ++count, ++countAll) { /* Only vertex (0-cell) dofs in global representation */
           idxLocal[count]        = iLocal * stag->entriesPerElement + d;
           idxGlobal[count]       = i * stag->entriesPerElement + d;
           idxGlobalAll[countAll] = i * stag->entriesPerElement + d;
         }
-        for (d = stag->dof[0]; d < stag->entriesPerElement; ++d, ++countAll) { /* Additional dummy entries */
+        for (PetscInt d = stag->dof[0]; d < stag->entriesPerElement; ++d, ++countAll) { /* Additional dummy entries */
           idxGlobalAll[countAll] = -1;
         }
         for (iLocal = stag->nGhost[0] - ghostOffsetEnd + 1; iLocal < stag->nGhost[0]; ++iLocal) {
           /* Additional dummy elements */
-          for (d = 0; d < stag->entriesPerElement; ++d, ++countAll) idxGlobalAll[countAll] = -1;
+          for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++countAll) idxGlobalAll[countAll] = -1;
         }
       }
     } else SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_SUP, "Unsupported x boundary type %s", DMBoundaryTypes[stag->boundaryType[0]]);
@@ -461,7 +461,7 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToGlobalInjective_1d(DM dm)
 {
   DM_Stag *const stag = (DM_Stag *)dm->data;
   PetscInt      *idxLocal, *idxGlobal;
-  PetscInt       i, iLocal, d, count;
+  PetscInt i, iLocal, count;
   IS             isLocal, isGlobal;
 
   PetscFunctionBegin;
@@ -470,7 +470,7 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToGlobalInjective_1d(DM dm)
   count  = 0;
   iLocal = stag->start[0] - stag->startGhost[0];
   for (i = stag->start[0]; i < stag->start[0] + stag->n[0]; ++i, ++iLocal) {
-    for (d = 0; d < stag->entriesPerElement; ++d, ++count) {
+    for (PetscInt d = 0; d < stag->entriesPerElement; ++d, ++count) {
       idxGlobal[count] = i * stag->entriesPerElement + d;
       idxLocal[count]  = iLocal * stag->entriesPerElement + d;
     }
@@ -478,7 +478,7 @@ PETSC_INTERN PetscErrorCode DMStagPopulateLocalToGlobalInjective_1d(DM dm)
   if (stag->lastRank[0] && stag->boundaryType[0] != DM_BOUNDARY_PERIODIC) {
     i      = stag->start[0] + stag->n[0];
     iLocal = stag->start[0] - stag->startGhost[0] + stag->n[0];
-    for (d = 0; d < stag->dof[0]; ++d, ++count) {
+    for (PetscInt d = 0; d < stag->dof[0]; ++d, ++count) {
       idxGlobal[count] = i * stag->entriesPerElement + d;
       idxLocal[count]  = iLocal * stag->entriesPerElement + d;
     }

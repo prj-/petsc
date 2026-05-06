@@ -350,7 +350,7 @@ PetscErrorCode DMSwarmSetPointsUniformCoordinates(DM sw, PetscReal min[], PetscR
 {
   PetscReal          lmin[] = {PETSC_MAX_REAL, PETSC_MAX_REAL, PETSC_MAX_REAL};
   PetscReal          lmax[] = {PETSC_MIN_REAL, PETSC_MIN_REAL, PETSC_MIN_REAL};
-  PetscInt           i, j, k, bs, b, n_estimate, n_curr, n_new_est, p, n_found, Nfc;
+  PetscInt i, bs, b, n_estimate, n_curr, n_new_est, p, n_found, Nfc;
   const PetscScalar *_coor;
   DMSwarmCellDM      celldm;
   DM                 dm;
@@ -385,8 +385,8 @@ PetscErrorCode DMSwarmSetPointsUniformCoordinates(DM sw, PetscReal min[], PetscR
 
   /* determine number of points living in the bounding box */
   n_estimate = 0;
-  for (k = 0; k < _npoints[2]; k++) {
-    for (j = 0; j < _npoints[1]; j++) {
+  for (PetscInt k = 0; k < _npoints[2]; k++) {
+    for (PetscInt j = 0; j < _npoints[1]; j++) {
       for (i = 0; i < _npoints[0]; i++) {
         PetscReal xp[] = {0.0, 0.0, 0.0};
         PetscInt  ijk[3];
@@ -413,8 +413,8 @@ PetscErrorCode DMSwarmSetPointsUniformCoordinates(DM sw, PetscReal min[], PetscR
   PetscCall(VecGetArray(pos, &_pos));
 
   n_estimate = 0;
-  for (k = 0; k < _npoints[2]; k++) {
-    for (j = 0; j < _npoints[1]; j++) {
+  for (PetscInt k = 0; k < _npoints[2]; k++) {
+    for (PetscInt j = 0; j < _npoints[1]; j++) {
       for (i = 0; i < _npoints[0]; i++) {
         PetscReal xp[] = {0.0, 0.0, 0.0};
         PetscInt  ijk[3];
@@ -1154,7 +1154,7 @@ PetscErrorCode DMSwarmInitializeCoordinates(DM sw)
     DM          dm;
     PetscRandom rnd;
     PetscReal   xi0[3];
-    PetscInt    cStart, cEnd, c;
+    PetscInt cStart, cEnd;
 
     PetscCall(DMSwarmGetCellDM(sw, &dm));
     PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
@@ -1166,7 +1166,7 @@ PetscErrorCode DMSwarmInitializeCoordinates(DM sw)
     PetscCall(PetscRandomSetFromOptions(rnd));
     PetscCall(DMSwarmSortGetAccess(sw));
     for (d = 0; d < dim; ++d) xi0[d] = -1.0;
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscReal v0[3], J[9], invJ[9], detJ;
       PetscInt *pidx, Npc, q;
 

@@ -287,12 +287,12 @@ int main(int argc, char **args)
 
 PetscErrorCode AssembleMatrix(Mat A, PetscInt m, PetscInt n)
 {
-  PetscInt    i, j, Ii, J, Istart, Iend;
+  PetscInt i, j, J, Istart, Iend;
   PetscScalar v;
 
   PetscFunctionBegin;
   PetscCall(MatGetOwnershipRange(A, &Istart, &Iend));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = -1.0;
     i = Ii / n;
     j = Ii - i * n;

@@ -1034,14 +1034,12 @@ PETSC_INTERN PetscErrorCode PetscFEIntegrateBdJacobian_Basic(PetscDS ds, PetscWe
       PetscCall(PetscFEUpdateElementMat_Internal(feI, feJ, face, qp, T[fieldI], basisReal, basisDerReal, T[fieldJ], testReal, testDerReal, &cgeom, g0, g1, g2, g3, totDim, offsetI, offsetJ, elemMat + eOffset));
     }
     if (debug > 1) {
-      PetscInt fc, f, gc, g;
-
       PetscCall(PetscPrintf(PETSC_COMM_SELF, "Element matrix for fields %" PetscInt_FMT " and %" PetscInt_FMT "\n", fieldI, fieldJ));
-      for (fc = 0; fc < T[fieldI]->Nc; ++fc) {
-        for (f = 0; f < T[fieldI]->Nb; ++f) {
+      for (PetscInt fc = 0; fc < T[fieldI]->Nc; ++fc) {
+        for (PetscInt f = 0; f < T[fieldI]->Nb; ++f) {
           const PetscInt i = offsetI + f * T[fieldI]->Nc + fc;
-          for (gc = 0; gc < T[fieldJ]->Nc; ++gc) {
-            for (g = 0; g < T[fieldJ]->Nb; ++g) {
+          for (PetscInt gc = 0; gc < T[fieldJ]->Nc; ++gc) {
+            for (PetscInt g = 0; g < T[fieldJ]->Nb; ++g) {
               const PetscInt j = offsetJ + g * T[fieldJ]->Nc + gc;
               PetscCall(PetscPrintf(PETSC_COMM_SELF, "    elemMat[%" PetscInt_FMT ",%" PetscInt_FMT ",%" PetscInt_FMT ",%" PetscInt_FMT "]: %g\n", f, fc, g, gc, (double)PetscRealPart(elemMat[eOffset + i * totDim + j])));
             }
@@ -1080,7 +1078,7 @@ PETSC_INTERN PetscErrorCode PetscFEIntegrateHybridJacobian_Basic(PetscDS ds, Pet
   PetscInt            dim, dimAux, numConstants, Nf, fieldI, fieldJ, NfAux = 0, totDim, totDimAux = 0, e;
   PetscBool           isCohesiveFieldI, isCohesiveFieldJ, auxOnBd = PETSC_FALSE;
   const PetscReal    *quadPoints, *quadWeights;
-  PetscInt            qNc, Nq, q, dE;
+  PetscInt qNc, Nq, dE;
 
   PetscFunctionBegin;
   PetscCall(PetscDSGetNumFields(ds, &Nf));
@@ -1158,7 +1156,7 @@ PETSC_INTERN PetscErrorCode PetscFEIntegrateHybridJacobian_Basic(PetscDS ds, Pet
     const PetscInt cornt[2] = {fgeom->face[e * 2 + 0][3], fgeom->face[e * 2 + 1][1]};
 
     fegeom.v = x; /* Workspace */
-    for (q = 0; q < Nq; ++q) {
+    for (PetscInt q = 0; q < Nq; ++q) {
       PetscInt  qpt[2];
       PetscReal w;
 

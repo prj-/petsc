@@ -130,8 +130,6 @@ PetscErrorCode DMSwarmDataExCreate(MPI_Comm comm, const PetscInt count, DMSwarmD
 */
 PetscErrorCode DMSwarmDataExView(DMSwarmDataEx d)
 {
-  PetscMPIInt p;
-
   PetscFunctionBegin;
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "DMSwarmDataEx: instance=%" PetscInt_FMT "\n", d->instance));
   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "  topology status:        %s \n", status_names[d->topology_status]));
@@ -142,15 +140,15 @@ PetscErrorCode DMSwarmDataExView(DMSwarmDataEx d)
   if (d->topology_status == DEOBJECT_FINALIZED) {
     PetscCall(PetscPrintf(PETSC_COMM_WORLD, "  Topology:\n"));
     PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d] neighbours: %d \n", d->rank, d->n_neighbour_procs));
-    for (p = 0; p < d->n_neighbour_procs; p++) PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d]   neighbour[%d] = %d \n", d->rank, p, d->neighbour_procs[p]));
+    for (PetscMPIInt p = 0; p < d->n_neighbour_procs; p++) PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d]   neighbour[%d] = %d \n", d->rank, p, d->neighbour_procs[p]));
     PetscCall(PetscSynchronizedFlush(PETSC_COMM_WORLD, stdout));
   }
 
   if (d->message_lengths_status == DEOBJECT_FINALIZED) {
     PetscCall(PetscPrintf(PETSC_COMM_WORLD, "  Message lengths:\n"));
     PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d] atomic size: %ld \n", d->rank, (long int)d->unit_message_size));
-    for (p = 0; p < d->n_neighbour_procs; p++) PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d] >>>>> ( %" PetscInt_FMT " units :: tag = %d) >>>>> [%d] \n", d->rank, d->messages_to_be_sent[p], d->send_tags[p], d->neighbour_procs[p]));
-    for (p = 0; p < d->n_neighbour_procs; p++) {
+    for (PetscMPIInt p = 0; p < d->n_neighbour_procs; p++) PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d] >>>>> ( %" PetscInt_FMT " units :: tag = %d) >>>>> [%d] \n", d->rank, d->messages_to_be_sent[p], d->send_tags[p], d->neighbour_procs[p]));
+    for (PetscMPIInt p = 0; p < d->n_neighbour_procs; p++) {
       PetscCall(PetscSynchronizedPrintf(PETSC_COMM_WORLD, "    [%d] <<<<< ( %" PetscInt_FMT " units :: tag = %d) <<<<< [%d] \n", d->rank, d->messages_to_be_recvieved[p], d->recv_tags[p], d->neighbour_procs[p]));
     }
     PetscCall(PetscSynchronizedFlush(PETSC_COMM_WORLD, stdout));
@@ -272,7 +270,7 @@ Makes the communication map symmetric
 static PetscErrorCode DMSwarmDataExCompleteCommunicationMap_Private(MPI_Comm comm, PetscMPIInt n, const PetscMPIInt proc_neighbours[], PetscMPIInt *n_new, PetscMPIInt **proc_neighbours_new)
 {
   Mat                A;
-  PetscInt           i, j, nc;
+  PetscInt i, nc;
   PetscInt           n_, *proc_neighbours_;
   PetscInt           rank_;
   PetscMPIInt        size, rank;
@@ -316,7 +314,7 @@ static PetscErrorCode DMSwarmDataExCompleteCommunicationMap_Private(MPI_Comm com
     PetscCall(MatGetRow(A, rank_, &nc, &cols, &red_vals));
     PetscCall(PetscMPIIntCast(nc, &_n_new));
     PetscCall(PetscMalloc1(_n_new, &_proc_neighbours_new));
-    for (j = 0; j < nc; ++j) PetscCall(PetscMPIIntCast(cols[j], &_proc_neighbours_new[j]));
+    for (PetscInt j = 0; j < nc; ++j) PetscCall(PetscMPIIntCast(cols[j], &_proc_neighbours_new[j]));
     PetscCall(MatRestoreRow(A, rank_, &nc, &cols, &red_vals));
     *n_new               = _n_new;
     *proc_neighbours_new = _proc_neighbours_new;
@@ -580,7 +578,7 @@ PetscErrorCode DMSwarmDataExBegin(DMSwarmDataEx de)
 /* do the actual message passing now */
 PetscErrorCode DMSwarmDataExEnd(DMSwarmDataEx de)
 {
-  PetscMPIInt i, np;
+  PetscMPIInt np;
   PetscInt    total;
   PetscInt   *message_recv_offsets;
   void       *dest;
@@ -593,12 +591,12 @@ PetscErrorCode DMSwarmDataExEnd(DMSwarmDataEx de)
   PetscCall(PetscMalloc1(np + 1, &message_recv_offsets));
   message_recv_offsets[0] = 0;
   total                   = de->messages_to_be_recvieved[0];
-  for (i = 1; i < np; ++i) {
+  for (PetscMPIInt i = 1; i < np; ++i) {
     message_recv_offsets[i] = total;
     total                   = total + de->messages_to_be_recvieved[i];
   }
   /* == NON BLOCKING == */
-  for (i = 0; i < np; ++i) {
+  for (PetscMPIInt i = 0; i < np; ++i) {
     dest = ((char *)de->recv_message) + de->unit_message_size * message_recv_offsets[i];
     PetscCallMPI(MPIU_Irecv(dest, de->messages_to_be_recvieved[i] * de->unit_message_size, MPI_CHAR, de->neighbour_procs[i], de->recv_tags[i], de->comm, &de->_requests[np + i]));
   }

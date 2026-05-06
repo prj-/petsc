@@ -154,7 +154,7 @@ PetscErrorCode ComputeMatrix(KSP ksp, Mat J, Mat jac, PetscCtx ctx)
 {
   UserContext *user = (UserContext *)ctx;
   PetscReal    centerRho;
-  PetscInt     i, j, mx, my, xm, ym, xs, ys;
+  PetscInt mx, my, xm, ym, xs, ys;
   PetscScalar  v[5];
   PetscReal    Hx, Hy, HydHx, HxdHy, rho;
   MatStencil   row, col[5];
@@ -170,8 +170,8 @@ PetscErrorCode ComputeMatrix(KSP ksp, Mat J, Mat jac, PetscCtx ctx)
   HxdHy = Hx / Hy;
   HydHx = Hy / Hx;
   PetscCall(DMDAGetCorners(da, &xs, &ys, 0, &xm, &ym, 0));
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       row.i = i;
       row.j = j;
       PetscCall(ComputeRho(i, j, mx, my, centerRho, &rho));

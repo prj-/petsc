@@ -94,7 +94,7 @@ PetscErrorCode pic_insert_DMPLEX_with_cell_list(PetscInt dim)
     PetscInt   n_trivert;
     PetscInt  *tricells;
     PetscReal *trivert, dx, dy;
-    PetscInt   ii, jj, cnt;
+    PetscInt cnt;
 
     cells_per_dim[0] = 4;
     cells_per_dim[1] = 4;
@@ -110,8 +110,8 @@ PetscErrorCode pic_insert_DMPLEX_with_cell_list(PetscInt dim)
     cnt = 0;
     dx  = 2.0 / ((PetscReal)cells_per_dim[0]);
     dy  = 1.0 / ((PetscReal)cells_per_dim[1]);
-    for (jj = 0; jj < nx[1]; jj++) {
-      for (ii = 0; ii < nx[0]; ii++) {
+    for (PetscInt jj = 0; jj < nx[1]; jj++) {
+      for (PetscInt ii = 0; ii < nx[0]; ii++) {
         trivert[2 * cnt + 0] = 0.0 + ii * dx;
         trivert[2 * cnt + 1] = 0.0 + jj * dy;
         cnt++;
@@ -120,8 +120,8 @@ PetscErrorCode pic_insert_DMPLEX_with_cell_list(PetscInt dim)
 
     /* connectivity */
     cnt = 0;
-    for (jj = 0; jj < cells_per_dim[1]; jj++) {
-      for (ii = 0; ii < cells_per_dim[0]; ii++) {
+    for (PetscInt jj = 0; jj < cells_per_dim[1]; jj++) {
+      for (PetscInt ii = 0; ii < cells_per_dim[0]; ii++) {
         PetscInt idx, idx0, idx1, idx2, idx3;
 
         idx  = (ii) + (jj)*nx[0];

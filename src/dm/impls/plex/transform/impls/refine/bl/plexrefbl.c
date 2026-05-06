@@ -27,13 +27,13 @@ static PetscErrorCode DMPlexTransformSetUp_BL(DMPlexTransform tr)
   if (active) {
     IS              refineIS;
     const PetscInt *refineCells;
-    PetscInt        pStart, pEnd, p, c;
+    PetscInt pStart, pEnd, p;
 
     PetscCall(DMLabelCreate(PETSC_COMM_SELF, "Refine Type", &tr->trType));
     PetscCall(DMLabelGetStratumIS(active, DM_ADAPT_REFINE, &refineIS));
     PetscCall(DMLabelGetStratumSize(active, DM_ADAPT_REFINE, &Nc));
     if (refineIS) PetscCall(ISGetIndices(refineIS, &refineCells));
-    for (c = 0; c < Nc; ++c) {
+    for (PetscInt c = 0; c < Nc; ++c) {
       const PetscInt cell    = refineCells[c];
       PetscInt      *closure = NULL;
       PetscInt       Ncl;

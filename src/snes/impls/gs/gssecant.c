@@ -3,7 +3,7 @@
 PETSC_EXTERN PetscErrorCode SNESComputeNGSDefaultSecant(SNES snes, Vec X, Vec B, PetscCtx ctx)
 {
   SNES_NGS          *gs = (SNES_NGS *)snes->data;
-  PetscInt           i, j, k, ncolors;
+  PetscInt ncolors;
   DM                 dm;
   PetscBool          flg;
   ISColoring         coloring = gs->coloring;
@@ -58,18 +58,18 @@ PETSC_EXTERN PetscErrorCode SNESComputeNGSDefaultSecant(SNES snes, Vec X, Vec B,
     PetscCall(PetscLogEventEnd(SNES_NGSFuncEval, snes, X, B, 0));
     if (B) PetscCall(VecAXPY(F, -1.0, B));
   }
-  for (i = 0; i < ncolors; i++) {
+  for (PetscInt i = 0; i < ncolors; i++) {
     PetscCall(ISGetIndices(coloris[i], &idx));
     PetscCall(ISGetLocalSize(coloris[i], &size));
     PetscCall(VecCopy(X, W));
     PetscCall(VecGetArray(W, &wa));
-    for (j = 0; j < size; j++) wa[idx[j] - s] += h;
+    for (PetscInt j = 0; j < size; j++) wa[idx[j] - s] += h;
     PetscCall(VecRestoreArray(W, &wa));
     PetscCall(PetscLogEventBegin(SNES_NGSFuncEval, snes, X, B, 0));
     PetscCall((*func)(snes, W, G, fctx));
     PetscCall(PetscLogEventEnd(SNES_NGSFuncEval, snes, X, B, 0));
     if (B) PetscCall(VecAXPY(G, -1.0, B));
-    for (k = 0; k < its; k++) {
+    for (PetscInt k = 0; k < its; k++) {
       dxt = 0.;
       xt  = 0.;
       ft  = 0.;
@@ -77,7 +77,7 @@ PETSC_EXTERN PetscErrorCode SNESComputeNGSDefaultSecant(SNES snes, Vec X, Vec B,
       PetscCall(VecGetArray(X, &xa));
       PetscCall(VecGetArrayRead(F, &fa));
       PetscCall(VecGetArrayRead(G, &ga));
-      for (j = 0; j < size; j++) {
+      for (PetscInt j = 0; j < size; j++) {
         f = fa[idx[j] - s];
         x = xa[idx[j] - s];
         g = ga[idx[j] - s];

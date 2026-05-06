@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   DM              network;
   PetscMPIInt     size, rank;
   MPI_Comm        comm;
-  PetscInt        e, ne, nv, v, ecompkey, vcompkey;
+  PetscInt ne, nv, ecompkey, vcompkey;
   PetscInt       *edgelist = NULL;
   const PetscInt *nodes, *edges;
   DM              plex;
@@ -62,11 +62,11 @@ int main(int argc, char **argv)
 
   /* Add components and variables for the network */
   PetscCall(DMNetworkGetSubnetwork(network, 0, &nv, &ne, &nodes, &edges));
-  for (e = 0; e < ne; e++) {
+  for (PetscInt e = 0; e < ne; e++) {
     /* The edges have no degrees of freedom */
     PetscCall(DMNetworkAddComponent(network, edges[e], ecompkey, NULL, 1));
   }
-  for (v = 0; v < nv; v++) PetscCall(DMNetworkAddComponent(network, nodes[v], vcompkey, NULL, 2));
+  for (PetscInt v = 0; v < nv; v++) PetscCall(DMNetworkAddComponent(network, nodes[v], vcompkey, NULL, 2));
 
   PetscCall(DMSetUp(network));
   PetscCall(DMNetworkGetPlex(network, &plex));

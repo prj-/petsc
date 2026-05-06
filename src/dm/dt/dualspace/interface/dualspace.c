@@ -1557,7 +1557,7 @@ PetscErrorCode PetscDualSpaceApplyFVM(PetscDualSpace sp, PetscInt f, PetscReal t
   PetscQuadrature  n;
   const PetscReal *points, *weights;
   PetscScalar     *val;
-  PetscInt         dimEmbed, qNc, c, Nq, q;
+  PetscInt dimEmbed, qNc, c, Nq;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(sp, PETSCDUALSPACE_CLASSID, 1);
@@ -1569,7 +1569,7 @@ PetscErrorCode PetscDualSpaceApplyFVM(PetscDualSpace sp, PetscInt f, PetscReal t
   PetscCheck(qNc == Nc, PetscObjectComm((PetscObject)sp), PETSC_ERR_ARG_SIZ, "The quadrature components %" PetscInt_FMT " != function components %" PetscInt_FMT, qNc, Nc);
   PetscCall(DMGetWorkArray(dm, Nc, MPIU_SCALAR, &val));
   *value = 0.;
-  for (q = 0; q < Nq; ++q) {
+  for (PetscInt q = 0; q < Nq; ++q) {
     PetscCall((*func)(dimEmbed, time, cgeom->centroid, Nc, val, ctx));
     for (c = 0; c < Nc; ++c) *value += val[c] * weights[q * Nc + c];
   }
@@ -1928,7 +1928,7 @@ PetscErrorCode PetscDualSpaceTransform(PetscDualSpace dsp, PetscDualSpaceTransfo
 PetscErrorCode PetscDualSpaceTransformGradient(PetscDualSpace dsp, PetscDualSpaceTransformType trans, PetscBool isInverse, PetscFEGeom *fegeom, PetscInt Nv, PetscInt Nc, PetscScalar vals[])
 {
   const PetscInt dim = dsp->dm->dim, dE = fegeom->dimEmbed;
-  PetscInt       v, c, d;
+  PetscInt v, c;
 
   PetscFunctionBeginHot;
   PetscValidHeaderSpecific(dsp, PETSCDUALSPACE_CLASSID, 1);
@@ -1967,7 +1967,7 @@ PetscErrorCode PetscDualSpaceTransformGradient(PetscDualSpace dsp, PetscDualSpac
   case COVARIANT_PIOLA_TRANSFORM: /* Covariant Piola mapping $\sigma^*(F) = J^{-T} F \circ \phi^{-1)$ */
     if (isInverse) {
       for (v = 0; v < Nv; ++v) {
-        for (d = 0; d < dim; ++d) {
+        for (PetscInt d = 0; d < dim; ++d) {
           switch (dim) {
           case 2:
             DMPlex_MultTranspose2DReal_Internal(fegeom->J, dim, &vals[v * Nc * dim + d], &vals[v * Nc * dim + d]);
@@ -1982,7 +1982,7 @@ PetscErrorCode PetscDualSpaceTransformGradient(PetscDualSpace dsp, PetscDualSpac
       }
     } else {
       for (v = 0; v < Nv; ++v) {
-        for (d = 0; d < dim; ++d) {
+        for (PetscInt d = 0; d < dim; ++d) {
           switch (dim) {
           case 2:
             DMPlex_MultTranspose2DReal_Internal(fegeom->invJ, dim, &vals[v * Nc * dim + d], &vals[v * Nc * dim + d]);
@@ -2000,7 +2000,7 @@ PetscErrorCode PetscDualSpaceTransformGradient(PetscDualSpace dsp, PetscDualSpac
   case CONTRAVARIANT_PIOLA_TRANSFORM: /* Contravariant Piola mapping $\sigma^*(F) = \frac{1}{|\det J|} J F \circ \phi^{-1}$ */
     if (isInverse) {
       for (v = 0; v < Nv; ++v) {
-        for (d = 0; d < dim; ++d) {
+        for (PetscInt d = 0; d < dim; ++d) {
           switch (dim) {
           case 2:
             DMPlex_Mult2DReal_Internal(fegeom->invJ, dim, &vals[v * Nc * dim + d], &vals[v * Nc * dim + d]);
@@ -2016,7 +2016,7 @@ PetscErrorCode PetscDualSpaceTransformGradient(PetscDualSpace dsp, PetscDualSpac
       }
     } else {
       for (v = 0; v < Nv; ++v) {
-        for (d = 0; d < dim; ++d) {
+        for (PetscInt d = 0; d < dim; ++d) {
           switch (dim) {
           case 2:
             DMPlex_Mult2DReal_Internal(fegeom->J, dim, &vals[v * Nc * dim + d], &vals[v * Nc * dim + d]);

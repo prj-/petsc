@@ -244,7 +244,7 @@ static PetscErrorCode PerturbMesh(DM *mesh, PetscScalar *coordVals, PetscInt npo
 /* Apply a global skew transformation to the mesh. */
 static PetscErrorCode SkewMesh(DM *mesh, PetscScalar *coordVals, PetscInt npoints, PetscInt dim)
 {
-  PetscInt     i, j, k, l;
+  PetscInt i;
   PetscScalar *transMat;
   PetscScalar  tmpcoord[3];
   PetscRandom  ran;
@@ -256,7 +256,7 @@ static PetscErrorCode SkewMesh(DM *mesh, PetscScalar *coordVals, PetscInt npoint
 
   /* Make a matrix representing a skew transformation */
   for (i = 0; i < dim; ++i) {
-    for (j = 0; j < dim; ++j) {
+    for (PetscInt j = 0; j < dim; ++j) {
       PetscCall(PetscRandomGetValueReal(ran, &randVal));
       if (i == j) transMat[i * dim + j] = 1.;
       else if (j < i) transMat[i * dim + j] = 2 * (j + i) * randVal;
@@ -266,11 +266,11 @@ static PetscErrorCode SkewMesh(DM *mesh, PetscScalar *coordVals, PetscInt npoint
 
   /* Multiply each coordinate vector by our transformation.*/
   for (i = 0; i < npoints; ++i) {
-    for (j = 0; j < dim; ++j) {
+    for (PetscInt j = 0; j < dim; ++j) {
       tmpcoord[j] = 0;
-      for (k = 0; k < dim; ++k) tmpcoord[j] += coordVals[dim * i + k] * transMat[dim * k + j];
+      for (PetscInt k = 0; k < dim; ++k) tmpcoord[j] += coordVals[dim * i + k] * transMat[dim * k + j];
     }
-    for (l = 0; l < dim; ++l) coordVals[dim * i + l] = tmpcoord[l];
+    for (PetscInt l = 0; l < dim; ++l) coordVals[dim * i + l] = tmpcoord[l];
   }
   PetscCall(PetscFree(transMat));
   PetscCall(PetscRandomDestroy(&ran));

@@ -384,7 +384,7 @@ PetscErrorCode FormJacobian(SNES snes, Vec X, Mat J, Mat jac, void *ptr)
 {
   AppCtx     *user = (AppCtx *)ptr; /* user-defined application context */
   Vec         localX;
-  PetscInt    i, j, k, Mx, My, Mz;
+  PetscInt Mx, My, Mz;
   MatStencil  col[7], row;
   PetscInt    xs, ys, zs, xm, ym, zm;
   PetscScalar lambda, v[7], hx, hy, hz, hxhzdhy, hyhzdhx, hxhydhz, sc, ***x;
@@ -434,9 +434,9 @@ PetscErrorCode FormJacobian(SNES snes, Vec X, Mat J, Mat jac, void *ptr)
       - We can set matrix entries either using either
         MatSetValuesLocal() or MatSetValues(), as discussed above.
   */
-  for (k = zs; k < zs + zm; k++) {
-    for (j = ys; j < ys + ym; j++) {
-      for (i = xs; i < xs + xm; i++) {
+  for (PetscInt k = zs; k < zs + zm; k++) {
+    for (PetscInt j = ys; j < ys + ym; j++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
         row.k = k;
         row.j = j;
         row.i = i;

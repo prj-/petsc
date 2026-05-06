@@ -451,7 +451,7 @@ PetscErrorCode PetscDTAltVPullback(PetscInt N, PetscInt M, const PetscReal *L, P
 @*/
 PetscErrorCode PetscDTAltVPullbackMatrix(PetscInt N, PetscInt M, const PetscReal *L, PetscInt k, PetscReal *Lstar)
 {
-  PetscInt   Nk, Mk, Nf, i, j, l, p;
+  PetscInt Nk, Mk, Nf, i, j, l;
   PetscReal *Lw, *Lwv;
   PetscInt  *subsetw, *subsetv;
   PetscInt  *perm;
@@ -525,7 +525,7 @@ PetscErrorCode PetscDTAltVPullbackMatrix(PetscInt N, PetscInt M, const PetscReal
         PetscCall(PetscDTEnumSplit(N, k, j, subsetv, &jOdd));
         jidx = negative ? Nk - 1 - j : j;
         jOdd = negative ? (PetscBool)(iOdd ^ jOdd ^ ((k * (N - k)) & 1)) : PETSC_FALSE;
-        for (p = 0; p < Nf; p++) {
+        for (PetscInt p = 0; p < Nf; p++) {
           PetscReal prod;
           PetscBool isOdd;
 

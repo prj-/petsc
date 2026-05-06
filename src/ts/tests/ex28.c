@@ -277,7 +277,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
   Vec                coordsLocal;
   PetscScalar       *r, *coords;
   PetscReal          n = 0.0, v = 0.0, E = 0.0, T = 0.0, m = 1.0, cn = 0.0, cv = 0.0, cE = 0.0, pE = 0.0, eqE = 0.0;
-  PetscInt           dim, d, Np, Ncp, p, cStart, cEnd, c;
+  PetscInt dim, Np, Ncp, p, cStart, cEnd;
   DM                 dmSw, plex;
 
   PetscFunctionBeginUser;
@@ -297,7 +297,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
   for (p = 0; p < Np; ++p) {
     PetscReal m1 = 0.0, m2 = 0.0;
 
-    for (d = 0; d < dim; ++d) {
+    for (PetscInt d = 0; d < dim; ++d) {
       m1 += PetscRealPart(coords[p * dim + d]);
       m2 += PetscSqr(PetscRealPart(coords[p * dim + d]));
     }
@@ -313,7 +313,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
      Begin cellwise evaluation of the collision operator. Essentially, penalize the weights of the particles
      in that cell against the maxwellian for the number of particles expected to be in that cell
   */
-  for (c = cStart; c < cEnd; ++c) {
+  for (PetscInt c = cStart; c < cEnd; ++c) {
     PetscScalar *vcoords    = NULL;
     PetscReal    relaxation = 1.0, neq;
     PetscInt     sp         = c * Ncp, q;
@@ -329,7 +329,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
     PetscReal    m1 = 0.0, m2 = 0.0;
     PetscScalar *vcoords = NULL;
 
-    for (d = 0; d < dim; ++d) {
+    for (PetscInt d = 0; d < dim; ++d) {
       m1 += PetscRealPart(coords[p * dim + d]);
       m2 += PetscSqr(PetscRealPart(coords[p * dim + d]));
     }
@@ -417,7 +417,7 @@ static PetscErrorCode KSConv(TS ts, PetscInt step, PetscReal t, Vec U, PetscCtx 
   const PetscScalar *u;
   PetscScalar        sup;
   PetscReal         *v, *coords, T = 0., vel = 0., step_cast, w_sum;
-  PetscInt           dim, Np, p, cStart, cEnd;
+  PetscInt dim, Np, cStart, cEnd;
   DM                 sw, plex;
 
   PetscFunctionBeginUser;
@@ -435,10 +435,10 @@ static PetscErrorCode KSConv(TS ts, PetscInt step, PetscReal t, Vec U, PetscCtx 
     PetscCall(DMSwarmGetCellDM(sw, &plex));
     PetscCall(DMGetDimension(sw, &dim));
     PetscCall(DMPlexGetHeightStratum(plex, 0, &cStart, &cEnd));
-    for (p = 0; p < Np; ++p) v[p] = PetscRealPart(u[p]);
+    for (PetscInt p = 0; p < Np; ++p) v[p] = PetscRealPart(u[p]);
     PetscCall(DMSwarmGetField(sw, DMSwarmPICField_coor, NULL, NULL, (void **)&coords));
     w_sum = 0.;
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       w_sum += u[p];
       T += u[p] * coords[p] * coords[p];
       vel += u[p] * coords[p];
@@ -446,7 +446,7 @@ static PetscErrorCode KSConv(TS ts, PetscInt step, PetscReal t, Vec U, PetscCtx 
     vel /= w_sum;
     T   = T / w_sum - vel * vel;
     sup = 0.0;
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       PetscReal tmp = 0.;
       tmp           = PetscAbs(u[p] - ComputePDF(1.0, w_sum, T, &coords[p * dim]));
       if (tmp > sup) sup = tmp;

@@ -857,7 +857,7 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
   const PetscInt     m = kaij->AIJ->rmap->n, *ai = a->i, *aj = a->j, p = kaij->p, q = kaij->q, *diag, *vi;
   const PetscScalar *b, *xb, *idiag;
   PetscScalar       *x, *work, *workt, *w, *y, *arr, *t, *arrt;
-  PetscInt           i, j, k, i2, bs, bs2, nz;
+  PetscInt i, j, i2, bs, bs2, nz;
 
   PetscFunctionBegin;
   its = its * lits;
@@ -902,14 +902,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
         if (T) { /* b - T (Arow * x) */
           PetscCall(PetscArrayzero(w, bs));
           for (j = 0; j < nz; j++) {
-            for (k = 0; k < bs; k++) w[k] -= v[j] * x[vi[j] * bs + k];
+            for (PetscInt k = 0; k < bs; k++) w[k] -= v[j] * x[vi[j] * bs + k];
           }
           PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs, w, T, &t[i2]);
-          for (k = 0; k < bs; k++) t[i2 + k] += b[i2 + k];
+          for (PetscInt k = 0; k < bs; k++) t[i2 + k] += b[i2 + k];
         } else if (kaij->isTI) {
           PetscCall(PetscArraycpy(t + i2, b + i2, bs));
           for (j = 0; j < nz; j++) {
-            for (k = 0; k < bs; k++) t[i2 + k] -= v[j] * x[vi[j] * bs + k];
+            for (PetscInt k = 0; k < bs; k++) t[i2 + k] -= v[j] * x[vi[j] * bs + k];
           }
         } else {
           PetscCall(PetscArraycpy(t + i2, b + i2, bs));
@@ -948,14 +948,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
           arrt = arr;
           for (j = 0; j < nz; j++) {
             PetscCall(PetscArraycpy(arrt, T, bs2));
-            for (k = 0; k < bs2; k++) arrt[k] *= v[j];
+            for (PetscInt k = 0; k < bs2; k++) arrt[k] *= v[j];
             arrt += bs2;
           }
           PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
         } else if (kaij->isTI) {
           PetscCall(PetscArraycpy(w, t + i2, bs));
           for (j = 0; j < nz; j++) {
-            for (k = 0; k < bs; k++) w[k] -= v[j] * x[vi[j] * bs + k];
+            for (PetscInt k = 0; k < bs; k++) w[k] -= v[j] * x[vi[j] * bs + k];
           }
         }
 
@@ -988,14 +988,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
         if (T) {
           for (j = 0; j < nz; j++) {
             PetscCall(PetscArraycpy(arrt, T, bs2));
-            for (k = 0; k < bs2; k++) arrt[k] *= v[j];
+            for (PetscInt k = 0; k < bs2; k++) arrt[k] *= v[j];
             arrt += bs2;
           }
           PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
         } else if (kaij->isTI) {
           for (j = 0; j < nz; j++) {
             PetscCall(PetscArrayzero(arrt, bs2));
-            for (k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
+            for (PetscInt k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
             arrt += bs2;
           }
           PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
@@ -1014,14 +1014,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
         if (T) {
           for (j = 0; j < nz; j++) {
             PetscCall(PetscArraycpy(arrt, T, bs2));
-            for (k = 0; k < bs2; k++) arrt[k] *= v[j];
+            for (PetscInt k = 0; k < bs2; k++) arrt[k] *= v[j];
             arrt += bs2;
           }
           PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
         } else if (kaij->isTI) {
           for (j = 0; j < nz; j++) {
             PetscCall(PetscArrayzero(arrt, bs2));
-            for (k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
+            for (PetscInt k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
             arrt += bs2;
           }
           PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
@@ -1054,14 +1054,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
           if (T) {
             for (j = 0; j < nz; j++) {
               PetscCall(PetscArraycpy(arrt, T, bs2));
-              for (k = 0; k < bs2; k++) arrt[k] *= v[j];
+              for (PetscInt k = 0; k < bs2; k++) arrt[k] *= v[j];
               arrt += bs2;
             }
             PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
           } else if (kaij->isTI) {
             for (j = 0; j < nz; j++) {
               PetscCall(PetscArrayzero(arrt, bs2));
-              for (k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
+              for (PetscInt k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
               arrt += bs2;
             }
             PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
@@ -1079,14 +1079,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
           if (T) {
             for (j = 0; j < nz; j++) {
               PetscCall(PetscArraycpy(arrt, T, bs2));
-              for (k = 0; k < bs2; k++) arrt[k] *= v[j];
+              for (PetscInt k = 0; k < bs2; k++) arrt[k] *= v[j];
               arrt += bs2;
             }
             PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
           } else if (kaij->isTI) {
             for (j = 0; j < nz; j++) {
               PetscCall(PetscArrayzero(arrt, bs2));
-              for (k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
+              for (PetscInt k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
               arrt += bs2;
             }
             PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
@@ -1110,14 +1110,14 @@ static PetscErrorCode MatSOR_SeqKAIJ(Mat A, Vec bb, PetscReal omega, MatSORType 
           if (T) {
             for (j = 0; j < nz; j++) {
               PetscCall(PetscArraycpy(arrt, T, bs2));
-              for (k = 0; k < bs2; k++) arrt[k] *= v[j];
+              for (PetscInt k = 0; k < bs2; k++) arrt[k] *= v[j];
               arrt += bs2;
             }
             PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);
           } else if (kaij->isTI) {
             for (j = 0; j < nz; j++) {
               PetscCall(PetscArrayzero(arrt, bs2));
-              for (k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
+              for (PetscInt k = 0; k < bs; k++) arrt[k + bs * k] = v[j];
               arrt += bs2;
             }
             PetscKernel_w_gets_w_minus_Ar_times_v(bs, bs * nz, w, arr, work);

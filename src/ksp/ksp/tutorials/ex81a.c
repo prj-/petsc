@@ -12,7 +12,7 @@ int main(int argc, char **args)
   Mat         array[Q * Q], A, a;
   Vec         b, x, sub;
   IS          rows[Q];
-  PetscInt    i, M, N;
+  PetscInt M, N;
   PetscMPIInt size;
   PetscRandom rctx;
 
@@ -22,8 +22,8 @@ int main(int argc, char **args)
   PetscCall(PetscRandomCreate(PETSC_COMM_WORLD, &rctx));
   PetscCall(KSPCreate(PETSC_COMM_WORLD, &ksp));
   size = PetscMax(3, size);
-  for (i = 0; i < Q * Q; ++i) array[i] = NULL;
-  for (i = 0; i < Q; ++i) {
+  for (PetscInt i = 0; i < Q * Q; ++i) array[i] = NULL;
+  for (PetscInt i = 0; i < Q; ++i) {
     if (i == 0) {
       PetscCall(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, size, size, 1, NULL, 0, NULL, array + (Q + 1) * i));
     } else if (i == 1 || i == 3) {
@@ -43,7 +43,7 @@ int main(int argc, char **args)
     size *= 2;
   }
   PetscCall(MatGetSize(array[0], &M, NULL));
-  for (i = 2; i < Q; ++i) {
+  for (PetscInt i = 2; i < Q; ++i) {
     PetscCall(MatGetSize(array[(Q + 1) * i], NULL, &N));
     if (i != Q - 1) {
       PetscCall(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, i == 3 ? N : M, i == 3 ? M : N, 0, NULL, 0, NULL, array + i));
@@ -61,7 +61,7 @@ int main(int argc, char **args)
     }
   }
   PetscCall(MatGetSize(array[0], NULL, &N));
-  for (i = 2; i < Q; i += 2) {
+  for (PetscInt i = 2; i < Q; i += 2) {
     PetscCall(MatGetSize(array[(Q + 1) * i], &M, NULL));
     if (i != Q - 1) {
       PetscCall(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, M, N, 2, NULL, 2, NULL, array + Q * i));
@@ -79,7 +79,7 @@ int main(int argc, char **args)
     }
   }
   PetscCall(MatGetSize(array[(Q + 1) * 3], &M, NULL));
-  for (i = 1; i < 3; ++i) {
+  for (PetscInt i = 1; i < 3; ++i) {
     PetscCall(MatGetSize(array[(Q + 1) * i], NULL, &N));
     PetscCall(MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, M, N, 2, NULL, 2, NULL, array + Q * 3 + i));
     PetscCall(MatAssemblyBegin(array[Q * 3 + i], MAT_FINAL_ASSEMBLY));
@@ -95,12 +95,12 @@ int main(int argc, char **args)
   PetscCall(MatDestroy(&a));
   PetscCall(MatDestroy(array + Q * Q - 1));
   PetscCall(MatCreateNest(PETSC_COMM_WORLD, Q, NULL, Q, NULL, array, &A));
-  for (i = 0; i < Q; ++i) PetscCall(MatDestroy(array + (Q + 1) * i));
-  for (i = 2; i < Q; ++i) {
+  for (PetscInt i = 0; i < Q; ++i) PetscCall(MatDestroy(array + (Q + 1) * i));
+  for (PetscInt i = 2; i < Q; ++i) {
     PetscCall(MatDestroy(array + i));
     PetscCall(MatDestroy(array + Q * i));
   }
-  for (i = 1; i < 3; ++i) PetscCall(MatDestroy(array + Q * 3 + i));
+  for (PetscInt i = 1; i < 3; ++i) PetscCall(MatDestroy(array + Q * 3 + i));
   PetscCall(MatDestroy(array + Q + Q - 1));
   PetscCall(KSPSetOperators(ksp, A, A));
   PetscCall(MatNestGetISs(A, rows, NULL));

@@ -291,7 +291,7 @@ PETSC_INTERN PetscErrorCode MatConvert_ADA(Mat mat, MatType newtype, Mat *NewMat
     PetscCall(MatAssemblyEnd(*NewMat, MAT_FINAL_ASSEMBLY));
     PetscCall(VecDestroy(&X));
   } else if (isseqdense && size == 1) {
-    PetscInt           i, j, low, high, m, n, M, N;
+    PetscInt low, high, m, n, M, N;
     const PetscScalar *dptr;
     Vec                X;
 
@@ -300,10 +300,10 @@ PETSC_INTERN PetscErrorCode MatConvert_ADA(Mat mat, MatType newtype, Mat *NewMat
     PetscCall(MatGetLocalSize(mat, &m, &n));
     PetscCall(MatCreateSeqDense(PetscObjectComm((PetscObject)mat), N, N, NULL, NewMat));
     PetscCall(MatGetOwnershipRange(*NewMat, &low, &high));
-    for (i = 0; i < M; i++) {
+    for (PetscInt i = 0; i < M; i++) {
       PetscCall(MatGetColumnVector_ADA(mat, X, i));
       PetscCall(VecGetArrayRead(X, &dptr));
-      for (j = 0; j < high - low; j++) PetscCall(MatSetValue(*NewMat, low + j, i, dptr[j], INSERT_VALUES));
+      for (PetscInt j = 0; j < high - low; j++) PetscCall(MatSetValue(*NewMat, low + j, i, dptr[j], INSERT_VALUES));
       PetscCall(VecRestoreArrayRead(X, &dptr));
     }
     PetscCall(MatAssemblyBegin(*NewMat, MAT_FINAL_ASSEMBLY));

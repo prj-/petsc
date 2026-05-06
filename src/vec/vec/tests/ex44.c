@@ -11,7 +11,7 @@ static char help[] = "Tests vecScatter Sequential to Sequential for (CUDA) vecto
 int main(int argc, char *argv[])
 {
   Vec         X, Y;
-  PetscInt    m, n, i, n1, n2;
+  PetscInt m, n, n1, n2;
   PetscInt    toFirst, toStep, fromFirst, fromStep;
   PetscInt   *idx, *idy;
   PetscBool   flg;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     /* Build the general index sets */
     PetscCall(PetscMalloc1(n, &idx));
     PetscCall(PetscMalloc1(n, &idy));
-    for (i = 0; i < n; i++) {
+    for (PetscInt i = 0; i < n; i++) {
       idx[i] = i % m;
       idy[i] = (i + m) % m;
     }

@@ -3728,7 +3728,7 @@ PetscErrorCode PetscDSSelectDiscretizations(PetscDS prob, PetscInt numFields, co
 @*/
 PetscErrorCode PetscDSSelectEquations(PetscDS prob, PetscInt numFields, const PetscInt fields[], PetscDS newprob)
 {
-  PetscInt Nf, Nfn, fn, gn;
+  PetscInt Nf, Nfn;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(prob, PETSCDS_CLASSID, 1);
@@ -3737,7 +3737,7 @@ PetscErrorCode PetscDSSelectEquations(PetscDS prob, PetscInt numFields, const Pe
   PetscCall(PetscDSGetNumFields(prob, &Nf));
   PetscCall(PetscDSGetNumFields(newprob, &Nfn));
   PetscCheck(numFields <= Nfn, PetscObjectComm((PetscObject)prob), PETSC_ERR_ARG_SIZ, "Number of fields %" PetscInt_FMT " to transfer must not be greater than the total number of fields %" PetscInt_FMT, numFields, Nfn);
-  for (fn = 0; fn < numFields; ++fn) {
+  for (PetscInt fn = 0; fn < numFields; ++fn) {
     const PetscInt  f = fields ? fields[fn] : fn;
     PetscPointFn   *obj;
     PetscPointFn   *f0, *f1;
@@ -3753,7 +3753,7 @@ PetscErrorCode PetscDSSelectEquations(PetscDS prob, PetscInt numFields, const Pe
     PetscCall(PetscDSSetResidual(newprob, fn, f0, f1));
     PetscCall(PetscDSSetBdResidual(newprob, fn, f0Bd, f1Bd));
     PetscCall(PetscDSSetRiemannSolver(newprob, fn, r));
-    for (gn = 0; gn < numFields; ++gn) {
+    for (PetscInt gn = 0; gn < numFields; ++gn) {
       const PetscInt     g = fields ? fields[gn] : gn;
       PetscPointJacFn   *g0, *g1, *g2, *g3;
       PetscPointJacFn   *g0p, *g1p, *g2p, *g3p;

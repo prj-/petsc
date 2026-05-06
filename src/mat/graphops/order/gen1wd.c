@@ -34,7 +34,7 @@ PetscErrorCode SPARSEPACKgen1wd(const PetscInt *neqns, const PetscInt *xadj, con
 
   /* Local variables */
   PetscInt node, nsep, lnum, nlvl, root;
-  PetscInt i, j, k, ccsize;
+  PetscInt ccsize;
   PetscInt num;
 
   PetscFunctionBegin;
@@ -48,11 +48,11 @@ PetscErrorCode SPARSEPACKgen1wd(const PetscInt *neqns, const PetscInt *xadj, con
   --adjncy;
 
   i__1 = *neqns;
-  for (i = 1; i <= i__1; ++i) mask[i] = 1;
+  for (PetscInt i = 1; i <= i__1; ++i) mask[i] = 1;
   *nblks = 0;
   num    = 0;
   i__1   = *neqns;
-  for (i = 1; i <= i__1; ++i) {
+  for (PetscInt i = 1; i <= i__1; ++i) {
     if (!mask[i]) goto L400;
     /*             FIND A ONE-WAY DISSECTOR FOR EACH COMPONENT.*/
     root = i;
@@ -65,7 +65,7 @@ PetscErrorCode SPARSEPACKgen1wd(const PetscInt *neqns, const PetscInt *xadj, con
     /*             EACH COMPONENT IN THE REMAINING SUBGRAPH FORMS*/
     /*             A NEW BLOCK IN THE PARTITIONING.*/
     i__2 = ccsize;
-    for (j = 1; j <= i__2; ++j) {
+    for (PetscInt j = 1; j <= i__2; ++j) {
       node = ls[j];
       if (!mask[node]) goto L300;
       PetscCall(SPARSEPACKrootls(&node, &xadj[1], &adjncy[1], &mask[1], &nlvl, &xls[1], &perm[num + 1]));
@@ -74,7 +74,7 @@ PetscErrorCode SPARSEPACKgen1wd(const PetscInt *neqns, const PetscInt *xadj, con
       ++(*nblks);
       xblk[*nblks] = *neqns - num + 1;
       i__3         = num;
-      for (k = lnum; k <= i__3; ++k) {
+      for (PetscInt k = lnum; k <= i__3; ++k) {
         node       = perm[k];
         mask[node] = 0;
       }

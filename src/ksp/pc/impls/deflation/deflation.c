@@ -457,7 +457,7 @@ static PetscErrorCode PCSetUp_Deflation(PC pc)
   KSP              innerksp;
   PC               pcinner;
   Mat              Amat, nextDef = NULL, *mats;
-  PetscInt         i, m, red, size;
+  PetscInt m, red, size;
   PetscMPIInt      commsize;
   PetscBool        match, flgspd, isset, transp = PETSC_FALSE;
   MatCompositeType ctype;
@@ -498,7 +498,7 @@ static PetscErrorCode PCSetUp_Deflation(PC pc)
     if (!transp) {
       if (def->lvl < def->maxlvl) {
         PetscCall(PetscMalloc1(size, &mats));
-        for (i = 0; i < size; i++) PetscCall(MatCompositeGetMat(def->W, i, &mats[i]));
+        for (PetscInt i = 0; i < size; i++) PetscCall(MatCompositeGetMat(def->W, i, &mats[i]));
         size -= 1;
         PetscCall(MatDestroy(&def->W));
         def->W = mats[size];
@@ -519,7 +519,7 @@ static PetscErrorCode PCSetUp_Deflation(PC pc)
     } else {
       if (def->lvl < def->maxlvl) {
         PetscCall(PetscMalloc1(size, &mats));
-        for (i = 0; i < size; i++) PetscCall(MatCompositeGetMat(def->Wt, i, &mats[i]));
+        for (PetscInt i = 0; i < size; i++) PetscCall(MatCompositeGetMat(def->Wt, i, &mats[i]));
         size -= 1;
         PetscCall(MatDestroy(&def->Wt));
         def->Wt = mats[0];
@@ -570,7 +570,7 @@ static PetscErrorCode PCSetUp_Deflation(PC pc)
 
         PetscCall(PetscMalloc1(m, &norms));
         PetscCall(MatGetColumnNorms(def->WtAW, NORM_INFINITY, norms));
-        for (i = 0; i < m; i++) PetscCheck(norms[i] > 100 * PETSC_MACHINE_EPSILON, PetscObjectComm((PetscObject)def->WtAW), PETSC_ERR_SUP, "Column %" PetscInt_FMT " of W is in kernel of A.", i);
+        for (PetscInt i = 0; i < m; i++) PetscCheck(norms[i] > 100 * PETSC_MACHINE_EPSILON, PetscObjectComm((PetscObject)def->WtAW), PETSC_ERR_SUP, "Column %" PetscInt_FMT " of W is in kernel of A.", i);
         PetscCall(PetscFree(norms));
       }
     } else PetscCall(MatIsSPDKnown(def->WtAW, &isset, &flgspd));

@@ -212,7 +212,7 @@ static PetscErrorCode PetscSortStrWithPermutation_Private(const char *v[], Petsc
  @*/
 PetscErrorCode PetscSortStrWithPermutation(PetscInt n, const char *i[], PetscInt idx[])
 {
-  PetscInt    j, k, tmp;
+  PetscInt tmp;
   const char *ik;
   PetscBool   gt;
 
@@ -223,9 +223,9 @@ PetscErrorCode PetscSortStrWithPermutation(PetscInt n, const char *i[], PetscInt
     PetscCheckIdentity(n, idx);
   }
   if (n < 8) {
-    for (k = 0; k < n; k++) {
+    for (PetscInt k = 0; k < n; k++) {
       ik = i[idx[k]];
-      for (j = k + 1; j < n; j++) {
+      for (PetscInt j = k + 1; j < n; j++) {
         PetscCall(PetscStrgrt(ik, i[idx[j]], &gt));
         if (gt) {
           SWAP(idx[k], idx[j], tmp);

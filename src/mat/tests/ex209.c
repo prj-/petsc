@@ -14,7 +14,7 @@ int main(int argc, char **args)
   PetscReal   fill = 4.0;
   PetscMPIInt rank, size;
   PetscBool   equal;
-  PetscInt    i, m, n, rstart, rend;
+  PetscInt m, n, rstart, rend;
   PetscScalar one = 1.0;
 
   PetscFunctionBeginUser;
@@ -39,7 +39,7 @@ int main(int argc, char **args)
   PetscCall(MatSetUp(B));
 
   PetscCall(MatGetOwnershipRange(B, &rstart, &rend));
-  for (i = rstart; i < rend; i++) PetscCall(MatSetValues(B, 1, &i, 1, &i, &one, INSERT_VALUES));
+  for (PetscInt i = rstart; i < rend; i++) PetscCall(MatSetValues(B, 1, &i, 1, &i, &one, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(B, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(B, MAT_FINAL_ASSEMBLY));
 

@@ -147,7 +147,7 @@ void g3_uu_3d(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], 
   const PetscInt  Ncomp = dim;
   const PetscReal mu = PetscRealPart(a[0]), kappa = 3.0;
   PetscReal       cofu_x[9 /* Ncomp*dim */], detu_x, pp, pm, p = PetscRealPart(u[Ncomp]);
-  PetscInt        compI, compJ, d1, d2;
+  PetscInt compI, compJ;
 
   Cof3D(cofu_x, u_x);
   Det3D(&detu_x, u_x);
@@ -160,8 +160,8 @@ void g3_uu_3d(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], 
     for (compJ = 0; compJ < Ncomp; ++compJ) {
       const PetscReal G = (compI == compJ) ? 1.0 : 0.0;
 
-      for (d1 = 0; d1 < dim; ++d1) {
-        for (d2 = 0; d2 < dim; ++d2) {
+      for (PetscInt d1 = 0; d1 < dim; ++d1) {
+        for (PetscInt d2 = 0; d2 < dim; ++d2) {
           const PetscReal g = (d1 == d2) ? 1.0 : 0.0;
 
           g3[((compI * Ncomp + compJ) * dim + d1) * dim + d2] = g * G * mu + pp * cofu_x[compI * dim + d1] * cofu_x[compJ * dim + d2] - pm * cofu_x[compI * dim + d2] * cofu_x[compJ * dim + d1];
@@ -190,7 +190,7 @@ void g1_bd_uu_3d(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[
   const PetscInt Ncomp = dim;
   PetscScalar    p     = a[aOff[1]];
   PetscReal      cofu_x[9 /* Ncomp*dim */], m[3 /* Ncomp */], detu_x;
-  PetscInt       comp, compI, compJ, d;
+  PetscInt comp, compI, d;
 
   Cof3D(cofu_x, u_x);
   Det3D(&detu_x, u_x);
@@ -199,7 +199,7 @@ void g1_bd_uu_3d(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[
   for (comp = 0; comp < Ncomp; ++comp)
     for (d = 0, m[comp] = 0.0; d < dim; ++d) m[comp] += cofu_x[comp * dim + d] * n[d];
   for (compI = 0; compI < Ncomp; ++compI) {
-    for (compJ = 0; compJ < Ncomp; ++compJ) {
+    for (PetscInt compJ = 0; compJ < Ncomp; ++compJ) {
       for (d = 0; d < dim; ++d) g1[(compI * Ncomp + compJ) * dim + d] = p * (m[compI] * cofu_x[compJ * dim + d] - cofu_x[compI * dim + d] * m[compJ]);
     }
   }
@@ -263,7 +263,7 @@ PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     DM              cdm;
     DMLabel         label;
     IS              is;
-    PetscInt        d, dim, b, f, Nf;
+    PetscInt dim, b, f, Nf;
     const PetscInt *faces;
     PetscInt        csize;
     PetscScalar    *coords = NULL;
@@ -289,7 +289,7 @@ PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
       for (f = 0; f < Nf; ++f) {
         PetscCall(DMPlexVecGetClosure(cdm, cs, coordinates, faces[f], &csize, &coords));
         /* Calculate mean coordinate vector */
-        for (d = 0; d < dim; ++d) {
+        for (PetscInt d = 0; d < dim; ++d) {
           const PetscInt Nv = csize / dim;
           faceCoord         = 0.0;
           for (PetscInt v = 0; v < Nv; ++v) faceCoord += PetscRealPart(coords[v * dim + d]);

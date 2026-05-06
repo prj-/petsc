@@ -742,16 +742,16 @@ static PetscErrorCode CreateHex_3D(MPI_Comm comm, PetscInt testNum, DM *dm)
 static PetscErrorCode CreateFaultLabel(DM dm)
 {
   DMLabel  label;
-  PetscInt dim, h, pStart, pEnd, pMax, p;
+  PetscInt dim, pStart, pEnd, pMax;
 
   PetscFunctionBegin;
   PetscCall(DMGetDimension(dm, &dim));
   PetscCall(DMCreateLabel(dm, "cohesive"));
   PetscCall(DMGetLabel(dm, "cohesive", &label));
-  for (h = 0; h <= dim; ++h) {
+  for (PetscInt h = 0; h <= dim; ++h) {
     PetscCall(DMPlexGetSimplexOrBoxCells(dm, h, NULL, &pMax));
     PetscCall(DMPlexGetHeightStratum(dm, h, &pStart, &pEnd));
-    for (p = pMax; p < pEnd; ++p) PetscCall(DMLabelSetValue(label, p, 1));
+    for (PetscInt p = pMax; p < pEnd; ++p) PetscCall(DMLabelSetValue(label, p, 1));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }

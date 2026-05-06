@@ -19,7 +19,7 @@
 PetscErrorCode MatComputeBandwidth(Mat A, PetscReal fraction, PetscInt *bw)
 {
   PetscInt lbw[2] = {0, 0}, gbw[2];
-  PetscInt rStart, rEnd, r;
+  PetscInt rStart, rEnd;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(A, MAT_CLASSID, 1);
@@ -27,7 +27,7 @@ PetscErrorCode MatComputeBandwidth(Mat A, PetscReal fraction, PetscInt *bw)
   PetscAssertPointer(bw, 3);
   PetscCheck(!(fraction > 0.0) || !(fraction < 1.0), PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "We do not yet support a fractional bandwidth");
   PetscCall(MatGetOwnershipRange(A, &rStart, &rEnd));
-  for (r = rStart; r < rEnd; ++r) {
+  for (PetscInt r = rStart; r < rEnd; ++r) {
     const PetscInt *cols;
     PetscInt        ncols;
 

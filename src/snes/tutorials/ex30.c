@@ -1291,7 +1291,7 @@ PetscErrorCode FormFunctionLocal(DMDALocalInfo *info, Field **x, Field **f, void
   Parameter  *param = user->param;
   GridInfo   *grid  = user->grid;
   PetscScalar mag_w, mag_u;
-  PetscInt    i, j, mx, mz, ilim, jlim;
+  PetscInt mx, mz, ilim, jlim;
   PetscInt    is, ie, js, je, ibound; /* ,ivisc */
 
   PetscFunctionBeginUser;
@@ -1308,8 +1308,8 @@ PetscErrorCode FormFunctionLocal(DMDALocalInfo *info, Field **x, Field **f, void
   /* Define geometric and numeric parameters */
   /* ivisc = param->ivisc; */ ibound = param->ibound;
 
-  for (j = js; j < je; j++) {
-    for (i = is; i < ie; i++) {
+  for (PetscInt j = js; j < je; j++) {
+    for (PetscInt i = is; i < ie; i++) {
       /************* X-MOMENTUM/VELOCITY *************/
       if (i < j) f[j][i].u = x[j][i].u - SlabVel('U', i, j, user);
       else if (j <= grid->jlid || (j < grid->corner + grid->inose && i < grid->corner + grid->inose)) {

@@ -2870,8 +2870,6 @@ PETSC_EXTERN PetscErrorCode PCCreate_BDDC(PC pc)
 @*/
 PetscErrorCode PCBDDCInitializePackage(void)
 {
-  int i;
-
   PetscFunctionBegin;
   if (PCBDDCPackageInitialized) PetscFunctionReturn(PETSC_SUCCESS);
   PCBDDCPackageInitialized = PETSC_TRUE;
@@ -2892,7 +2890,7 @@ PetscErrorCode PCBDDCInitializePackage(void)
   PetscCall(PetscLogEventRegister("PCBDDCDirS", PC_CLASSID, &PC_BDDC_Solves[0][0]));
   PetscCall(PetscLogEventRegister("PCBDDCNeuS", PC_CLASSID, &PC_BDDC_Solves[0][1]));
   PetscCall(PetscLogEventRegister("PCBDDCCoaS", PC_CLASSID, &PC_BDDC_Solves[0][2]));
-  for (i = 1; i < PETSC_PCBDDC_MAXLEVELS; i++) {
+  for (int i = 1; i < PETSC_PCBDDC_MAXLEVELS; i++) {
     char ename[32];
 
     PetscCall(PetscSNPrintf(ename, sizeof(ename), "PCBDDCTopo l%02d", i));

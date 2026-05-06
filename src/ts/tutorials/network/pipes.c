@@ -225,7 +225,7 @@ PetscErrorCode WASHIFunction(TS ts, PetscReal t, Vec X, Vec Xdot, Vec F, PetscCt
 
 PetscErrorCode WASHSetInitialSolution(DM networkdm, Vec X, Wash wash)
 {
-  PetscInt           k, nx, vkey, vfrom, vto, offsetfrom, offsetto;
+  PetscInt nx, vkey, vfrom, vto, offsetfrom, offsetto;
   PetscInt           type, varoffset;
   PetscInt           e, eStart, eEnd;
   Vec                localX;
@@ -252,7 +252,7 @@ PetscErrorCode WASHSetInitialSolution(DM networkdm, Vec X, Wash wash)
 
     PetscCall(VecGetArrayRead(pipe->x, &xarray));
     /* copy pipe->x to xarray */
-    for (k = 0; k < nx; k++) (xarr + varoffset)[k] = xarray[k];
+    for (PetscInt k = 0; k < nx; k++) (xarr + varoffset)[k] = xarray[k];
 
     /* set boundary values into vfrom and vto */
     PetscCall(DMNetworkGetConnectedVertices(networkdm, e, &cone));
@@ -610,7 +610,7 @@ int main(int argc, char **argv)
   Junction          junctions, junction;
   Pipe              pipe, pipes;
   PetscInt          KeyPipe, KeyJunction, *edgelist = NULL, *vtype = NULL;
-  PetscInt          i, e, v, eStart, eEnd, vStart, vEnd, key, vkey, type;
+  PetscInt eStart, eEnd, vStart, vEnd, key, vkey, type;
   PetscInt          steps = 1, nedges, nnodes = 6;
   const PetscInt   *cone;
   DM                networkdm;
@@ -672,7 +672,7 @@ int main(int argc, char **argv)
   }
 
   /* Add Pipe component and number of variables to all local edges */
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     pipes[e - eStart].nnodes = nnodes;
     PetscCall(DMNetworkAddComponent(networkdm, e, KeyPipe, &pipes[e - eStart], 2 * pipes[e - eStart].nnodes));
 
@@ -684,7 +684,7 @@ int main(int argc, char **argv)
   }
 
   /* Add Junction component and number of variables to all local vertices */
-  for (v = vStart; v < vEnd; v++) PetscCall(DMNetworkAddComponent(networkdm, v, KeyJunction, &junctions[v - vStart], 2));
+  for (PetscInt v = vStart; v < vEnd; v++) PetscCall(DMNetworkAddComponent(networkdm, v, KeyJunction, &junctions[v - vStart], 2));
 
   if (size > 1) { /* must be called before DMSetUp()???. Other partitioners do not work yet??? -- cause crash in proc[0]! */
     DM               plexdm;
@@ -703,7 +703,7 @@ int main(int argc, char **argv)
   }
 
   /* Set user physical parameters to the components */
-  for (e = eStart; e < eEnd; e++) {
+  for (PetscInt e = eStart; e < eEnd; e++) {
     PetscCall(DMNetworkGetConnectedVertices(networkdm, e, &cone));
     /* vfrom */
     PetscCall(DMNetworkGetComponent(networkdm, cone[0], 0, &vkey, (void **)&junction, NULL));
@@ -735,7 +735,7 @@ int main(int argc, char **argv)
   userJac = PETSC_TRUE;
   PetscCall(DMNetworkHasJacobian(networkdm, userJac, userJac));
   PetscCall(DMNetworkGetEdgeRange(networkdm, &eStart, &eEnd));
-  for (e = eStart; e < eEnd; e++) { /* each edge has only one component, pipe */
+  for (PetscInt e = eStart; e < eEnd; e++) { /* each edge has only one component, pipe */
     PetscCall(DMNetworkGetComponent(networkdm, e, 0, &type, (void **)&pipe, NULL));
 
     wash->nnodes_loc += pipe->nnodes;        /* local total number of nodes, will be used by PipesView() */
@@ -755,7 +755,7 @@ int main(int argc, char **argv)
 
   if (userJac) {
     PetscCall(DMNetworkGetVertexRange(networkdm, &vStart, &vEnd));
-    for (v = vStart; v < vEnd; v++) {
+    for (PetscInt v = vStart; v < vEnd; v++) {
       Mat *J;
       PetscCall(JunctionCreateJacobian(networkdm, v, NULL, &J));
       PetscCall(DMNetworkVertexSetMatrix(networkdm, v, J));
@@ -819,12 +819,12 @@ int main(int argc, char **argv)
 
   /* Destroy objects from each pipe that are created in PipeSetUp() */
   PetscCall(DMNetworkGetEdgeRange(networkdm, &eStart, &eEnd));
-  for (i = eStart; i < eEnd; i++) {
+  for (PetscInt i = eStart; i < eEnd; i++) {
     PetscCall(DMNetworkGetComponent(networkdm, i, 0, &key, (void **)&pipe, NULL));
     PetscCall(PipeDestroy(&pipe));
   }
   if (userJac) {
-    for (v = vStart; v < vEnd; v++) {
+    for (PetscInt v = vStart; v < vEnd; v++) {
       PetscCall(DMNetworkGetComponent(networkdm, v, 0, &vkey, (void **)&junction, NULL));
       PetscCall(JunctionDestroyJacobian(networkdm, v, junction));
     }

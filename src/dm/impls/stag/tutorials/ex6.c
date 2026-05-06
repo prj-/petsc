@@ -821,7 +821,7 @@ static PetscErrorCode DumpVelocity(const Ctx *ctx, Vec velocity, PetscInt timest
   DM       daVelAvg;
   Vec      vecVelAvg;
   Vec      velocity_local;
-  PetscInt ex, ey, ez, startx, starty, startz, nx, ny, nz;
+  PetscInt startx, starty, startz, nx, ny, nz;
 
   PetscFunctionBeginUser;
   if (ctx->dim == 2) {
@@ -836,8 +836,8 @@ static PetscErrorCode DumpVelocity(const Ctx *ctx, Vec velocity, PetscInt timest
   PetscCall(DMGlobalToLocal(ctx->dm_velocity, velocity, INSERT_VALUES, velocity_local));
   PetscCall(DMStagGetCorners(dmVelAvg, &startx, &starty, &startz, &nx, &ny, &nz, NULL, NULL, NULL));
   if (ctx->dim == 2) {
-    for (ey = starty; ey < starty + ny; ++ey) {
-      for (ex = startx; ex < startx + nx; ++ex) {
+    for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+      for (PetscInt ex = startx; ex < startx + nx; ++ex) {
         DMStagStencil from[4], to[2];
         PetscScalar   valFrom[4], valTo[2];
 
@@ -872,9 +872,9 @@ static PetscErrorCode DumpVelocity(const Ctx *ctx, Vec velocity, PetscInt timest
       }
     }
   } else if (ctx->dim == 3) {
-    for (ez = startz; ez < startz + nz; ++ez) {
-      for (ey = starty; ey < starty + ny; ++ey) {
-        for (ex = startx; ex < startx + nx; ++ex) {
+    for (PetscInt ez = startz; ez < startz + nz; ++ez) {
+      for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+        for (PetscInt ex = startx; ex < startx + nx; ++ex) {
           DMStagStencil from[6], to[3];
           PetscScalar   valFrom[6], valTo[3];
 

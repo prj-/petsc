@@ -28,7 +28,7 @@ int main(int argc, char **args)
   PetscInt        n, N, i, j, k, l, nsub, Jlow[2] = {0, 1}, *jlow, Jhigh[2] = {3, 4}, *jhigh, row, col, *subindices, ncols;
   const PetscInt *cols;
   PetscScalar     v;
-  PetscMPIInt     rank, size, p, inversions, total_inversions;
+  PetscMPIInt rank, size, inversions, total_inversions;
   PetscBool       sort_rows, sort_cols, show_inversions;
 
   PetscFunctionBeginUser;
@@ -122,7 +122,7 @@ int main(int argc, char **args)
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-show_inversions", &show_inversions, NULL));
 
   inversions = 0;
-  for (p = 0; p < size; ++p) {
+  for (PetscMPIInt p = 0; p < size; ++p) {
     if (p == rank) {
       PetscCall(PetscPrintf(PETSC_COMM_SELF, "[%" PetscInt_FMT ":%" PetscInt_FMT "]: Number of subdomains: %" PetscInt_FMT ":\n", rank, size, nsub));
       for (l = 0; l < nsub; ++l) {

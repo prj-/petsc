@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 PetscErrorCode FormFunction(SNES snes, Vec U, Vec FU, void *dummy)
 {
   UserCtx     *user = (UserCtx *)dummy;
-  PetscInt     xs, xm, i, N;
+  PetscInt xs, xm, N;
   PetscScalar *u, *lambda, *w, *fu, *fw, *flambda, d, h;
   Vec          vw, vu, vlambda, vfw, vfu, vflambda;
 
@@ -135,7 +135,7 @@ PetscErrorCode FormFunction(SNES snes, Vec U, Vec FU, void *dummy)
   }
 
   /* derivative of L() w.r.t. u */
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     if (i == 0) flambda[0] = h * u[0] + 2. * d * lambda[0] - d * lambda[1];
     else if (i == 1) flambda[1] = 2. * h * u[1] + 2. * d * lambda[1] - d * lambda[2];
     else if (i == N - 1) flambda[N - 1] = h * u[N - 1] + 2. * d * lambda[N - 1] - d * lambda[N - 2];
@@ -144,7 +144,7 @@ PetscErrorCode FormFunction(SNES snes, Vec U, Vec FU, void *dummy)
   }
 
   /* derivative of L() w.r.t. lambda */
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     if (i == 0) fu[0] = 2.0 * d * (u[0] - w[0]);
     else if (i == N - 1) fu[N - 1] = 2.0 * d * u[N - 1];
     else fu[i] = -(d * (u[i + 1] - 2.0 * u[i] + u[i - 1]) - 2.0 * h);

@@ -57,7 +57,7 @@ int main(int argc, char **argv)
   /* Set tags to be preserved */
   if (!noTagging) {
     DM                 cdm;
-    PetscInt           cStart, cEnd, c, fStart, fEnd, f, vStart, vEnd;
+    PetscInt cStart, cEnd, fStart, fEnd, vStart, vEnd;
     const PetscScalar *coords;
     Vec                coordinates;
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     PetscCall(DMCreateLabel(dm, "Cell Sets"));
     PetscCall(DMGetLabel(dm, "Cell Sets", &rgLabel));
     PetscCall(DMPlexGetHeightStratum(dm, 0, &cStart, &cEnd));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscReal centroid[3], volume, x;
 
       PetscCall(DMPlexComputeCellGeometryFVM(dm, c, &volume, centroid, NULL));
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     PetscCall(DMGetCoordinateDM(dm, &cdm));
     PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
     PetscCall(VecGetArrayRead(coordinates, &coords));
-    for (f = fStart; f < fEnd; ++f) {
+    for (PetscInt f = fStart; f < fEnd; ++f) {
       PetscBool flg     = PETSC_TRUE;
       PetscInt *closure = NULL, closureSize, cl;
       PetscReal eps     = 1.0e-08;

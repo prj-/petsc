@@ -187,7 +187,7 @@ static PetscErrorCode ComputeRHS(KSP ksp, Vec b, PetscCtx ctx)
 
 static PetscErrorCode ComputeMatrix(KSP ksp, Mat J, Mat jac, PetscCtx ctx)
 {
-  PetscInt    i, mx, xm, xs;
+  PetscInt mx, xm, xs;
   PetscScalar v[3], h;
   MatStencil  row, col[3];
   DM          da, shell;
@@ -199,7 +199,7 @@ static PetscErrorCode ComputeMatrix(KSP ksp, Mat J, Mat jac, PetscCtx ctx)
   PetscCall(DMDAGetCorners(da, &xs, 0, 0, &xm, 0, 0));
   h = 1.0 / (mx - 1);
 
-  for (i = xs; i < xs + xm; i++) {
+  for (PetscInt i = xs; i < xs + xm; i++) {
     row.i = i;
     if (i == 0 || i == mx - 1) {
       v[0] = 2.0 / h;

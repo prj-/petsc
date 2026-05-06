@@ -92,10 +92,10 @@ static PetscErrorCode TSMPRKGenerateTableau2(PetscInt ratio, PetscInt s, const P
 
 static PetscErrorCode TSMPRKGenerateTableau3(PetscInt ratio, PetscInt s, const PetscReal Abase[], const PetscReal bbase[], PetscReal A1[], PetscReal b1[], PetscReal A2[], PetscReal b2[], PetscReal A3[], PetscReal b3[])
 {
-  PetscInt i, j, k, l, m, n;
+  PetscInt i, j, l, m, n;
 
   PetscFunctionBegin;
-  for (k = 0; k < ratio; k++) { /* diagonal blocks of size ratio*s by ratio*s */
+  for (PetscInt k = 0; k < ratio; k++) { /* diagonal blocks of size ratio*s by ratio*s */
     for (l = 0; l < ratio; l++) /* diagonal sub-blocks of size s by s */
       for (i = 0; i < s; i++)
         for (j = 0; j < s; j++) {
@@ -792,7 +792,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
   PetscInt         s  = tab->s;
   const PetscReal *Af = tab->Af, *cf = tab->cf, *Asb = tab->Asb, *csb = tab->csb;
   PetscScalar     *wf = mprk->work_fast, *ws = mprk->work_slow, *wsb = mprk->work_slowbuffer;
-  PetscInt         i, j, computedstages;
+  PetscInt i, computedstages;
   PetscReal        next_time_step = ts->time_step, t = ts->ptime, h = ts->time_step;
 
   PetscFunctionBegin;
@@ -801,7 +801,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
     PetscCall(TSPreStage(ts, mprk->stage_time));
     /* calculate the stage value for fast and slow components respectively */
     PetscCall(VecCopy(ts->vec_sol, Y[i]));
-    for (j = 0; j < i; j++) wsb[j] = h * Asb[i * s + j];
+    for (PetscInt j = 0; j < i; j++) wsb[j] = h * Asb[i * s + j];
 
     /* slow buffer region */
     if (tab->np == 3 && mprk->is_medium) {
@@ -812,7 +812,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
       } else {
         PetscScalar *wm = mprk->work_medium;
         computedstages  = 0;
-        for (j = 0; j < i; j++) {
+        for (PetscInt j = 0; j < i; j++) {
           if (tab->rmb[j]) wm[computedstages - tab->sbase + (tab->rmb[j] - 1) % tab->sbase] += wsb[j];
           else wm[computedstages++] = wsb[j];
         }
@@ -834,7 +834,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
         PetscCall(VecRestoreSubVector(Y[i], mprk->is_slow, &Yslow));
       } else {
         computedstages = 0;
-        for (j = 0; j < i; j++) {
+        for (PetscInt j = 0; j < i; j++) {
           if (tab->rsb[j]) ws[tab->rsb[j] - 1] += wsb[j];
           else ws[computedstages++] = wsb[j];
         }
@@ -847,7 +847,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
     }
 
     /* fast region */
-    for (j = 0; j < i; j++) wf[j] = h * Af[i * s + j];
+    for (PetscInt j = 0; j < i; j++) wf[j] = h * Af[i * s + j];
     PetscCall(VecGetSubVector(Y[i], mprk->is_fast, &Yfast));
     PetscCall(VecMAXPY(Yfast, i, wf, YdotRHS_fast));
     PetscCall(VecRestoreSubVector(Y[i], mprk->is_fast, &Yfast));
@@ -858,7 +858,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
       const PetscReal *Amb = tab->Amb, *cmb = tab->cmb;
       PetscScalar     *wm = mprk->work_medium, *wmb = mprk->work_mediumbuffer;
 
-      for (j = 0; j < i; j++) wmb[j] = h * Amb[i * s + j];
+      for (PetscInt j = 0; j < i; j++) wmb[j] = h * Amb[i * s + j];
       /* medium buffer region */
       PetscCall(VecGetSubVector(Y[i], mprk->is_mediumbuffer, &Ymediumbuffer));
       PetscCall(VecMAXPY(Ymediumbuffer, i, wmb, YdotRHS_mediumbuffer));
@@ -871,7 +871,7 @@ static PetscErrorCode TSStep_MPRKSPLIT(TS ts)
           PetscCall(VecRestoreSubVector(Y[i], mprk->is_medium, &Ymedium));
         } else {
           computedstages = 0;
-          for (j = 0; j < i; j++) {
+          for (PetscInt j = 0; j < i; j++) {
             if (tab->rmb[j]) wm[computedstages - tab->sbase + (tab->rmb[j] - 1) % tab->sbase] += wmb[j];
             else wm[computedstages++] = wmb[j];
           }

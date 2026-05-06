@@ -57,14 +57,14 @@ static PetscErrorCode PetscDrawPixelToCoordinate_X(PetscDraw draw, int i, int j,
 static PetscErrorCode PetscDrawPoint_X(PetscDraw draw, PetscReal x, PetscReal y, int c)
 {
   PetscDraw_X *XiWin = (PetscDraw_X *)draw->data;
-  int          xx, yy, i, j;
+  int xx, yy;
 
   PetscFunctionBegin;
   xx = XTRANS(draw, XiWin, x);
   yy = YTRANS(draw, XiWin, y);
   PetscDrawXiSetColor(XiWin, c);
-  for (i = -1; i < 2; i++) {
-    for (j = -1; j < 2; j++) XDrawPoint(XiWin->disp, PetscDrawXiDrawable(XiWin), XiWin->gc.set, xx + i, yy + j);
+  for (int i = -1; i < 2; i++) {
+    for (int j = -1; j < 2; j++) XDrawPoint(XiWin->disp, PetscDrawXiDrawable(XiWin), XiWin->gc.set, xx + i, yy + j);
   }
   PetscFunctionReturn(PETSC_SUCCESS);
 }

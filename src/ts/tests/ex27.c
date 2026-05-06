@@ -336,7 +336,7 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
   const PetscScalar *u;   /* input solution vector */
   PetscScalar       *r;
   PetscReal         *velocity;
-  PetscInt           dim, Np, p, q;
+  PetscInt dim, Np;
 
   PetscFunctionBeginUser;
   PetscCall(VecZeroEntries(R));
@@ -349,11 +349,11 @@ static PetscErrorCode RHSFunctionParticles(TS ts, PetscReal t, Vec U, Vec R, Pet
   PetscCall(VecGetArrayRead(U, &u));
   Np /= dim;
   if (dbg) PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Part  ppr     x        y\n"));
-  for (p = 0; p < Np; ++p) {
+  for (PetscInt p = 0; p < Np; ++p) {
     PetscReal gradS_p[3] = {0., 0., 0.};
 
     PetscCall(ComputeGradS(dim, Np, &velocity[p * dim], velocity, gradS_p, user));
-    for (q = 0; q < Np; ++q) {
+    for (PetscInt q = 0; q < Np; ++q) {
       PetscReal gradS_q[3] = {0., 0., 0.}, GammaS[3] = {0., 0., 0.}, Q[9];
 
       if (q == p) continue;

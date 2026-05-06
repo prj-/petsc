@@ -552,7 +552,7 @@ PetscErrorCode MatLUFactorNumeric_SeqBAIJ_4_NaturalOrdering(Mat B, Mat A, const 
 {
   Mat             C = B;
   Mat_SeqBAIJ    *a = (Mat_SeqBAIJ *)A->data, *b = (Mat_SeqBAIJ *)C->data;
-  PetscInt        i, j, k, nz, nzL, row;
+  PetscInt i, j, nz, nzL, row;
   const PetscInt  n = a->mbs, *ai = a->i, *aj = a->j, *bi = b->i, *bj = b->j;
   const PetscInt *ajtmp, *bjtmp, *bdiag = b->diag, *pj, bs2 = a->bs2;
   MatScalar      *rtmp, *pc, *mwork, *v, *pv, *aa = a->a;
@@ -594,7 +594,7 @@ PetscErrorCode MatLUFactorNumeric_SeqBAIJ_4_NaturalOrdering(Mat B, Mat A, const 
     /* elimination */
     bjtmp = bj + bi[i];
     nzL   = bi[i + 1] - bi[i];
-    for (k = 0; k < nzL; k++) {
+    for (PetscInt k = 0; k < nzL; k++) {
       row = bjtmp[k];
       pc  = rtmp + bs2 * row;
       for (flg = 0, j = 0; j < bs2; j++) {

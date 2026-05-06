@@ -255,7 +255,7 @@ PetscErrorCode PetscSectionRestoreField_Internal(PetscSection section, PetscSect
 @*/
 PetscErrorCode PetscSectionVecNorm(PetscSection s, PetscSection gs, Vec x, NormType type, PetscReal val[])
 {
-  PetscInt Nf, f, pStart, pEnd;
+  PetscInt Nf, pStart, pEnd;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(s, PETSC_SECTION_CLASSID, 1);
@@ -266,7 +266,7 @@ PetscErrorCode PetscSectionVecNorm(PetscSection s, PetscSection gs, Vec x, NormT
   if (Nf < 2) PetscCall(VecNorm(x, type, val));
   else {
     PetscCall(PetscSectionGetChart(s, &pStart, &pEnd));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       Vec subv;
       IS  is;
 

@@ -108,7 +108,7 @@ static PetscErrorCode PCApplyTranspose_VPBJacobi(PC pc, Vec x, Vec y)
   PC_VPBJacobi      *jac = (PC_VPBJacobi *)pc->data;
   PetscInt           i, ncnt = 0;
   const MatScalar   *diag = jac->diag;
-  PetscInt           ib, jb, bs;
+  PetscInt bs;
   const PetscScalar *xx;
   PetscScalar       *yy, x0, x1, x2, x3, x4, x5, x6;
   PetscInt           nblocks;
@@ -191,9 +191,9 @@ static PetscErrorCode PCApplyTranspose_VPBJacobi(PC pc, Vec x, Vec y)
       yy[ncnt + 6] = diag[42] * x0 + diag[43] * x1 + diag[44] * x2 + diag[45] * x3 + diag[46] * x4 + diag[47] * x5 + diag[48] * x6;
       break;
     default:
-      for (ib = 0; ib < bs; ib++) {
+      for (PetscInt ib = 0; ib < bs; ib++) {
         PetscScalar rowsum = 0;
-        for (jb = 0; jb < bs; jb++) rowsum += diag[ib * bs + jb] * xx[ncnt + jb];
+        for (PetscInt jb = 0; jb < bs; jb++) rowsum += diag[ib * bs + jb] * xx[ncnt + jb];
         yy[ncnt + ib] = rowsum;
       }
     }

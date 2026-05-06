@@ -8,7 +8,7 @@ static PetscInt       project(PetscInt, PetscReal *, PetscReal, PetscReal *, Pet
 
 static PetscErrorCode solve(TAO_DF *df)
 {
-  PetscInt    i, j, innerIter, it, it2, luv, info;
+  PetscInt i, innerIter, it, it2, luv, info;
   PetscReal   gd, max, ak, bk, akold, bkold, lamnew, alpha, kktlam = 0.0, lam_ext;
   PetscReal   DELTAsv, ProdDELTAsv;
   PetscReal   c, *tempQ;
@@ -47,7 +47,7 @@ static PetscErrorCode solve(TAO_DF *df)
   PetscCall(PetscArrayzero(t, dim));
   for (i = 0; i < it; i++) {
     tempQ = Q[ipt[i]];
-    for (j = 0; j < dim; j++) t[j] += (tempQ[j] * x[ipt[i]]);
+    for (PetscInt j = 0; j < dim; j++) t[j] += (tempQ[j] * x[ipt[i]]);
   }
   for (i = 0; i < dim; i++) g[i] = t[i] + f[i];
 
@@ -114,14 +114,14 @@ static PetscErrorCode solve(TAO_DF *df)
     if (it < it2) {
       for (i = 0; i < it; i++) {
         tempQ = Q[ipt[i]];
-        for (j = 0; j < dim; j++) Qd[j] += (tempQ[j] * d[ipt[i]]);
+        for (PetscInt j = 0; j < dim; j++) Qd[j] += (tempQ[j] * d[ipt[i]]);
       }
     } else { /* compute Qd = Q*y-t */
       for (i = 0; i < it2; i++) {
         tempQ = Q[ipt2[i]];
-        for (j = 0; j < dim; j++) Qd[j] += (tempQ[j] * y[ipt2[i]]);
+        for (PetscInt j = 0; j < dim; j++) Qd[j] += (tempQ[j] * y[ipt2[i]]);
       }
-      for (j = 0; j < dim; j++) Qd[j] -= t[j];
+      for (PetscInt j = 0; j < dim; j++) Qd[j] -= t[j];
     }
 
     /* ak = inner{d_{k}}{d_{k}} */

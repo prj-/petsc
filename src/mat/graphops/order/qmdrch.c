@@ -33,7 +33,7 @@ PetscErrorCode SPARSEPACKqmdrch(const PetscInt *root, const PetscInt *xadj, cons
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt node, i, j, nabor, istop, jstop, istrt, jstrt;
+  PetscInt node, nabor, istop, jstop, istrt, jstrt;
 
   /*       LOOP THROUGH THE NEIGHBORS OF ROOT IN THE*/
   /*       QUOTIENT GRAPH.*/
@@ -53,7 +53,7 @@ PetscErrorCode SPARSEPACKqmdrch(const PetscInt *root, const PetscInt *xadj, cons
   istop   = xadj[*root + 1] - 1;
   if (istop < istrt) PetscFunctionReturn(PETSC_SUCCESS);
   i__1 = istop;
-  for (i = istrt; i <= i__1; ++i) {
+  for (PetscInt i = istrt; i <= i__1; ++i) {
     nabor = adjncy[i];
     if (!nabor) PetscFunctionReturn(PETSC_SUCCESS);
     if (marker[nabor] != 0) goto L600;
@@ -74,7 +74,7 @@ PetscErrorCode SPARSEPACKqmdrch(const PetscInt *root, const PetscInt *xadj, cons
     jstrt = xadj[nabor];
     jstop = xadj[nabor + 1] - 1;
     i__2  = jstop;
-    for (j = jstrt; j <= i__2; ++j) {
+    for (PetscInt j = jstrt; j <= i__2; ++j) {
       node  = adjncy[j];
       nabor = -node;
       if (node < 0) goto L300;

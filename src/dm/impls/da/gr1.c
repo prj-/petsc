@@ -145,7 +145,7 @@ PetscErrorCode VecView_MPI_Draw_DA1d(Vec xin, PetscViewer v)
 {
   DM                  da;
   PetscMPIInt         rank, size, tag;
-  PetscInt            i, n, N, dof, istart, isize, j, nbounds;
+  PetscInt n, N, dof, istart, isize, j, nbounds;
   MPI_Status          status;
   PetscReal           min, max, xmin = 0.0, xmax = 0.0, tmp = 0.0, xgtmp = 0.0;
   const PetscScalar  *array, *xg;
@@ -258,7 +258,7 @@ PetscErrorCode VecView_MPI_Draw_DA1d(Vec xin, PetscViewer v)
       PetscCall(PetscDrawLine(draw, xgtmp, tmp, PetscRealPart(xg[0]), PetscRealPart(array[j]), PETSC_DRAW_RED));
       if (showmarkers) PetscCall(PetscDrawPoint(draw, xgtmp, tmp, PETSC_DRAW_BLACK));
     }
-    for (i = 1; i < n; i++) {
+    for (PetscInt i = 1; i < n; i++) {
       PetscCall(PetscDrawLine(draw, PetscRealPart(xg[i - 1]), PetscRealPart(array[j + dof * (i - 1)]), PetscRealPart(xg[i]), PetscRealPart(array[j + dof * i]), PETSC_DRAW_RED));
       if (showmarkers) PetscCall(PetscDrawMarker(draw, PetscRealPart(xg[i - 1]), PetscRealPart(array[j + dof * (i - 1)]), PETSC_DRAW_BLACK));
     }

@@ -1018,7 +1018,7 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
   const PetscScalar *u;
   PetscReal         *coords, *E;
   PetscReal          enKin = 0., enEM = 0.;
-  PetscInt           dim, d, Np, p, q;
+  PetscInt dim, Np;
 
   PetscFunctionBeginUser;
   if (step % ostep == 0) {
@@ -1030,7 +1030,7 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
     PetscCall(DMSwarmGetField(sw, DMSwarmPICField_coor, NULL, NULL, (void **)&coords));
     PetscCall(DMSwarmGetField(sw, "E_field", NULL, NULL, (void **)&E));
     if (!step) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "Time     Step Part     Energy\n"));
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       const PetscReal v2     = DMPlex_DotRealD_Internal(dim, &u[(p * 2 + 1) * dim], &u[(p * 2 + 1) * dim]);
       PetscReal      *pcoord = &coords[p * dim];
 
@@ -1039,15 +1039,15 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
       if (em == EM_NONE) {
         continue;
       } else if (em == EM_COULOMB) {
-        for (q = p + 1; q < Np; ++q) {
+        for (PetscInt q = p + 1; q < Np; ++q) {
           PetscReal *qcoord = &coords[q * dim];
           PetscReal  rpq[3], r;
-          for (d = 0; d < dim; ++d) rpq[d] = pcoord[d] - qcoord[d];
+          for (PetscInt d = 0; d < dim; ++d) rpq[d] = pcoord[d] - qcoord[d];
           r = DMPlex_NormD_Internal(dim, rpq);
           enEM += 1. / r;
         }
       } else if (em == EM_PRIMAL || em == EM_MIXED) {
-        for (d = 0; d < dim; ++d) enEM += E[p * dim + d];
+        for (PetscInt d = 0; d < dim; ++d) enEM += E[p * dim + d];
       }
     }
     PetscCall(PetscSynchronizedPrintf(PetscObjectComm((PetscObject)ts), "%.6lf %4" PetscInt_FMT " KE\t    %10.4lf\n", (double)t, step, (double)enKin));

@@ -849,7 +849,7 @@ static inline PetscErrorCode DMInterpolate_Hex_Private(DMInterpolationInfo ctx, 
 PetscErrorCode DMInterpolationEvaluate(DMInterpolationInfo ctx, DM dm, Vec x, Vec v)
 {
   PetscDS   ds;
-  PetscInt  n, p, Nf, field;
+  PetscInt n, p, Nf;
   PetscBool useDS = PETSC_FALSE;
 
   PetscFunctionBegin;
@@ -863,7 +863,7 @@ PetscErrorCode DMInterpolationEvaluate(DMInterpolationInfo ctx, DM dm, Vec x, Ve
   if (ds) {
     useDS = PETSC_TRUE;
     PetscCall(PetscDSGetNumFields(ds, &Nf));
-    for (field = 0; field < Nf; ++field) {
+    for (PetscInt field = 0; field < Nf; ++field) {
       PetscObject  obj;
       PetscClassId id;
 
@@ -892,7 +892,7 @@ PetscErrorCode DMInterpolationEvaluate(DMInterpolationInfo ctx, DM dm, Vec x, Ve
       for (PetscInt d = 0; d < cdim; ++d) pcoords[d] = PetscRealPart(coords[p * cdim + d]);
       PetscCall(DMPlexCoordinatesToReference(dm, ctx->cells[p], 1, pcoords, xi));
       PetscCall(DMPlexVecGetClosure(dm, NULL, x, ctx->cells[p], &clSize, &xa));
-      for (field = 0; field < Nf; ++field) {
+      for (PetscInt field = 0; field < Nf; ++field) {
         PetscTabulation T;
         PetscObject     obj;
         PetscClassId    id;

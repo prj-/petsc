@@ -118,7 +118,7 @@ PetscErrorCode InitializeProblem(AppCtx *user)
 {
   PetscViewer loader;
   MPI_Comm    comm;
-  PetscInt    nrows, ncols, i;
+  PetscInt nrows, ncols;
   PetscScalar one = 1.0;
   char        filebase[128];
   char        filename[128];
@@ -181,7 +181,7 @@ PetscErrorCode InitializeProblem(AppCtx *user)
   PetscCall(MatMPIAIJSetPreallocation(user->Ain, 1, NULL, 0, NULL));
   PetscCall(MatSeqAIJSetPreallocation(user->Ain, 1, NULL));
 
-  for (i = 0; i < user->mi; i++) PetscCall(MatSetValues(user->Ain, 1, &i, 1, &i, &one, INSERT_VALUES));
+  for (PetscInt i = 0; i < user->mi; i++) PetscCall(MatSetValues(user->Ain, 1, &i, 1, &i, &one, INSERT_VALUES));
   PetscCall(MatAssemblyBegin(user->Ain, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(user->Ain, MAT_FINAL_ASSEMBLY));
   PetscCall(MatSetFromOptions(user->Ain));

@@ -1355,7 +1355,7 @@ PetscErrorCode DMCoarsenHierarchy_DA(DM da, PetscInt nlevels, DM dac[])
 
 static PetscErrorCode DMDASetGLLCoordinates_1d(DM dm, PetscInt n, PetscReal *nodes)
 {
-  PetscInt     i, j, xs, xn, q;
+  PetscInt i, xs, xn, q;
   PetscScalar *xx;
   PetscReal    h;
   Vec          x;
@@ -1374,7 +1374,7 @@ static PetscErrorCode DMDASetGLLCoordinates_1d(DM dm, PetscInt n, PetscReal *nod
   PetscCall(DMDAVecGetArray(dm, x, &xx));
 
   /* loop over local spectral elements */
-  for (j = xs; j < xs + xn; j++) {
+  for (PetscInt j = xs; j < xs + xn; j++) {
     /*
      Except for the first process, each process starts on the second GLL point of the first element on that process
      */

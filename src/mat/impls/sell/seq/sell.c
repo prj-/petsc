@@ -1532,7 +1532,7 @@ PetscErrorCode MatGetInfo_SeqSELL(Mat A, MatInfoType flag, MatInfo *info)
 PetscErrorCode MatSetValues_SeqSELL(Mat A, PetscInt m, const PetscInt im[], PetscInt n, const PetscInt in[], const PetscScalar v[], InsertMode is)
 {
   Mat_SeqSELL *a = (Mat_SeqSELL *)A->data;
-  PetscInt     shift, i, k, l, low, high, t, ii, row, col, nrow;
+  PetscInt shift, i, low, high, t, row, col, nrow;
   PetscInt    *cp, nonew = a->nonew, lastcol = -1;
   MatScalar   *vp, value;
 #if defined(PETSC_HAVE_CUPM)
@@ -1541,7 +1541,7 @@ PetscErrorCode MatSetValues_SeqSELL(Mat A, PetscInt m, const PetscInt im[], Pets
 #endif
 
   PetscFunctionBegin;
-  for (k = 0; k < m; k++) { /* loop over added rows */
+  for (PetscInt k = 0; k < m; k++) { /* loop over added rows */
     row = im[k];
     if (row < 0) continue;
     PetscCheck(row < A->rmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Row too large: row %" PetscInt_FMT " max %" PetscInt_FMT, row, A->rmap->n - 1);
@@ -1552,7 +1552,7 @@ PetscErrorCode MatSetValues_SeqSELL(Mat A, PetscInt m, const PetscInt im[], Pets
     low   = 0;
     high  = nrow;
 
-    for (l = 0; l < n; l++) { /* loop over added columns */
+    for (PetscInt l = 0; l < n; l++) { /* loop over added columns */
       col = in[l];
       if (col < 0) continue;
       PetscCheck(col < A->cmap->n, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Col too large: row %" PetscInt_FMT " max %" PetscInt_FMT, col, A->cmap->n - 1);
@@ -1594,7 +1594,7 @@ PetscErrorCode MatSetValues_SeqSELL(Mat A, PetscInt m, const PetscInt im[], Pets
       MatSeqXSELLReallocateSELL(A, A->rmap->n, 1, nrow, a->sliidx, a->sliceheight, row / a->sliceheight, row, col, a->colidx, a->val, cp, vp, nonew, MatScalar, 1);
 #endif
       /* add the new nonzero to the high position, shift the remaining elements in current row to the right by one slot */
-      for (ii = nrow - 1; ii >= i; ii--) {
+      for (PetscInt ii = nrow - 1; ii >= i; ii--) {
         *(cp + a->sliceheight * (ii + 1)) = *(cp + a->sliceheight * ii);
         *(vp + a->sliceheight * (ii + 1)) = *(vp + a->sliceheight * ii);
       }

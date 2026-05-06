@@ -195,7 +195,7 @@ static PetscErrorCode SNESVIComputeMeritFunctionGradient(Mat H, Vec phi, Vec dps
 static PetscErrorCode SNESSolve_VINEWTONSSLS(SNES snes)
 {
   SNES_VINEWTONSSLS   *vi = (SNES_VINEWTONSSLS *)snes->data;
-  PetscInt             maxits, i, lits;
+  PetscInt maxits, lits;
   SNESLineSearchReason lssucceed;
   PetscReal            gnorm, xnorm = 0, ynorm;
   Vec                  Y, X, F;
@@ -252,7 +252,7 @@ static PetscErrorCode SNESSolve_VINEWTONSSLS(SNES snes)
     PetscFunctionReturn(PETSC_SUCCESS);
   }
 
-  for (i = 0; i < maxits; i++) {
+  for (PetscInt i = 0; i < maxits; i++) {
     /* Call general purpose update function */
     PetscTryTypeMethod(snes, update, snes->iter);
 

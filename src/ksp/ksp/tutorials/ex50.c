@@ -101,7 +101,7 @@ PetscErrorCode ComputeRHS(KSP ksp, Vec b, PetscCtx ctx)
 
 PetscErrorCode ComputeJacobian(KSP ksp, Mat J, Mat jac, PetscCtx ctx)
 {
-  PetscInt     i, j, M, N, xm, ym, xs, ys, num, numi, numj;
+  PetscInt M, N, xm, ym, xs, ys, num, numi, numj;
   PetscScalar  v[5], Hx, Hy, HydHx, HxdHy;
   MatStencil   row, col[5];
   DM           da;
@@ -115,8 +115,8 @@ PetscErrorCode ComputeJacobian(KSP ksp, Mat J, Mat jac, PetscCtx ctx)
   HxdHy = Hx / Hy;
   HydHx = Hy / Hx;
   PetscCall(DMDAGetCorners(da, &xs, &ys, 0, &xm, &ym, 0));
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       row.i = i;
       row.j = j;
 

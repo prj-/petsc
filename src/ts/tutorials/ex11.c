@@ -1109,7 +1109,7 @@ static PetscErrorCode adaptToleranceFVMSetUp(TS ts, PetscInt nstep, PetscReal ti
   Vec                cellGeom, faceGeom;
   PetscBool          computeGradient;
   Vec                grad, locGrad, locX, errVec;
-  PetscInt           cStart, cEnd, c, dim, nRefine, nCoarsen;
+  PetscInt cStart, cEnd, dim, nRefine, nCoarsen;
   PetscReal          minMaxInd[2] = {PETSC_MAX_REAL, PETSC_MIN_REAL}, minMaxIndGlobal[2];
   PetscScalar       *errArray;
   const PetscScalar *pointVals;
@@ -1146,7 +1146,7 @@ static PetscErrorCode adaptToleranceFVMSetUp(TS ts, PetscInt nstep, PetscReal ti
   PetscCall(VecCreateFromOptions(PetscObjectComm((PetscObject)plex), NULL, 1, cEnd - cStart, PETSC_DETERMINE, &errVec));
   PetscCall(VecSetUp(errVec));
   PetscCall(VecGetArray(errVec, &errArray));
-  for (c = cStart; c < cEnd; c++) {
+  for (PetscInt c = cStart; c < cEnd; c++) {
     PetscReal        errInd = 0.;
     PetscScalar     *pointGrad;
     PetscScalar     *pointVal;
@@ -1582,12 +1582,11 @@ int projecttoprim(PetscReal v[], const PetscReal wc[], PetscReal rv[][3])
 /* ---------------------------------------------------------------------- */
 int eigenvectors(PetscReal rv[][3], PetscReal lv[][3], const PetscReal ueq[], PetscReal gamma)
 {
-  int       j, k;
   PetscReal rho, csnd, p0;
   /* PetscScalar u; */
 
-  for (k = 0; k < 3; ++k)
-    for (j = 0; j < 3; ++j) {
+  for (int k = 0; k < 3; ++k)
+    for (int j = 0; j < 3; ++j) {
       lv[k][j] = 0.;
       rv[k][j] = 0.;
     }

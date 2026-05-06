@@ -919,7 +919,7 @@ static PetscErrorCode TestExpandPoints(DM dm, AppCtx *user)
 
 static PetscErrorCode DMPlexExpandedConesToFaces_Private(DM dm, IS is, PetscSection section, IS *newis)
 {
-  PetscInt        n, n1, ncone, numCoveredPoints, o, p, q, start, end;
+  PetscInt n, n1, ncone, numCoveredPoints, o, p, start, end;
   const PetscInt *coveredPoints;
   const PetscInt *arr, *cone;
   PetscInt       *newarr;
@@ -931,7 +931,7 @@ static PetscErrorCode DMPlexExpandedConesToFaces_Private(DM dm, IS is, PetscSect
   PetscCheck(n == n1, PETSC_COMM_SELF, PETSC_ERR_PLIB, "IS size = %" PetscInt_FMT " != %" PetscInt_FMT " = section storage size", n, n1);
   PetscCall(ISGetIndices(is, &arr));
   PetscCall(PetscMalloc1(end - start, &newarr));
-  for (q = start; q < end; q++) {
+  for (PetscInt q = start; q < end; q++) {
     PetscCall(PetscSectionGetDof(section, q, &ncone));
     PetscCall(PetscSectionGetOffset(section, q, &o));
     cone = &arr[o];
@@ -1304,7 +1304,7 @@ static PetscErrorCode ViewPointsWithType_Internal(DM dm, IS pointsIS, PetscViewe
   PetscSection    coordsSection;
   Vec             coordsVec;
   PetscScalar    *coordsScalar;
-  PetscInt        coneSize, depth, dim, i, p, npoints;
+  PetscInt coneSize, depth, dim, p, npoints;
   const PetscInt *points;
 
   PetscFunctionBegin;
@@ -1316,7 +1316,7 @@ static PetscErrorCode ViewPointsWithType_Internal(DM dm, IS pointsIS, PetscViewe
   PetscCall(ISGetIndices(pointsIS, &points));
   PetscCall(DMPlexGetDepthLabel(dm, &label));
   PetscCall(PetscViewerASCIIPushTab(v));
-  for (i = 0; i < npoints; i++) {
+  for (PetscInt i = 0; i < npoints; i++) {
     p = points[i];
     PetscCall(DMLabelGetValue(label, p, &depth));
     if (!depth) {

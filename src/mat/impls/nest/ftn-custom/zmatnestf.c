@@ -66,7 +66,7 @@ PETSC_EXTERN void matnestsetsubmats_(Mat *B, PetscInt *nr, IS is_row[], PetscInt
 
 PETSC_EXTERN void matnestgetsubmats_(Mat *A, PetscInt *M, PetscInt *N, Mat *sub, PetscErrorCode *ierr)
 {
-  PetscInt i, j, m, n;
+  PetscInt m, n;
   Mat    **mat;
 
   CHKFORTRANNULLINTEGER(M);
@@ -78,8 +78,8 @@ PETSC_EXTERN void matnestgetsubmats_(Mat *A, PetscInt *M, PetscInt *N, Mat *sub,
   if (M) *M = m;
   if (N) *N = n;
   if (sub) {
-    for (i = 0; i < m; i++) {
-      for (j = 0; j < n; j++) {
+    for (PetscInt i = 0; i < m; i++) {
+      for (PetscInt j = 0; j < n; j++) {
         if (mat[i][j]) {
           sub[j + n * i] = mat[i][j];
         } else {

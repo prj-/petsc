@@ -12,7 +12,7 @@ PetscErrorCode ex2_1(void)
   DM          dms;
   Vec         x;
   PetscMPIInt rank;
-  PetscInt    p, bs, nlocal;
+  PetscInt bs, nlocal;
 
   PetscFunctionBegin;
   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
@@ -31,14 +31,14 @@ PetscErrorCode ex2_1(void)
   {
     PetscReal *array;
     PetscCall(DMSwarmGetField(dms, "viscosity", &bs, NULL, (void **)&array));
-    for (p = 0; p < nlocal; p++) array[p] = 11.1 + p * 0.1 + rank * 100.0;
+    for (PetscInt p = 0; p < nlocal; p++) array[p] = 11.1 + p * 0.1 + rank * 100.0;
     PetscCall(DMSwarmRestoreField(dms, "viscosity", &bs, NULL, (void **)&array));
   }
 
   {
     PetscReal *array;
     PetscCall(DMSwarmGetField(dms, "strain", &bs, NULL, (void **)&array));
-    for (p = 0; p < nlocal; p++) {
+    for (PetscInt p = 0; p < nlocal; p++) {
       array[bs * p + 0] = 2.0e-2 + p * 0.001 + rank * 1.0;
       array[bs * p + 1] = 2.0e-2 + p * 0.002 + rank * 1.0;
       array[bs * p + 2] = 2.0e-2 + p * 0.003 + rank * 1.0;

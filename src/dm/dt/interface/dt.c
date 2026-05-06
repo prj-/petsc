@@ -666,7 +666,7 @@ PetscErrorCode PetscQuadratureExpandComposite(PetscQuadrature q, PetscInt numSub
   DMPolytopeType   ct;
   const PetscReal *points, *weights;
   PetscReal       *pointsRef, *weightsRef;
-  PetscInt         dim, Nc, order, npoints, npointsRef, c, p, cp, d, e;
+  PetscInt dim, Nc, order, npoints, npointsRef, c, p, d, e;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(q, PETSCQUADRATURE_CLASSID, 1);
@@ -687,7 +687,7 @@ PetscErrorCode PetscQuadratureExpandComposite(PetscQuadrature q, PetscInt numSub
         for (e = 0; e < dim; ++e) pointsRef[(c * npoints + p) * dim + d] += jac[(c * dim + d) * dim + e] * (points[p * dim + e] + 1.0);
       }
       /* Could also use detJ here */
-      for (cp = 0; cp < Nc; ++cp) weightsRef[(c * npoints + p) * Nc + cp] = weights[p * Nc + cp] / numSubelements;
+      for (PetscInt cp = 0; cp < Nc; ++cp) weightsRef[(c * npoints + p) * Nc + cp] = weights[p * Nc + cp] / numSubelements;
     }
   }
   PetscCall(PetscQuadratureSetCellType(*qref, ct));
@@ -1094,7 +1094,7 @@ const char       PKDCitation[] = "@article{Kirby2010,\n"
 @*/
 PetscErrorCode PetscDTPKDEvalJet(PetscInt dim, PetscInt npoints, const PetscReal points[], PetscInt degree, PetscInt k, PetscReal p[])
 {
-  PetscInt   degidx, kidx, d, pt;
+  PetscInt d, pt;
   PetscInt   Nk, Ndeg;
   PetscInt  *ktup, *degtup;
   PetscReal *scales, initscale, scaleexp;
@@ -1110,7 +1110,7 @@ PetscErrorCode PetscDTPKDEvalJet(PetscInt dim, PetscInt npoints, const PetscReal
     PetscCall(PetscDTBinomial(dim, 2, &scaleexp));
     initscale = PetscPowReal(2., scaleexp * 0.5);
   }
-  for (degidx = 0; degidx < Ndeg; degidx++) {
+  for (PetscInt degidx = 0; degidx < Ndeg; degidx++) {
     PetscInt  e;
     PetscInt  m1idx = -1, m2idx = -1;
     PetscInt  n;
@@ -1169,7 +1169,7 @@ PetscErrorCode PetscDTPKDEvalJet(PetscInt dim, PetscInt npoints, const PetscReal
       thetanm1 *= 0.5;
       thetanm2 = thetanm1 * thetanm1;
 
-      for (kidx = 0; kidx < Nk; kidx++) {
+      for (PetscInt kidx = 0; kidx < Nk; kidx++) {
         PetscCall(PetscDTIndexToGradedOrder(dim, kidx, ktup));
         /* first sum in the same derivative terms */
         p[(degidx * Nk + kidx) * npoints + pt] = (cnm1 * thetanm1 + cnm1x * thetanm1x) * p[(m1idx * Nk + kidx) * npoints + pt];
@@ -1212,7 +1212,7 @@ PetscErrorCode PetscDTPKDEvalJet(PetscInt dim, PetscInt npoints, const PetscReal
       }
     }
   }
-  for (degidx = 0; degidx < Ndeg; degidx++) {
+  for (PetscInt degidx = 0; degidx < Ndeg; degidx++) {
     PetscReal scale = scales[degidx];
     for (PetscInt i = 0; i < Nk * npoints; i++) p[degidx * Nk * npoints + i] *= scale;
   }
@@ -2595,7 +2595,7 @@ PetscErrorCode PetscDTTensorQuadratureCreate(PetscQuadrature q1, PetscQuadrature
   const PetscReal *x1, *w1, *x2, *w2;
   PetscReal       *x, *w;
   PetscInt         dim1, Nc1, Np1, order1, qa, d1;
-  PetscInt         dim2, Nc2, Np2, order2, qb, d2;
+  PetscInt dim2, Nc2, Np2, order2;
   PetscInt         dim, Nc, Np, order, qc, d;
 
   PetscFunctionBegin;
@@ -2749,9 +2749,9 @@ PetscErrorCode PetscDTTensorQuadratureCreate(PetscQuadrature q1, PetscQuadrature
   PetscCall(PetscMalloc1(Np * dim, &x));
   PetscCall(PetscMalloc1(Np, &w));
   for (qa = 0, qc = 0; qa < Np1; ++qa) {
-    for (qb = 0; qb < Np2; ++qb, ++qc) {
+    for (PetscInt qb = 0; qb < Np2; ++qb, ++qc) {
       for (d1 = 0, d = 0; d1 < dim1; ++d1, ++d) x[qc * dim + d] = x1[qa * dim1 + d1];
-      for (d2 = 0; d2 < dim2; ++d2, ++d) x[qc * dim + d] = x2[qb * dim2 + d2];
+      for (PetscInt d2 = 0; d2 < dim2; ++d2, ++d) x[qc * dim + d] = x2[qb * dim2 + d2];
       w[qc] = w1[qa] * w2[qb];
     }
   }
@@ -2957,7 +2957,7 @@ PetscErrorCode PetscGaussLobattoLegendreElementLaplacianCreate(PetscInt n, Petsc
   const PetscReal *gllnodes = nodes;
   const PetscInt   p        = n - 1;
   PetscReal        z0, z1, z2 = -1, x, Lpj, Lpr;
-  PetscInt         i, j, nn, r;
+  PetscInt i, j;
 
   PetscFunctionBegin;
   PetscCall(PetscMalloc1(n, &A));
@@ -2968,20 +2968,20 @@ PetscErrorCode PetscGaussLobattoLegendreElementLaplacianCreate(PetscInt n, Petsc
     x  = gllnodes[j];
     z0 = 1.;
     z1 = x;
-    for (nn = 1; nn < p; nn++) {
+    for (PetscInt nn = 1; nn < p; nn++) {
       z2 = x * z1 * (2. * ((PetscReal)nn) + 1.) / (((PetscReal)nn) + 1.) - z0 * (((PetscReal)nn) / (((PetscReal)nn) + 1.));
       z0 = z1;
       z1 = z2;
     }
     Lpj = z2;
-    for (r = 1; r < p; r++) {
+    for (PetscInt r = 1; r < p; r++) {
       if (r == j) {
         A[j][j] = 2. / (3. * (1. - gllnodes[j] * gllnodes[j]) * Lpj * Lpj);
       } else {
         x  = gllnodes[r];
         z0 = 1.;
         z1 = x;
-        for (nn = 1; nn < p; nn++) {
+        for (PetscInt nn = 1; nn < p; nn++) {
           z2 = x * z1 * (2. * ((PetscReal)nn) + 1.) / (((PetscReal)nn) + 1.) - z0 * (((PetscReal)nn) / (((PetscReal)nn) + 1.));
           z0 = z1;
           z1 = z2;
@@ -2995,7 +2995,7 @@ PetscErrorCode PetscGaussLobattoLegendreElementLaplacianCreate(PetscInt n, Petsc
     x  = gllnodes[j];
     z0 = 1.;
     z1 = x;
-    for (nn = 1; nn < p; nn++) {
+    for (PetscInt nn = 1; nn < p; nn++) {
       z2 = x * z1 * (2. * ((PetscReal)nn) + 1.) / (((PetscReal)nn) + 1.) - z0 * (((PetscReal)nn) / (((PetscReal)nn) + 1.));
       z0 = z1;
       z1 = z2;
@@ -3008,7 +3008,7 @@ PetscErrorCode PetscGaussLobattoLegendreElementLaplacianCreate(PetscInt n, Petsc
     x  = gllnodes[j];
     z0 = 1.;
     z1 = x;
-    for (nn = 1; nn < p; nn++) {
+    for (PetscInt nn = 1; nn < p; nn++) {
       z2 = x * z1 * (2. * ((PetscReal)nn) + 1.) / (((PetscReal)nn) + 1.) - z0 * (((PetscReal)nn) / (((PetscReal)nn) + 1.));
       z0 = z1;
       z1 = z2;
@@ -3355,7 +3355,7 @@ PetscErrorCode PetscQuadratureComputePermutations(PetscQuadrature quad, PeOp Pet
 {
   DMPolytopeType   ct;
   const PetscReal *xq, *wq;
-  PetscInt         dim, qdim, d, Na, o, Nq, q, qp;
+  PetscInt dim, qdim, Na, Nq, q, qp;
 
   PetscFunctionBegin;
   PetscCall(PetscQuadratureGetData(quad, &qdim, NULL, &Nq, &xq, &wq));
@@ -3365,7 +3365,7 @@ PetscErrorCode PetscQuadratureComputePermutations(PetscQuadrature quad, PeOp Pet
   PetscCall(PetscMalloc1(Na, perm));
   if (Np) *Np = Na;
   Na /= 2;
-  for (o = -Na; o < Na; ++o) {
+  for (PetscInt o = -Na; o < Na; ++o) {
     DM        refdm;
     PetscInt *idx;
     PetscReal xi0[3] = {-1., -1., -1.}, v0[3], J[9], detJ, txq[3];
@@ -3380,7 +3380,7 @@ PetscErrorCode PetscQuadratureComputePermutations(PetscQuadrature quad, PeOp Pet
       for (qp = 0; qp < Nq; ++qp) {
         PetscReal diff = 0.;
 
-        for (d = 0; d < dim; ++d) diff += PetscAbsReal(txq[d] - xq[qp * dim + d]);
+        for (PetscInt d = 0; d < dim; ++d) diff += PetscAbsReal(txq[d] - xq[qp * dim + d]);
         if (diff < PETSC_SMALL) break;
       }
       PetscCheck(qp < Nq, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Transformed quad point %" PetscInt_FMT " does not match another quad point", q);

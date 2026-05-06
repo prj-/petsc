@@ -1363,12 +1363,12 @@ PetscErrorCode DMPlexInterpolatePointSF(DM dm, PetscSF pointSF)
       }
       /* Put back faces for this root */
       for (PetscInt deg = 0; deg < rootdegree[r]; ++deg, ++idx2) {
-        PetscInt offset, dof, d;
+        PetscInt offset, dof;
 
         PetscCall(PetscSectionGetDof(candidateRemoteSection, idx2, &dof));
         PetscCall(PetscSectionGetOffset(candidateRemoteSection, idx2, &offset));
         /* dof may include many faces from the remote process */
-        for (d = 0; d < dof; ++d) {
+        for (PetscInt d = 0; d < dof; ++d) {
           const PetscInt         hidx  = offset + d;
           const PetscInt         Np    = candidatesRemote[hidx].index + 1;
           const PetscSFNode     *fcone = &candidatesRemote[hidx + 2];
@@ -1406,7 +1406,7 @@ PetscErrorCode DMPlexInterpolatePointSF(DM dm, PetscSF pointSF)
     PetscSF      sfMulti, sfClaims, sfPointNew;
     PetscSFNode *remotePointsNew;
     PetscInt    *remoteOffsets, *localPointsNew;
-    PetscInt     pStart, pEnd, r, NlNew, p;
+    PetscInt pStart, pEnd, NlNew, p;
 
     /* 4) Push claims back to receiver via the MultiSF and derive new pointSF mapping on receiver */
     PetscCall(PetscSFGetMultiSF(pointSF, &sfMulti));
@@ -1426,7 +1426,7 @@ PetscErrorCode DMPlexInterpolatePointSF(DM dm, PetscSF pointSF)
     /* Step 5) Walk the original section of local supports and add an SF entry for each updated item */
     /* TODO I should not have to do a join here since I already put the face and its cone in the candidate section */
     PetscCall(PetscHMapICreate(&claimshash));
-    for (r = 0; r < Nr; ++r) {
+    for (PetscInt r = 0; r < Nr; ++r) {
       PetscInt dof, off, d;
 
       if (debug) PetscCall(PetscSynchronizedPrintf(comm, "[%d]  Checking root for claims %" PetscInt_FMT "\n", rank, r));
@@ -1672,7 +1672,7 @@ PetscErrorCode DMPlexCopyCoordinates(DM dmA, DM dmB)
   VecType      vtype;
   PetscSection coordSectionA, coordSectionB;
   PetscScalar *coordsA, *coordsB;
-  PetscInt     spaceDim, Nf, vStartA, vStartB, vEndA, vEndB, coordSizeB, v, d;
+  PetscInt spaceDim, Nf, vStartA, vStartB, vEndA, vEndB, coordSizeB, d;
   PetscInt     cStartA, cEndA, cStartB, cEndB, cS, cE, cdim;
 
   PetscFunctionBegin;
@@ -1733,7 +1733,7 @@ PetscErrorCode DMPlexCopyCoordinates(DM dmA, DM dmB)
   cS = vStartB;
   cE = vEndB;
   PetscCall(PetscSectionSetChart(coordSectionB, cS, cE));
-  for (v = vStartB; v < vEndB; ++v) {
+  for (PetscInt v = vStartB; v < vEndB; ++v) {
     PetscCall(PetscSectionSetDof(coordSectionB, v, spaceDim));
     PetscCall(PetscSectionSetFieldDof(coordSectionB, v, 0, spaceDim));
   }
@@ -1749,7 +1749,7 @@ PetscErrorCode DMPlexCopyCoordinates(DM dmA, DM dmB)
   PetscCall(VecSetType(coordinatesB, vtype));
   PetscCall(VecGetArray(coordinatesA, &coordsA));
   PetscCall(VecGetArray(coordinatesB, &coordsB));
-  for (v = 0; v < vEndB - vStartB; ++v) {
+  for (PetscInt v = 0; v < vEndB - vStartB; ++v) {
     PetscInt offA, offB;
 
     PetscCall(PetscSectionGetOffset(coordSectionA, v + vStartA, &offA));
@@ -1846,7 +1846,7 @@ PetscErrorCode DMPlexUninterpolate(DM dm, DM *dmUnint)
     const PetscInt    *localPoints;
     PetscSFNode       *remotePointsUn;
     PetscInt          *localPointsUn;
-    PetscInt           numRoots, numLeaves, l;
+    PetscInt numRoots, numLeaves;
     PetscInt           numLeavesUn = 0, n = 0;
 
     /* Get original SF information */
@@ -1856,7 +1856,7 @@ PetscErrorCode DMPlexUninterpolate(DM dm, DM *dmUnint)
     PetscCall(PetscSFGetGraph(sfPoint, &numRoots, &numLeaves, &localPoints, &remotePoints));
     if (numRoots >= 0) {
       /* Allocate space for cells and vertices */
-      for (l = 0; l < numLeaves; ++l) {
+      for (PetscInt l = 0; l < numLeaves; ++l) {
         const PetscInt p = localPoints[l];
 
         if ((vStart <= p && p < vEnd) || (cStart <= p && p < cEnd)) numLeavesUn++;
@@ -1864,7 +1864,7 @@ PetscErrorCode DMPlexUninterpolate(DM dm, DM *dmUnint)
       /* Fill in leaves */
       PetscCall(PetscMalloc1(numLeavesUn, &remotePointsUn));
       PetscCall(PetscMalloc1(numLeavesUn, &localPointsUn));
-      for (l = 0; l < numLeaves; l++) {
+      for (PetscInt l = 0; l < numLeaves; l++) {
         const PetscInt p = localPoints[l];
 
         if ((vStart <= p && p < vEnd) || (cStart <= p && p < cEnd)) {
@@ -1892,7 +1892,7 @@ PetscErrorCode DMPlexUninterpolate(DM dm, DM *dmUnint)
 
 static PetscErrorCode DMPlexIsInterpolated_Internal(DM dm, DMPlexInterpolatedFlag *interpolated)
 {
-  PetscInt coneSize, depth, dim, h, p, pStart, pEnd;
+  PetscInt coneSize, depth, dim, pStart, pEnd;
   MPI_Comm comm;
 
   PetscFunctionBegin;
@@ -1906,7 +1906,7 @@ static PetscErrorCode DMPlexIsInterpolated_Internal(DM dm, DMPlexInterpolatedFla
 
     /* Check points at height = dim are vertices (have no cones) */
     PetscCall(DMPlexGetHeightStratum(dm, dim, &pStart, &pEnd));
-    for (p = pStart; p < pEnd; p++) {
+    for (PetscInt p = pStart; p < pEnd; p++) {
       PetscCall(DMPlexGetConeSize(dm, p, &coneSize));
       if (coneSize) {
         *interpolated = DMPLEX_INTERPOLATED_PARTIAL;
@@ -1915,9 +1915,9 @@ static PetscErrorCode DMPlexIsInterpolated_Internal(DM dm, DMPlexInterpolatedFla
     }
 
     /* Check points at height < dim have cones */
-    for (h = 0; h < dim; h++) {
+    for (PetscInt h = 0; h < dim; h++) {
       PetscCall(DMPlexGetHeightStratum(dm, h, &pStart, &pEnd));
-      for (p = pStart; p < pEnd; p++) {
+      for (PetscInt p = pStart; p < pEnd; p++) {
         PetscCall(DMPlexGetConeSize(dm, p, &coneSize));
         if (!coneSize) {
           *interpolated = DMPLEX_INTERPOLATED_PARTIAL;

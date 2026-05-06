@@ -2215,13 +2215,13 @@ PetscErrorCode PCBDDCSubSchursDestroy(PCBDDCSubSchurs *sub_schurs)
 
 static inline PetscErrorCode PCBDDCAdjGetNextLayer_Private(PetscInt *queue_tip, PetscInt n_prev, PetscBT touched, PetscInt *xadj, PetscInt *adjncy, PetscInt *n_added)
 {
-  PetscInt i, j, n;
+  PetscInt n;
 
   PetscFunctionBegin;
   n = 0;
-  for (i = -n_prev; i < 0; i++) {
+  for (PetscInt i = -n_prev; i < 0; i++) {
     PetscInt start_dof = queue_tip[i];
-    for (j = xadj[start_dof]; j < xadj[start_dof + 1]; j++) {
+    for (PetscInt j = xadj[start_dof]; j < xadj[start_dof + 1]; j++) {
       PetscInt dof = adjncy[j];
       if (!PetscBTLookup(touched, dof)) {
         PetscCall(PetscBTSet(touched, dof));

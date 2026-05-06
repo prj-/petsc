@@ -48,7 +48,7 @@ static PetscErrorCode CheckQuadrature_Basics(PetscInt npoints, PetscReal alpha, 
 
 static PetscErrorCode CheckQuadrature(PetscInt npoints, PetscReal alpha, PetscReal beta, const PetscReal x[], const PetscReal w[], PetscInt nexact)
 {
-  PetscInt   i, j, k;
+  PetscInt i;
   PetscReal *Pi, *Pj;
   PetscReal  eps;
 
@@ -57,7 +57,7 @@ static PetscErrorCode CheckQuadrature(PetscInt npoints, PetscReal alpha, PetscRe
   PetscCall(PetscMalloc2(npoints, &Pi, npoints, &Pj));
   for (i = 0; i <= nexact; i++) {
     PetscCall(PetscDTJacobiEval(npoints, alpha, beta, x, 1, &i, Pi, NULL, NULL));
-    for (j = i; j <= nexact - i; j++) {
+    for (PetscInt j = i; j <= nexact - i; j++) {
       PetscReal I_quad  = 0.;
       PetscReal I_exact = 0.;
       PetscReal err, tol;
@@ -75,7 +75,7 @@ static PetscErrorCode CheckQuadrature(PetscInt npoints, PetscReal alpha, PetscRe
           PetscInt ibeta = (PetscInt)beta;
 
           PetscCheck((PetscReal)ibeta == beta, PETSC_COMM_SELF, PETSC_ERR_SUP, "lgamma() - math routine is unavailable.");
-          for (k = 0; k < ibeta; k++) I_exact *= (i + 1. + k) / (i + alpha + 1. + k);
+          for (PetscInt k = 0; k < ibeta; k++) I_exact *= (i + 1. + k) / (i + alpha + 1. + k);
         }
 #endif
 
@@ -85,7 +85,7 @@ static PetscErrorCode CheckQuadrature(PetscInt npoints, PetscReal alpha, PetscRe
 
         tol = eps * I_exact;
       }
-      for (k = 0; k < npoints; k++) I_quad += w[k] * (Pi[k] * Pj[k]);
+      for (PetscInt k = 0; k < npoints; k++) I_quad += w[k] * (Pi[k] * Pj[k]);
       err = PetscAbsReal(I_exact - I_quad);
       PetscCall(PetscInfo(NULL, "npoints %" PetscInt_FMT ", alpha %g, beta %g, i %" PetscInt_FMT ", j %" PetscInt_FMT ", exact %g, err %g\n", npoints, (double)alpha, (double)beta, i, j, (double)I_exact, (double)err));
       PetscCheck(err <= tol, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Incorrectly integrated P_%" PetscInt_FMT " * P_%" PetscInt_FMT " using %" PetscInt_FMT " point rule with alpha = %g, beta = %g: exact %g, err %g", i, j, npoints, (double)alpha, (double)beta, (double)I_exact, (double)err);

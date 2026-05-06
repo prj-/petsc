@@ -68,8 +68,6 @@ static PetscErrorCode processPacket(MLINK link, int indent, int *result)
   switch (tokenType) {
   case MLTKFUNC: {
     long numArguments;
-    int  arg;
-
     printf("Function:\n");
     MLGetArgCount(link, &numArguments);
     /* Process head */
@@ -80,7 +78,7 @@ static PetscErrorCode processPacket(MLINK link, int indent, int *result)
     isHead = 0;
     /* Process arguments */
     printf("  Arguments:\n");
-    for (arg = 0; arg < numArguments; arg++) PetscCall(processPacket(link, indent + 4));
+    for (int arg = 0; arg < numArguments; arg++) PetscCall(processPacket(link, indent + 4));
   } break;
   case MLTKSYM: {
     const char *symbol;

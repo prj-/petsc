@@ -852,7 +852,7 @@ PetscErrorCode test_mg(void)
   Mat          A;
   Vec          x, b;
   KSP          ksp;
-  PetscInt     k, d, nd, nref;
+  PetscInt nd, nref;
   MPI_Comm    *comms = NULL;
   UserContext *user  = NULL;
 
@@ -877,7 +877,7 @@ PetscErrorCode test_mg(void)
 
   PetscCall(KSPSolve(ksp, b, x));
 
-  for (d = 0; d < nd; d++) {
+  for (PetscInt d = 0; d < nd; d++) {
     DM first = dms[d * nref + 0];
 
     if (first) {
@@ -887,13 +887,13 @@ PetscErrorCode test_mg(void)
       PetscCall(PetscFree(ctx));
       PetscCall(DMSetApplicationContext(first, NULL));
     }
-    for (k = 1; k < nref; k++) {
+    for (PetscInt k = 1; k < nref; k++) {
       DM dm = dms[d * nref + k];
       if (dm) PetscCall(DMSetApplicationContext(dm, NULL));
     }
   }
 
-  for (k = 0; k < nd * nref; k++) {
+  for (PetscInt k = 0; k < nd * nref; k++) {
     if (dms[k]) PetscCall(DMDestroyShellDMDA(&dms[k]));
   }
   PetscCall(PetscFree(dms));
@@ -903,7 +903,7 @@ PetscErrorCode test_mg(void)
   PetscCall(VecDestroy(&b));
   PetscCall(VecDestroy(&x));
 
-  for (k = 0; k < nd; k++) {
+  for (PetscInt k = 0; k < nd; k++) {
     if (comms[k] != MPI_COMM_NULL) PetscCall(PetscCommDestroy(&comms[k]));
   }
   PetscCall(PetscFree(comms));
@@ -984,7 +984,7 @@ PetscErrorCode ComputeMatrix_DMDA(DM da, Mat J, Mat jac, PetscCtx ctx)
 {
   UserContext *user = (UserContext *)ctx;
   PetscReal    centerRho;
-  PetscInt     i, j, mx, my, xm, ym, xs, ys;
+  PetscInt mx, my, xm, ym, xs, ys;
   PetscScalar  v[5];
   PetscReal    Hx, Hy, HydHx, HxdHy, rho;
   MatStencil   row, col[5];
@@ -1001,8 +1001,8 @@ PetscErrorCode ComputeMatrix_DMDA(DM da, Mat J, Mat jac, PetscCtx ctx)
   HxdHy = Hx / Hy;
   HydHx = Hy / Hx;
   PetscCall(DMDAGetCorners(da, &xs, &ys, NULL, &xm, &ym, NULL));
-  for (j = ys; j < ys + ym; j++) {
-    for (i = xs; i < xs + xm; i++) {
+  for (PetscInt j = ys; j < ys + ym; j++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       row.i = i;
       row.j = j;
       PetscCall(ComputeRho(i, j, mx, my, centerRho, &rho));

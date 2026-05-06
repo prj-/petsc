@@ -121,7 +121,7 @@ PetscErrorCode PetscDrawStringBoxed(PetscDraw draw, PetscReal sxl, PetscReal syl
   PetscReal top, left, right, bottom, tw, th;
   size_t    len, mlen = 0;
   char    **array;
-  int       cnt, i;
+  int cnt;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(draw, PETSC_DRAW_CLASSID, 1);
@@ -133,7 +133,7 @@ PetscErrorCode PetscDrawStringBoxed(PetscDraw draw, PetscReal sxl, PetscReal syl
   }
 
   PetscCall(PetscStrToArray(text, '\n', &cnt, &array));
-  for (i = 0; i < cnt; i++) {
+  for (int i = 0; i < cnt; i++) {
     PetscCall(PetscStrlen(array[i], &len));
     mlen = PetscMax(mlen, len);
   }
@@ -159,7 +159,7 @@ PetscErrorCode PetscDrawStringBoxed(PetscDraw draw, PetscReal sxl, PetscReal syl
   PetscCall(PetscDrawLine(draw, right, bottom, right, top, bc));
   PetscCall(PetscDrawLine(draw, left, bottom, right, bottom, bc));
 
-  for (i = 0; i < cnt; i++) PetscCall(PetscDrawString(draw, left + tw, top - (1.5 + i) * th, sc, array[i]));
+  for (int i = 0; i < cnt; i++) PetscCall(PetscDrawString(draw, left + tw, top - (1.5 + i) * th, sc, array[i]));
   PetscCall(PetscStrToArrayDestroy(cnt, array));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

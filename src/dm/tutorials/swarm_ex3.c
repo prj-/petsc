@@ -128,7 +128,7 @@ PetscErrorCode ex3_1(void)
 {
   DM          dms, dmcell, dmregular;
   PetscMPIInt rank;
-  PetscInt    p, bs, nlocal, overlap, mx, tk;
+  PetscInt bs, nlocal, overlap, mx;
   PetscReal   dx;
   PetscReal  *array, dt;
   PetscInt   *iarray;
@@ -180,7 +180,7 @@ PetscErrorCode ex3_1(void)
     cnt = 0;
     PetscCall(PetscRandomCreate(PETSC_COMM_SELF, &rand));
     PetscCall(PetscRandomSetInterval(rand, -1.0, 1.0));
-    for (p = 0; p < nlocal; p++) {
+    for (PetscInt p = 0; p < nlocal; p++) {
       PetscReal px, py, rx, ry, r2;
 
       PetscCall(PetscRandomGetValueReal(rand, &rx));
@@ -203,7 +203,7 @@ PetscErrorCode ex3_1(void)
 
     PetscCall(DMSwarmGetLocalSize(dms, &nlocal));
     PetscCall(DMSwarmGetField(dms, "itag", &bs, NULL, (void **)&iarray));
-    for (p = 0; p < nlocal; p++) iarray[p] = (PetscInt)rank;
+    for (PetscInt p = 0; p < nlocal; p++) iarray[p] = (PetscInt)rank;
     PetscCall(DMSwarmRestoreField(dms, "itag", &bs, NULL, (void **)&iarray));
   }
 
@@ -211,13 +211,13 @@ PetscErrorCode ex3_1(void)
   PetscCall(SwarmViewGP(dms, "step0"));
 
   dt = 0.1;
-  for (tk = 1; tk < 20; tk++) {
+  for (PetscInt tk = 1; tk < 20; tk++) {
     char prefix[PETSC_MAX_PATH_LEN];
     PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Step %" PetscInt_FMT " \n", tk));
     /* push points */
     PetscCall(DMSwarmGetLocalSize(dms, &nlocal));
     PetscCall(DMSwarmGetField(dms, DMSwarmPICField_coor, &bs, NULL, (void **)&array));
-    for (p = 0; p < nlocal; p++) {
+    for (PetscInt p = 0; p < nlocal; p++) {
       PetscReal cx, cy, vx, vy;
 
       cx = array[2 * p];

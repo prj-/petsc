@@ -117,7 +117,7 @@ PetscErrorCode ComputeInitialGuess(KSP ksp, Vec b, PetscCtx ctx)
 PetscErrorCode ComputeMatrix(KSP ksp, Mat jac, Mat B, PetscCtx ctx)
 {
   DM          da;
-  PetscInt    i, j, k, mx, my, mz, xm, ym, zm, xs, ys, zs;
+  PetscInt mx, my, mz, xm, ym, zm, xs, ys, zs;
   PetscScalar v[7], Hx, Hy, Hz, HxHydHz, HyHzdHx, HxHzdHy;
   MatStencil  row, col[7];
 
@@ -133,9 +133,9 @@ PetscErrorCode ComputeMatrix(KSP ksp, Mat jac, Mat B, PetscCtx ctx)
   HyHzdHx = Hy * Hz / Hx;
   PetscCall(DMDAGetCorners(da, &xs, &ys, &zs, &xm, &ym, &zm));
 
-  for (k = zs; k < zs + zm; k++) {
-    for (j = ys; j < ys + ym; j++) {
-      for (i = xs; i < xs + xm; i++) {
+  for (PetscInt k = zs; k < zs + zm; k++) {
+    for (PetscInt j = ys; j < ys + ym; j++) {
+      for (PetscInt i = xs; i < xs + xm; i++) {
         row.i = i;
         row.j = j;
         row.k = k;

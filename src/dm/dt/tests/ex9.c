@@ -32,7 +32,7 @@ static PetscErrorCode testOrthogonality(PetscInt dim, PetscInt deg)
 
 static PetscErrorCode testDerivativesLegendre(PetscInt dim, PetscInt deg, PetscInt k)
 {
-  PetscInt         Np, Nk, i, j, l, d, npoints;
+  PetscInt Np, Nk, i, j, npoints;
   PetscRandom      rand;
   PetscReal       *point;
   PetscReal       *lgndre_coeffs;
@@ -76,7 +76,7 @@ static PetscErrorCode testDerivativesLegendre(PetscInt dim, PetscInt deg, PetscI
   PetscCall(PetscArrayzero(pkd_coeffs, Np));
   PetscCall(PetscMalloc1(npoints, &points1d));
   PetscCall(PetscMalloc1(dim, &B));
-  for (d = 0; d < dim; d++) {
+  for (PetscInt d = 0; d < dim; d++) {
     PetscCall(PetscMalloc1((deg + 1) * npoints, &B[d]));
     /* get this coordinate */
     for (i = 0; i < npoints; i++) points1d[i] = points[i * dim + d];
@@ -91,7 +91,7 @@ static PetscErrorCode testDerivativesLegendre(PetscInt dim, PetscInt deg, PetscI
       PetscReal valj = 1.;
 
       PetscCall(PetscDTIndexToGradedOrder(dim, j, degtup));
-      for (l = 0; l < dim; l++) valj *= B[l][i * (deg + 1) + degtup[l]];
+      for (PetscInt l = 0; l < dim; l++) valj *= B[l][i * (deg + 1) + degtup[l]];
       val += mul * valj;
     }
     for (j = 0; j < Np; j++) pkd_coeffs[j] += proj[j * npoints + i] * val;
@@ -134,7 +134,7 @@ static PetscErrorCode testDerivativesLegendre(PetscInt dim, PetscInt deg, PetscI
       PetscReal val = 1.;
 
       PetscCall(PetscDTIndexToGradedOrder(dim, j, ktup));
-      for (l = 0; l < dim; l++) val *= D[l][degtup[l] * (k + 1) + ktup[l]];
+      for (PetscInt l = 0; l < dim; l++) val *= D[l][degtup[l] * (k + 1) + ktup[l]];
       lgndre_jet[j] += mul * val;
     }
   }

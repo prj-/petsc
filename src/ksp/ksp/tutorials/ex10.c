@@ -50,7 +50,7 @@ PetscErrorCode CreateSystem(const char filename[PETSC_MAX_PATH_LEN], RHSType rhs
   Mat                A;      /* linear system matrix */
   PetscViewer        viewer; /* viewer */
   PetscBool          same;
-  PetscInt           j, len, start, idx, n1, n2;
+  PetscInt len, start, idx, n1, n2;
   const PetscScalar *val;
   IS                 rowperm = NULL, colperm = NULL;
 
@@ -103,7 +103,7 @@ PetscErrorCode CreateSystem(const char filename[PETSC_MAX_PATH_LEN], RHSType rhs
     PetscCall(VecGetOwnershipRange(b, &start, NULL));
     PetscCall(VecGetLocalSize(b, &len));
     PetscCall(VecGetArrayRead(b, &val));
-    for (j = 0; j < len; j++) {
+    for (PetscInt j = 0; j < len; j++) {
       idx = start + j;
       PetscCall(VecSetValues(b2, 1, &idx, val + j, INSERT_VALUES));
     }

@@ -934,7 +934,7 @@ PetscErrorCode PCApplyRichardson_Telescope_dmda(PC pc, Vec x, Vec y, Vec w, Pets
   PC_Telescope          sred = (PC_Telescope)pc->data;
   Mat                   perm;
   Vec                   xtmp, xp, yred;
-  PetscInt              i, st, ed;
+  PetscInt st, ed;
   VecScatter            scatter;
   const PetscScalar    *x_array;
   PetscBool             default_init_guess_value = PETSC_FALSE;
@@ -966,7 +966,7 @@ PetscErrorCode PCApplyRichardson_Telescope_dmda(PC pc, Vec x, Vec y, Vec w, Pets
       PetscScalar *LA_yred;
       PetscCall(VecGetOwnershipRange(yred, &st, &ed));
       PetscCall(VecGetArray(yred, &LA_yred));
-      for (i = 0; i < ed - st; i++) LA_yred[i] = x_array[i];
+      for (PetscInt i = 0; i < ed - st; i++) LA_yred[i] = x_array[i];
       PetscCall(VecRestoreArray(yred, &LA_yred));
     }
     PetscCall(VecRestoreArrayRead(xtmp, &x_array));

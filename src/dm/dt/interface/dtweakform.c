@@ -1000,14 +1000,14 @@ static PetscErrorCode PetscWeakFormViewTable_Ascii(PetscWeakForm wf, PetscViewer
       PetscCall(PetscWeakFormGetFunction_Private(wf, map, keys[i].label, keys[i].value, keys[i].field, keys[i].part, &n, &funcs));
       for (PetscInt f = 0; f < n; ++f) {
         char  *fname;
-        size_t len, l;
+        size_t len;
 
         if (f > 0) PetscCall(PetscViewerASCIIPrintf(viewer, ", "));
         PetscCall(PetscDLAddr(funcs[f], &fname));
         if (fname) {
           /* Eliminate argument types */
           PetscCall(PetscStrlen(fname, &len));
-          for (l = 0; l < len; ++l)
+          for (size_t l = 0; l < len; ++l)
             if (fname[l] == '(') {
               fname[l] = '\0';
               break;

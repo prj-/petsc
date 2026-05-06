@@ -82,7 +82,7 @@ PetscErrorCode CreateSystem1d(DM dm, Mat *A, Vec *b)
   PetscCall(DMCreateMatrix(dm, A));
   PetscCall(DMCreateGlobalVector(dm, b));
   if (dim == 1) {
-    PetscInt    e, start, n, N;
+    PetscInt start, n, N;
     PetscBool   isFirstRank, isLastRank;
     PetscScalar h;
     PetscCall(DMStagGetCorners(dm, &start, NULL, NULL, &n, NULL, NULL, NULL, NULL, NULL));
@@ -90,7 +90,7 @@ PetscErrorCode CreateSystem1d(DM dm, Mat *A, Vec *b)
     h = 1.0 / N;
     PetscCall(DMStagGetIsFirstRank(dm, &isFirstRank, NULL, NULL));
     PetscCall(DMStagGetIsLastRank(dm, &isLastRank, NULL, NULL));
-    for (e = start; e < start + n; ++e) {
+    for (PetscInt e = start; e < start + n; ++e) {
       DMStagStencil pos[3];
       PetscScalar   val[3];
       PetscInt      idxLoc;
@@ -136,7 +136,7 @@ PetscErrorCode CreateSystem1d(DM dm, Mat *A, Vec *b)
       PetscCall(DMStagVecSetValuesStencil(dm, *b, idxLoc, pos, val, INSERT_VALUES));
     }
 
-    for (e = start; e < start + n; ++e) {
+    for (PetscInt e = start; e < start + n; ++e) {
       if (isFirstRank && e == start) {
         DMStagStencil row;
         PetscScalar   val;
@@ -241,7 +241,7 @@ PetscErrorCode CreateSystem2d(DM dm, Mat *A, Vec *b)
 {
   PetscInt  N[2];
   PetscBool isLastRankx, isLastRanky, isFirstRankx, isFirstRanky;
-  PetscInt  ex, ey, startx, starty, nx, ny;
+  PetscInt startx, starty, nx, ny;
   PetscReal hx, hy, dv;
 
   PetscFunctionBeginUser;
@@ -255,8 +255,8 @@ PetscErrorCode CreateSystem2d(DM dm, Mat *A, Vec *b)
   hy = 1.0 / N[1];
   dv = hx * hy;
 
-  for (ey = starty; ey < starty + ny; ++ey) {
-    for (ex = startx; ex < startx + nx; ++ex) {
+  for (PetscInt ey = starty; ey < starty + ny; ++ey) {
+    for (PetscInt ex = startx; ex < startx + nx; ++ex) {
       if (ex == N[0] - 1) {
         /* Right Boundary velocity Dirichlet */
         DMStagStencil     row;

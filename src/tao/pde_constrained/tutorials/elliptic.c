@@ -535,7 +535,7 @@ PetscErrorCode Gather(Vec x, Vec sub1, VecScatter scat1, Vec sub2, VecScatter sc
 
 PetscErrorCode EllipticInitialize(AppCtx *user)
 {
-  PetscInt        m, n, i, j, k, l, linear_index, is, js, ks, ls, istart, iend, iblock;
+  PetscInt m, n, i, j, k, l, is, ls, istart, iend, iblock;
   Vec             XX, YY, ZZ, XXwork, YYwork, ZZwork, UTwork;
   PetscReal      *x, *y, *z;
   PetscReal       h, meanut;
@@ -549,7 +549,7 @@ PetscErrorCode EllipticInitialize(AppCtx *user)
   PetscMPIInt     size;
   PetscReal       xri, yri, zri, xim, yim, zim, dx1, dx2, dy1, dy2, dz1, dz2, Dx, Dy, Dz;
   PetscScalar     v, vx, vy, vz;
-  PetscInt        offset, subindex, subvec, nrank, kk;
+  PetscInt offset, subindex, subvec, nrank;
 
   PetscScalar xr[64] = {0.4970, 0.8498, 0.7814, 0.6268, 0.7782, 0.6402, 0.3617, 0.3160, 0.3610, 0.5298, 0.6987, 0.3331, 0.7962, 0.5596, 0.3866, 0.6774, 0.5407, 0.4518, 0.6702, 0.6061, 0.7580, 0.8997,
                         0.5198, 0.8326, 0.2138, 0.9198, 0.3000, 0.2833, 0.8288, 0.7076, 0.1820, 0.0728, 0.8447, 0.2367, 0.3239, 0.6413, 0.3114, 0.4731, 0.1192, 0.9273, 0.5724, 0.4331, 0.5136, 0.3547,
@@ -689,7 +689,7 @@ PetscErrorCode EllipticInitialize(AppCtx *user)
   neg_hinv = -hinv;
 
   PetscCall(VecGetOwnershipRange(XX, &istart, &iend));
-  for (linear_index = istart; linear_index < iend; linear_index++) {
+  for (PetscInt linear_index = istart; linear_index < iend; linear_index++) {
     i  = linear_index % user->mx;
     j  = ((linear_index - i) / user->mx) % user->mx;
     k  = ((linear_index - i) / user->mx - j) / user->mx;
@@ -700,8 +700,8 @@ PetscErrorCode EllipticInitialize(AppCtx *user)
     PetscCall(VecSetValues(YY, 1, &linear_index, &vy, INSERT_VALUES));
     PetscCall(VecSetValues(ZZ, 1, &linear_index, &vz, INSERT_VALUES));
     for (is = 0; is < 2; is++) {
-      for (js = 0; js < 2; js++) {
-        for (ks = 0; ks < 2; ks++) {
+      for (PetscInt js = 0; js < 2; js++) {
+        for (PetscInt ks = 0; ks < 2; ks++) {
           ls = is * 4 + js * 2 + ks;
           if (ls < user->ns) {
             l = ls * n + linear_index;
@@ -712,7 +712,7 @@ PetscErrorCode EllipticInitialize(AppCtx *user)
             while (subindex >= subranges[nrank + 1]) nrank++;
             offset = subindex - subranges[nrank];
             istart = 0;
-            for (kk = 0; kk < nrank; kk++) istart += user->ns * (subranges[kk + 1] - subranges[kk]);
+            for (PetscInt kk = 0; kk < nrank; kk++) istart += user->ns * (subranges[kk + 1] - subranges[kk]);
             istart += (subranges[nrank + 1] - subranges[nrank]) * subvec;
             l = istart + offset;
             v = 100 * PetscSinScalar(2 * PETSC_PI * (vx + 0.25 * is)) * PetscSinScalar(2 * PETSC_PI * (vy + 0.25 * js)) * PetscSinScalar(2 * PETSC_PI * (vz + 0.25 * ks));

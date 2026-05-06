@@ -821,7 +821,7 @@ static PetscErrorCode PetscSFReset_Window(PetscSF sf)
 {
   PetscSF_Window *w = (PetscSF_Window *)sf->data;
   PetscSFDataLink link, next;
-  PetscSFWinLink  wlink, wnext;
+  PetscSFWinLink wnext;
   MPI_Comm        wcomm;
   PetscBool       is_empty;
 
@@ -840,7 +840,7 @@ static PetscErrorCode PetscSFReset_Window(PetscSF sf)
   wcomm    = w->window_comm;
   is_empty = w->is_empty;
   if (!is_empty) {
-    for (wlink = w->wins; wlink; wlink = wnext) {
+    for (PetscSFWinLink wlink = w->wins; wlink; wlink = wnext) {
       wnext = wlink->next;
       PetscCheck(!wlink->inuse, wcomm, PETSC_ERR_ARG_WRONGSTATE, "Window still in use with address %p", (void *)wlink->addr);
       PetscCall(PetscFree(wlink->dyn_target_addr));
@@ -959,12 +959,12 @@ static PetscErrorCode PetscSFView_Window(PetscSF sf, PetscViewer viewer)
     PetscCall(PetscViewerASCIIPrintf(viewer, "  current flavor=%s synchronization=%s MultiSF sort=%s\n", PetscSFWindowFlavorTypes[w->flavor], PetscSFWindowSyncTypes[w->sync], sf->rankorder ? "rank-order" : "unordered"));
     if (format == PETSC_VIEWER_ASCII_INFO_DETAIL) {
       if (w->info != MPI_INFO_NULL) {
-        PetscMPIInt k, nkeys;
+        PetscMPIInt nkeys;
         char        key[MPI_MAX_INFO_KEY], value[MPI_MAX_INFO_VAL];
 
         PetscCallMPI(MPI_Info_get_nkeys(w->info, &nkeys));
         PetscCall(PetscViewerASCIIPrintf(viewer, "    current info with %d keys. Ordered key-value pairs follow:\n", nkeys));
-        for (k = 0; k < nkeys; k++) {
+        for (PetscMPIInt k = 0; k < nkeys; k++) {
           PetscMPIInt flag;
 
           PetscCallMPI(MPI_Info_get_nthkey(w->info, k, key));

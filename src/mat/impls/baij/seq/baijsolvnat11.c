@@ -8,7 +8,7 @@ PetscErrorCode MatSolve_SeqBAIJ_11_NaturalOrdering(Mat A, Vec bb, Vec xx)
 {
   Mat_SeqBAIJ       *a = (Mat_SeqBAIJ *)A->data;
   const PetscInt     n = a->mbs, *ai = a->i, *aj = a->j, *adiag = a->diag, *vi, bs = A->rmap->bs, bs2 = a->bs2;
-  PetscInt           i, k, nz, idx, idt, m;
+  PetscInt nz, idx, idt;
   const MatScalar   *aa = a->a, *v;
   PetscScalar        s[11];
   PetscScalar       *x, xv;
@@ -19,7 +19,7 @@ PetscErrorCode MatSolve_SeqBAIJ_11_NaturalOrdering(Mat A, Vec bb, Vec xx)
   PetscCall(VecGetArray(xx, &x));
 
   /* forward solve the lower triangular */
-  for (i = 0; i < n; i++) {
+  for (PetscInt i = 0; i < n; i++) {
     v           = aa + bs2 * ai[i];
     vi          = aj + ai[i];
     nz          = ai[i + 1] - ai[i];
@@ -35,9 +35,9 @@ PetscErrorCode MatSolve_SeqBAIJ_11_NaturalOrdering(Mat A, Vec bb, Vec xx)
     x[8 + idt]  = b[8 + idt];
     x[9 + idt]  = b[9 + idt];
     x[10 + idt] = b[10 + idt];
-    for (m = 0; m < nz; m++) {
+    for (PetscInt m = 0; m < nz; m++) {
       idx = bs * vi[m];
-      for (k = 0; k < 11; k++) {
+      for (PetscInt k = 0; k < 11; k++) {
         xv = x[k + idx];
         x[idt] -= v[0] * xv;
         x[1 + idt] -= v[1] * xv;
@@ -55,7 +55,7 @@ PetscErrorCode MatSolve_SeqBAIJ_11_NaturalOrdering(Mat A, Vec bb, Vec xx)
     }
   }
   /* backward solve the upper triangular */
-  for (i = n - 1; i >= 0; i--) {
+  for (PetscInt i = n - 1; i >= 0; i--) {
     v     = aa + bs2 * (adiag[i + 1] + 1);
     vi    = aj + adiag[i + 1] + 1;
     nz    = adiag[i] - adiag[i + 1] - 1;
@@ -72,9 +72,9 @@ PetscErrorCode MatSolve_SeqBAIJ_11_NaturalOrdering(Mat A, Vec bb, Vec xx)
     s[9]  = x[9 + idt];
     s[10] = x[10 + idt];
 
-    for (m = 0; m < nz; m++) {
+    for (PetscInt m = 0; m < nz; m++) {
       idx = bs * vi[m];
-      for (k = 0; k < 11; k++) {
+      for (PetscInt k = 0; k < 11; k++) {
         xv = x[k + idx];
         s[0] -= v[0] * xv;
         s[1] -= v[1] * xv;
@@ -91,7 +91,7 @@ PetscErrorCode MatSolve_SeqBAIJ_11_NaturalOrdering(Mat A, Vec bb, Vec xx)
       }
     }
     PetscCall(PetscArrayzero(x + idt, bs));
-    for (k = 0; k < 11; k++) {
+    for (PetscInt k = 0; k < 11; k++) {
       x[idt] += v[0] * s[k];
       x[1 + idt] += v[1] * s[k];
       x[2 + idt] += v[2] * s[k];

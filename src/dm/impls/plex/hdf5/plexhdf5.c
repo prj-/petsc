@@ -485,10 +485,10 @@ static PetscErrorCode DMPlexCreateCutVertexLabel_Private(DM dm, DMLabel cutLabel
     for (c = 0; c < n; ++c) {
       if ((cutc[c] >= cStart) && (cutc[c] < cEnd)) {
         PetscInt *closure = NULL;
-        PetscInt  closureSize, cl, value;
+        PetscInt closureSize, value;
 
         PetscCall(DMPlexGetTransitiveClosure(dm, cutc[c], PETSC_TRUE, &closureSize, &closure));
-        for (cl = 0; cl < closureSize * 2; cl += 2) {
+        for (PetscInt cl = 0; cl < closureSize * 2; cl += 2) {
           if ((closure[cl] >= vStart) && (closure[cl] < vEnd)) {
             PetscCall(DMLabelGetValue(cutLabel, closure[cl], &value));
             if (value == 1) PetscCall(DMLabelSetValue(*cutVertexLabel, closure[cl], 1));
@@ -2746,7 +2746,7 @@ static PetscErrorCode DMPlexCoordinatesLoad_HDF5_Legacy_Private(DM dm, PetscView
   PetscSection coordSection;
   Vec          coordinates;
   PetscReal    lengthScale;
-  PetscInt     spatialDim, N, numVertices, vStart, vEnd, v;
+  PetscInt spatialDim, N, numVertices, vStart, vEnd;
   PetscMPIInt  rank;
 
   PetscFunctionBegin;
@@ -2775,7 +2775,7 @@ static PetscErrorCode DMPlexCoordinatesLoad_HDF5_Legacy_Private(DM dm, PetscView
   PetscCall(PetscSectionSetNumFields(coordSection, 1));
   PetscCall(PetscSectionSetFieldComponents(coordSection, 0, spatialDim));
   PetscCall(PetscSectionSetChart(coordSection, vStart, vEnd));
-  for (v = vStart; v < vEnd; ++v) {
+  for (PetscInt v = vStart; v < vEnd; ++v) {
     PetscCall(PetscSectionSetDof(coordSection, v, spatialDim));
     PetscCall(PetscSectionSetFieldDof(coordSection, v, 0, spatialDim));
   }
@@ -3104,7 +3104,7 @@ PetscErrorCode DMPlexVecLoad_HDF5_Internal(DM dm, PetscViewer viewer, DM section
   /* Check consistency */
   {
     PetscSF  pointsf, pointsf1;
-    PetscInt m1, i, j;
+    PetscInt m1, j;
 
     PetscCall(DMGetPointSF(dm, &pointsf));
     PetscCall(DMGetPointSF(sectiondm, &pointsf1));
@@ -3120,7 +3120,7 @@ PetscErrorCode DMPlexVecLoad_HDF5_Internal(DM dm, PetscViewer viewer, DM section
 #endif
     PetscCall(VecGetLocalSize(vec, &m1));
     PetscCheck(m1 >= m, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Target vector size (%" PetscInt_FMT ") < SF leaf size (%" PetscInt_FMT ")", m1, m);
-    for (i = 0; i < m; ++i) {
+    for (PetscInt i = 0; i < m; ++i) {
       j = ilocal ? ilocal[i] : i;
       PetscCheck(j >= 0 && j < m1, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Leaf's %" PetscInt_FMT "-th index, %" PetscInt_FMT ", not in [%" PetscInt_FMT ", %" PetscInt_FMT ")", i, j, (PetscInt)0, m1);
     }

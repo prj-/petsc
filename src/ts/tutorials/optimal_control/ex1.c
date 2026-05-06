@@ -137,7 +137,7 @@ static PetscErrorCode IntegrandHessianProductUU(TS ts, PetscReal t, Vec U, Vec *
   const PetscScalar *v, *w, *vr, *u;
   PetscScalar       *vhv;
   PetscScalar        dRudU[2][2] = {{0}};
-  PetscInt           step, j, k;
+  PetscInt step;
 
   PetscFunctionBeginUser;
   PetscCall(TSGetStepNumber(ts, &step));
@@ -150,9 +150,9 @@ static PetscErrorCode IntegrandHessianProductUU(TS ts, PetscReal t, Vec U, Vec *
   dRudU[0][0] = 2.0;
   dRudU[1][1] = 2.0;
 
-  for (j = 0; j < 2; j++) {
+  for (PetscInt j = 0; j < 2; j++) {
     vhv[j] = 0;
-    for (k = 0; k < 2; k++) vhv[j] += dRudU[j][k] * vr[k];
+    for (PetscInt k = 0; k < 2; k++) vhv[j] += dRudU[j][k] * vr[k];
   }
   PetscCall(VecRestoreArrayRead(U, &u));
   PetscCall(VecRestoreArrayRead(Vr, &vr));

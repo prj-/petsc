@@ -671,7 +671,7 @@ PetscErrorCode Gather_yi(Vec y, Vec *yi, VecScatter *scat, PetscInt nt)
 
 PetscErrorCode HyperbolicInitialize(AppCtx *user)
 {
-  PetscInt    n, i, j, linear_index, istart, iend, iblock, lo, hi;
+  PetscInt n, i, j, istart, iend, iblock, lo, hi;
   Vec         XX, YY, XXwork, YYwork, yi, uxi, ui, bc;
   PetscReal   h, sum;
   PetscScalar hinv, neg_hinv, quarter = 0.25, one = 1.0, half_hinv, neg_half_hinv;
@@ -800,7 +800,7 @@ PetscErrorCode HyperbolicInitialize(AppCtx *user)
   PetscCall(VecDuplicate(XX, &user->dwork));
 
   PetscCall(VecGetOwnershipRange(XX, &istart, &iend));
-  for (linear_index = istart; linear_index < iend; linear_index++) {
+  for (PetscInt linear_index = istart; linear_index < iend; linear_index++) {
     i  = linear_index % user->mx;
     j  = (linear_index - i) / user->mx;
     vx = h * (i + 0.5);

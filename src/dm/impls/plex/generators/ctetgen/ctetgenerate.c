@@ -203,7 +203,7 @@ PETSC_EXTERN PetscErrorCode DMPlexGenerate_CTetgen(DM boundary, PetscBool interp
     {
       DMLabel        bodyLabel;
       PetscContainer modelObj;
-      PetscInt       cStart, cEnd, c, eStart, eEnd, fStart, fEnd;
+      PetscInt cStart, cEnd, eStart, eEnd, fStart, fEnd;
       ego           *bodies;
       ego            model, geom;
       int            Nb, oclass, mtype, *senses;
@@ -222,7 +222,7 @@ PETSC_EXTERN PetscErrorCode DMPlexGenerate_CTetgen(DM boundary, PetscBool interp
         PetscCall(DMPlexGetHeightStratum(*dm, 1, &fStart, &fEnd));
         PetscCall(DMPlexGetDepthStratum(*dm, 1, &eStart, &eEnd));
 
-        for (c = cStart; c < cEnd; ++c) {
+        for (PetscInt c = cStart; c < cEnd; ++c) {
           PetscReal centroid[3] = {0., 0., 0.};
           PetscInt  b;
 
@@ -231,13 +231,13 @@ PETSC_EXTERN PetscErrorCode DMPlexGenerate_CTetgen(DM boundary, PetscBool interp
             PetscSection coordSection;
             Vec          coordinates;
             PetscScalar *coords = NULL;
-            PetscInt     coordSize, s, d;
+            PetscInt coordSize, s;
 
             PetscCall(DMGetCoordinatesLocal(*dm, &coordinates));
             PetscCall(DMGetCoordinateSection(*dm, &coordSection));
             PetscCall(DMPlexVecGetClosure(*dm, coordSection, coordinates, c, &coordSize, &coords));
             for (s = 0; s < coordSize; ++s)
-              for (d = 0; d < dim; ++d) centroid[d] += coords[s * dim + d];
+              for (PetscInt d = 0; d < dim; ++d) centroid[d] += coords[s * dim + d];
             PetscCall(DMPlexVecRestoreClosure(*dm, coordSection, coordinates, c, &coordSize, &coords));
           } else PetscCall(DMPlexComputeCellGeometryFVM(*dm, c, NULL, centroid, NULL));
           for (b = 0; b < Nb; ++b) {
@@ -472,7 +472,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_CTetgen(DM dm, PetscReal *maxVolumes, D
     {
       DMLabel        bodyLabel;
       PetscContainer modelObj;
-      PetscInt       cStart, cEnd, c, eStart, eEnd, fStart, fEnd;
+      PetscInt cStart, cEnd, eStart, eEnd, fStart, fEnd;
       ego           *bodies;
       ego            model, geom;
       int            Nb, oclass, mtype, *senses;
@@ -491,7 +491,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_CTetgen(DM dm, PetscReal *maxVolumes, D
         PetscCall(DMPlexGetHeightStratum(*dmRefined, 1, &fStart, &fEnd));
         PetscCall(DMPlexGetDepthStratum(*dmRefined, 1, &eStart, &eEnd));
 
-        for (c = cStart; c < cEnd; ++c) {
+        for (PetscInt c = cStart; c < cEnd; ++c) {
           PetscReal centroid[3] = {0., 0., 0.};
           PetscInt  b;
 
@@ -500,13 +500,13 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_CTetgen(DM dm, PetscReal *maxVolumes, D
             PetscSection coordSection;
             Vec          coordinates;
             PetscScalar *coords = NULL;
-            PetscInt     coordSize, s, d;
+            PetscInt coordSize, s;
 
             PetscCall(DMGetCoordinatesLocal(*dmRefined, &coordinates));
             PetscCall(DMGetCoordinateSection(*dmRefined, &coordSection));
             PetscCall(DMPlexVecGetClosure(*dmRefined, coordSection, coordinates, c, &coordSize, &coords));
             for (s = 0; s < coordSize; ++s)
-              for (d = 0; d < dim; ++d) centroid[d] += coords[s * dim + d];
+              for (PetscInt d = 0; d < dim; ++d) centroid[d] += coords[s * dim + d];
             PetscCall(DMPlexVecRestoreClosure(*dmRefined, coordSection, coordinates, c, &coordSize, &coords));
           } else PetscCall(DMPlexComputeCellGeometryFVM(*dmRefined, c, NULL, centroid, NULL));
           for (b = 0; b < Nb; ++b) {

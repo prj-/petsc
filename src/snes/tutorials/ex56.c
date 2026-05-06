@@ -103,13 +103,12 @@ void g3_uu_3d_private(PetscScalar g3[], const PetscReal mu, const PetscReal lamb
     g3[80] += mu;
     g3[80] += mu;
   } else {
-    int        i, j, k, l;
     static int cc = -1;
     cc++;
-    for (i = 0; i < 3; ++i) {
-      for (j = 0; j < 3; ++j) {
-        for (k = 0; k < 3; ++k) {
-          for (l = 0; l < 3; ++l) {
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          for (int l = 0; l < 3; ++l) {
             if (k == l && i == j) g3[IDX(i, j, k, l)] += lambda;
             if (i == k && j == l) g3[IDX(i, j, k, l)] += mu;
             if (i == l && j == k) g3[IDX(i, j, k, l)] += mu;
@@ -245,7 +244,7 @@ int main(int argc, char **args)
       PetscCall(DMGetStratumIS(dm, "boundary", 1, &is));
       PetscCall(DMCreateLabel(dm, "Faces"));
       if (is) {
-        PetscInt        d, f, Nf;
+        PetscInt d, Nf;
         const PetscInt *faces;
         PetscInt        csize;
         PetscSection    cs;
@@ -257,7 +256,7 @@ int main(int argc, char **args)
         PetscCall(DMGetCoordinateDM(dm, &cdm));
         PetscCall(DMGetLocalSection(cdm, &cs));
         /* Check for each boundary face if any component of its centroid is either 0.0 or 1.0 */
-        for (f = 0; f < Nf; ++f) {
+        for (PetscInt f = 0; f < Nf; ++f) {
           PetscReal    faceCoord;
           PetscScalar *coords = NULL;
           PetscInt     Nv;

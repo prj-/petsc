@@ -48,7 +48,7 @@ PetscErrorCode KSPAGMRESLejaOrdering(PetscScalar *re, PetscScalar *im, PetscScal
 {
   PetscInt    *spos;
   PetscScalar *n_cmpl, temp;
-  PetscInt     i, pos, j;
+  PetscInt pos, j;
 
   PetscFunctionBegin;
   PetscCall(PetscMalloc1(m, &n_cmpl));
@@ -66,7 +66,7 @@ PetscErrorCode KSPAGMRESLejaOrdering(PetscScalar *re, PetscScalar *im, PetscScal
     } else j++;
   }
 
-  for (i = 0; i < m; i++) n_cmpl[i] = PetscSqrtReal(re[i] * re[i] + im[i] * im[i]);
+  for (PetscInt i = 0; i < m; i++) n_cmpl[i] = PetscSqrtReal(re[i] * re[i] + im[i] * im[i]);
   PetscCall(KSPAGMRESLejafmaxarray(n_cmpl, 0, m, &pos));
   j = 0;
   if (im[pos] >= 0.0) {

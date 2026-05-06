@@ -169,7 +169,7 @@ static PetscErrorCode TaoSetup_LCL(Tao tao)
 static PetscErrorCode TaoSolve_LCL(Tao tao)
 {
   TAO_LCL                     *lclP = (TAO_LCL *)tao->data;
-  PetscInt                     phase2_iter, nlocal, its;
+  PetscInt nlocal, its;
   TaoLineSearchConvergedReason ls_reason = TAOLINESEARCH_CONTINUE_ITERATING;
   PetscReal                    step      = 1.0, f, descent, aldescent;
   PetscReal                    cnorm, mnorm;
@@ -374,7 +374,7 @@ static PetscErrorCode TaoSolve_LCL(Tao tao)
     if (tao->reason != TAO_CONTINUE_ITERATING) break;
 
     /* TODO: use a heuristic to choose how many iterations should be performed within phase 2 */
-    for (phase2_iter = 0; phase2_iter < lclP->phase2_niter; phase2_iter++) {
+    for (PetscInt phase2_iter = 0; phase2_iter < lclP->phase2_niter; phase2_iter++) {
       /* We now minimize the objective function starting from the fraction of
          the Newton point accepted by applying one step of a reduced-space
          method.  The optimization problem is:

@@ -2205,7 +2205,7 @@ PetscErrorCode PetscSectionCreateSupersection(PetscSection s[], PetscInt len, Pe
   PetscCall(PetscSectionCreate(PetscObjectComm((PetscObject)s[0]), supers));
   PetscCall(PetscSectionSetNumFields(*supers, Nf));
   for (i = 0, f = 0; i < len; ++i) {
-    PetscInt nf, fi, ci;
+    PetscInt nf, fi;
 
     PetscCall(PetscSectionGetNumFields(s[i], &nf));
     for (fi = 0; fi < nf; ++fi, ++f) {
@@ -2216,7 +2216,7 @@ PetscErrorCode PetscSectionCreateSupersection(PetscSection s[], PetscInt len, Pe
       PetscCall(PetscSectionSetFieldName(*supers, f, name));
       PetscCall(PetscSectionGetFieldComponents(s[i], fi, &numComp));
       PetscCall(PetscSectionSetFieldComponents(*supers, f, numComp));
-      for (ci = 0; ci < s[i]->numFieldComponents[fi]; ++ci) {
+      for (PetscInt ci = 0; ci < s[i]->numFieldComponents[fi]; ++ci) {
         PetscCall(PetscSectionGetComponentName(s[i], fi, ci, &name));
         PetscCall(PetscSectionSetComponentName(*supers, f, ci, name));
       }
@@ -2260,18 +2260,18 @@ PetscErrorCode PetscSectionCreateSupersection(PetscSection s[], PetscInt len, Pe
 
         for (i = 0, f = 0; i < len; ++i) {
           const PetscInt *oldIndices = NULL;
-          PetscInt        nf, fi, pStarti, pEndi, fdof, cfdof, fc;
+          PetscInt nf, pStarti, pEndi, fdof, cfdof;
 
           PetscCall(PetscSectionGetNumFields(s[i], &nf));
           PetscCall(PetscSectionGetChart(s[i], &pStarti, &pEndi));
           if ((p < pStarti) || (p >= pEndi)) continue;
-          for (fi = 0; fi < nf; ++fi, ++f) {
+          for (PetscInt fi = 0; fi < nf; ++fi, ++f) {
             PetscCall(PetscSectionGetFieldDof(s[i], p, fi, &fdof));
             PetscCall(PetscSectionGetFieldConstraintDof(s[i], p, fi, &cfdof));
             PetscCall(PetscSectionGetFieldConstraintIndices(s[i], p, fi, &oldIndices));
-            for (fc = 0; fc < cfdof; ++fc) indices[numConst + fc] = oldIndices[fc];
+            for (PetscInt fc = 0; fc < cfdof; ++fc) indices[numConst + fc] = oldIndices[fc];
             PetscCall(PetscSectionSetFieldConstraintIndices(*supers, p, f, &indices[numConst]));
-            for (fc = 0; fc < cfdof; ++fc) indices[numConst + fc] += fOff;
+            for (PetscInt fc = 0; fc < cfdof; ++fc) indices[numConst + fc] += fOff;
             numConst += cfdof;
           }
           PetscCall(PetscSectionGetDof(s[i], p, &dof));
@@ -3080,7 +3080,7 @@ PetscErrorCode PetscSectionPermute(PetscSection section, IS permutation, PetscSe
 {
   PetscSection    s = section, sNew;
   const PetscInt *perm;
-  PetscInt        numFields, f, c, numPoints, pStart, pEnd, p;
+  PetscInt numFields, numPoints, pStart, pEnd, p;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(section, PETSC_SECTION_CLASSID, 1);
@@ -3089,7 +3089,7 @@ PetscErrorCode PetscSectionPermute(PetscSection section, IS permutation, PetscSe
   PetscCall(PetscSectionCreate(PetscObjectComm((PetscObject)s), &sNew));
   PetscCall(PetscSectionGetNumFields(s, &numFields));
   if (numFields) PetscCall(PetscSectionSetNumFields(sNew, numFields));
-  for (f = 0; f < numFields; ++f) {
+  for (PetscInt f = 0; f < numFields; ++f) {
     const char *name;
     PetscInt    numComp;
 
@@ -3097,7 +3097,7 @@ PetscErrorCode PetscSectionPermute(PetscSection section, IS permutation, PetscSe
     PetscCall(PetscSectionSetFieldName(sNew, f, name));
     PetscCall(PetscSectionGetFieldComponents(s, f, &numComp));
     PetscCall(PetscSectionSetFieldComponents(sNew, f, numComp));
-    for (c = 0; c < s->numFieldComponents[f]; ++c) {
+    for (PetscInt c = 0; c < s->numFieldComponents[f]; ++c) {
       PetscCall(PetscSectionGetComponentName(s, f, c, &name));
       PetscCall(PetscSectionSetComponentName(sNew, f, c, name));
     }
@@ -3114,7 +3114,7 @@ PetscErrorCode PetscSectionPermute(PetscSection section, IS permutation, PetscSe
     PetscCall(PetscSectionSetDof(sNew, perm[p], dof));
     PetscCall(PetscSectionGetConstraintDof(s, p, &cdof));
     if (cdof) PetscCall(PetscSectionSetConstraintDof(sNew, perm[p], cdof));
-    for (f = 0; f < numFields; ++f) {
+    for (PetscInt f = 0; f < numFields; ++f) {
       PetscCall(PetscSectionGetFieldDof(s, p, f, &dof));
       PetscCall(PetscSectionSetFieldDof(sNew, perm[p], f, dof));
       PetscCall(PetscSectionGetFieldConstraintDof(s, p, f, &cdof));
@@ -3131,7 +3131,7 @@ PetscErrorCode PetscSectionPermute(PetscSection section, IS permutation, PetscSe
       PetscCall(PetscSectionGetConstraintIndices(s, p, &cind));
       PetscCall(PetscSectionSetConstraintIndices(sNew, perm[p], cind));
     }
-    for (f = 0; f < numFields; ++f) {
+    for (PetscInt f = 0; f < numFields; ++f) {
       PetscCall(PetscSectionGetFieldConstraintDof(s, p, f, &cdof));
       if (cdof) {
         PetscCall(PetscSectionGetFieldConstraintIndices(s, p, f, &cind));
@@ -4016,7 +4016,7 @@ PetscErrorCode PetscSectionExtractDofsFromArray(PetscSection origSection, MPI_Da
 {
   PetscSection    s;
   const PetscInt *points_;
-  PetscInt        i, n, npoints, pStart, pEnd;
+  PetscInt n, npoints, pStart, pEnd;
   PetscMPIInt     unitsize;
 
   PetscFunctionBegin;
@@ -4031,7 +4031,7 @@ PetscErrorCode PetscSectionExtractDofsFromArray(PetscSection origSection, MPI_Da
   PetscCall(PetscSectionGetChart(origSection, &pStart, &pEnd));
   PetscCall(PetscSectionCreate(PETSC_COMM_SELF, &s));
   PetscCall(PetscSectionSetChart(s, 0, npoints));
-  for (i = 0; i < npoints; i++) {
+  for (PetscInt i = 0; i < npoints; i++) {
     PetscCheck(points_[i] >= pStart && points_[i] < pEnd, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "point %" PetscInt_FMT " (index %" PetscInt_FMT ") in input IS out of input section's chart", points_[i], i);
     PetscCall(PetscSectionGetDof(origSection, points_[i], &n));
     PetscCall(PetscSectionSetDof(s, i, n));

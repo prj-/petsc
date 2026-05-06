@@ -82,7 +82,7 @@ static PetscErrorCode DMFieldView_DA(DMField field, PetscViewer viewer)
 
 static void MultilinearEvaluate(PetscInt dim, PetscReal (*coordRange)[2], PetscInt nc, PetscScalar *cf, PetscScalar *cfWork, PetscInt nPoints, const PetscScalar *points, PetscDataType datatype, void *B, void *D, void *H)
 {
-  PetscInt i, j, k, l, m;
+  PetscInt i, j, k;
   PetscInt whol = 1 << dim;
   PetscInt half = whol >> 1;
 
@@ -128,11 +128,11 @@ static void MultilinearEvaluate(PetscInt dim, PetscReal (*coordRange)[2], PetscI
       if (datatype == PETSC_SCALAR) {
         PetscScalar *out = &((PetscScalar *)D)[nc * dim * i];
 
-        for (m = 0; m < nc * dim; m++) out[m] = 0.;
+        for (PetscInt m = 0; m < nc * dim; m++) out[m] = 0.;
       } else {
         PetscReal *out = &((PetscReal *)D)[nc * dim * i];
 
-        for (m = 0; m < nc * dim; m++) out[m] = 0.;
+        for (PetscInt m = 0; m < nc * dim; m++) out[m] = 0.;
       }
       for (j = 0; j < dim; j++) {
         PetscReal d = deta[j];
@@ -145,18 +145,18 @@ static void MultilinearEvaluate(PetscInt dim, PetscReal (*coordRange)[2], PetscI
           etaB[k]        = work[2 * k];
           etaB[k + half] = e = work[2 * k + 1];
 
-          for (l = 0; l < nc; l++) {
+          for (PetscInt l = 0; l < nc; l++) {
             cf[k * nc + l]          = cfWork[2 * k * nc + l];
             cf[(k + half) * nc + l] = cfWork[(2 * k + 1) * nc + l];
           }
           if (datatype == PETSC_SCALAR) {
             PetscScalar *out = &((PetscScalar *)D)[nc * dim * i];
 
-            for (l = 0; l < nc; l++) out[l * dim + j] += d * e * cf[k * nc + l];
+            for (PetscInt l = 0; l < nc; l++) out[l * dim + j] += d * e * cf[k * nc + l];
           } else {
             PetscReal *out = &((PetscReal *)D)[nc * dim * i];
 
-            for (l = 0; l < nc; l++) out[l * dim + j] += d * e * PetscRealPart(cf[k * nc + l]);
+            for (PetscInt l = 0; l < nc; l++) out[l * dim + j] += d * e * PetscRealPart(cf[k * nc + l]);
           }
         }
       }
@@ -466,7 +466,7 @@ PetscErrorCode DMFieldCreateDA(DM dm, PetscInt nc, const PetscScalar *cornerValu
 {
   DMField      b;
   DMField_DA  *dafield;
-  PetscInt     dim, nv, i, j, k;
+  PetscInt dim, nv, j;
   PetscInt     half;
   PetscScalar *cv, *cf, *work;
 
@@ -477,22 +477,22 @@ PetscErrorCode DMFieldCreateDA(DM dm, PetscInt nc, const PetscScalar *cornerValu
   PetscCall(DMGetDimension(dm, &dim));
   nv = (1 << dim) * nc;
   PetscCall(PetscMalloc3(nv, &cv, nv, &cf, nv, &work));
-  for (i = 0; i < nv; i++) cv[i] = cornerValues[i];
-  for (i = 0; i < nv; i++) cf[i] = cv[i];
+  for (PetscInt i = 0; i < nv; i++) cv[i] = cornerValues[i];
+  for (PetscInt i = 0; i < nv; i++) cf[i] = cv[i];
   dafield->cornerVals   = cv;
   dafield->cornerCoeffs = cf;
   dafield->work         = work;
   half                  = (1 << (dim - 1));
-  for (i = 0; i < dim; i++) {
+  for (PetscInt i = 0; i < dim; i++) {
     PetscScalar *w;
 
     w = work;
     for (j = 0; j < half; j++) {
-      for (k = 0; k < nc; k++) w[j * nc + k] = 0.5 * (cf[(2 * j + 1) * nc + k] - cf[(2 * j) * nc + k]);
+      for (PetscInt k = 0; k < nc; k++) w[j * nc + k] = 0.5 * (cf[(2 * j + 1) * nc + k] - cf[(2 * j) * nc + k]);
     }
     w = &work[j * nc];
     for (j = 0; j < half; j++) {
-      for (k = 0; k < nc; k++) w[j * nc + k] = 0.5 * (cf[(2 * j) * nc + k] + cf[(2 * j + 1) * nc + k]);
+      for (PetscInt k = 0; k < nc; k++) w[j * nc + k] = 0.5 * (cf[(2 * j) * nc + k] + cf[(2 * j + 1) * nc + k]);
     }
     for (j = 0; j < nv; j++) cf[j] = work[j];
   }

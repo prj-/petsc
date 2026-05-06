@@ -1444,7 +1444,7 @@ PetscErrorCode MatDiagonalScale_SeqSBAIJ(Mat A, Vec ll, Vec rr)
   PetscScalar        x;
   const PetscScalar *l, *li, *ri;
   MatScalar         *aa, *v;
-  PetscInt           i, j, k, lm, M, m, mbs, tmp, bs, bs2;
+  PetscInt i, j, k, lm, M, m, mbs, bs, bs2;
   const PetscInt    *ai, *aj;
 
   PetscFunctionBegin;
@@ -1468,7 +1468,7 @@ PetscErrorCode MatDiagonalScale_SeqSBAIJ(Mat A, Vec ll, Vec rr)
       ri = l + bs * aj[ai[i] + j];
       for (k = 0; k < bs; k++) {
         x = ri[k];
-        for (tmp = 0; tmp < bs; tmp++) (*v++) *= li[tmp] * x;
+        for (PetscInt tmp = 0; tmp < bs; tmp++) (*v++) *= li[tmp] * x;
       }
     }
   }
@@ -1518,7 +1518,7 @@ PetscErrorCode MatGetRowMaxAbs_SeqSBAIJ(Mat A, Vec v, PetscInt idx[])
   PetscReal        atmp;
   const MatScalar *aa;
   PetscScalar     *x;
-  PetscInt         ncols, brow, bcol, krow, kcol;
+  PetscInt ncols, brow, bcol;
 
   PetscFunctionBegin;
   PetscCheck(!idx, PETSC_COMM_SELF, PETSC_ERR_SUP, "Send email to petsc-maint@mcs.anl.gov");
@@ -1539,9 +1539,9 @@ PetscErrorCode MatGetRowMaxAbs_SeqSBAIJ(Mat A, Vec v, PetscInt idx[])
     brow = bs * i;
     for (j = 0; j < ncols; j++) {
       bcol = bs * (*aj);
-      for (kcol = 0; kcol < bs; kcol++) {
+      for (PetscInt kcol = 0; kcol < bs; kcol++) {
         col = bcol + kcol; /* col index */
-        for (krow = 0; krow < bs; krow++) {
+        for (PetscInt krow = 0; krow < bs; krow++) {
           atmp = PetscAbsScalar(*aa);
           aa++;
           row = brow + krow; /* row index */

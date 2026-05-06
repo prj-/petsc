@@ -20,7 +20,7 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_Pragmatic_Plex(DM dm, Vec vertexMetric
   PetscReal         *x, *y, *z, *metric;
   PetscInt          *cells;
   PetscInt           dim, cStart, cEnd, numCells, c, coff, vStart, vEnd, numVertices, numLocVertices, v;
-  PetscInt           off, maxConeSize, numBdFaces, f, bdSize, i, j, Nd;
+  PetscInt off, maxConeSize, numBdFaces, f, bdSize, Nd;
   PetscBool          flg, isotropic, uniform;
   DMLabel            bdLabelNew;
   PetscReal         *coordsNew;
@@ -138,8 +138,8 @@ PETSC_EXTERN PetscErrorCode DMAdaptMetric_Pragmatic_Plex(DM dm, Vec vertexMetric
   PetscCall(DMPlexMetricIsUniform(dm, &uniform));
   Nd = PetscSqr(dim);
   for (v = 0; v < vEnd - vStart; ++v) {
-    for (i = 0; i < dim; ++i) {
-      for (j = 0; j < dim; ++j) {
+    for (PetscInt i = 0; i < dim; ++i) {
+      for (PetscInt j = 0; j < dim; ++j) {
         if (isotropic) {
           if (i == j) {
             if (uniform) metric[Nd * v + dim * i + j] = PetscRealPart(met[0]);

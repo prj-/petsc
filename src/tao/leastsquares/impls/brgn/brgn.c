@@ -165,7 +165,7 @@ static PetscErrorCode GNObjectiveGradientEval(Tao tao, Vec X, PetscReal *fcn, Ve
 static PetscErrorCode GNComputeHessian(Tao tao, Vec X, Mat H, Mat Hpre, void *ptr)
 {
   TAO_BRGN    *gn = (TAO_BRGN *)ptr;
-  PetscInt     i, n, cstart, cend;
+  PetscInt n, cstart, cend;
   PetscScalar *cnorms, *diag_ary;
 
   PetscFunctionBegin;
@@ -206,7 +206,7 @@ static PetscErrorCode GNComputeHessian(Tao tao, Vec X, Mat H, Mat Hpre, void *pt
     PetscCall(MatGetColumnNorms(gn->parent->ls_jac, NORM_2, cnorms));
     PetscCall(MatGetOwnershipRangeColumn(gn->parent->ls_jac, &cstart, &cend));
     PetscCall(VecGetArray(gn->diag, &diag_ary));
-    for (i = 0; i < cend - cstart; i++) diag_ary[i] = cnorms[cstart + i] * cnorms[cstart + i];
+    for (PetscInt i = 0; i < cend - cstart; i++) diag_ary[i] = cnorms[cstart + i] * cnorms[cstart + i];
     PetscCall(VecRestoreArray(gn->diag, &diag_ary));
     PetscCall(PetscFree(cnorms));
     PetscCall(ComputeDamping(gn));

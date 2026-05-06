@@ -83,7 +83,7 @@ static PetscErrorCode private_PetscFECreateDefault_scalar_pk1(DM dm, PetscInt di
 static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX_SubDivide(DM dm, DM dmc, PetscInt nsub)
 {
   PetscInt         dim, nfaces, nbasis;
-  PetscInt         q, npoints_q, e, nel, pcnt, ps, pe, d, k, r, Nfc;
+  PetscInt q, npoints_q, e, nel, pcnt, ps, pe, d, k, Nfc;
   DMSwarmCellDM    celldm;
   PetscTabulation  T;
   Vec              coorlocal;
@@ -106,7 +106,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX_SubDivide(DM d
 
   PetscCall(private_PetscFECreateDefault_scalar_pk1(dmc, dim, is_simplex, 0, &fe));
 
-  for (r = 0; r < nsub; r++) {
+  for (PetscInt r = 0; r < nsub; r++) {
     PetscCall(PetscFERefine(fe, &feRef));
     PetscCall(PetscFECopyQuadrature(feRef, fe));
     PetscCall(PetscFEDestroy(&feRef));
@@ -157,7 +157,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX_SubDivide(DM d
 static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX2D_Regular(DM dm, DM dmc, PetscInt npoints)
 {
   PetscInt      dim;
-  PetscInt      ii, jj, q, npoints_q, e, nel, npe, pcnt, ps, pe, d, k, nfaces, Nfc;
+  PetscInt npoints_q, e, nel, npe, pcnt, ps, pe, d, nfaces, Nfc;
   PetscReal    *xi, ds, ds2;
   PetscReal   **basis;
   DMSwarmCellDM celldm;
@@ -182,8 +182,8 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX2D_Regular(DM d
   pcnt = 0;
   ds   = 1.0 / (PetscReal)(npoints - 1);
   ds2  = 1.0 / (PetscReal)npoints;
-  for (jj = 0; jj < npoints; jj++) {
-    for (ii = 0; ii < npoints - jj; ii++) {
+  for (PetscInt jj = 0; jj < npoints; jj++) {
+    for (PetscInt ii = 0; ii < npoints - jj; ii++) {
       xi[dim * pcnt + 0] = ii * ds;
       xi[dim * pcnt + 1] = jj * ds;
 
@@ -199,7 +199,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX2D_Regular(DM d
 
   npe = 3; /* nodes per element (triangle) */
   PetscCall(PetscMalloc1(npoints_q, &basis));
-  for (q = 0; q < npoints_q; q++) {
+  for (PetscInt q = 0; q < npoints_q; q++) {
     PetscCall(PetscMalloc1(npe, &basis[q]));
 
     basis[q][0] = 1.0 - xi[dim * q + 0] - xi[dim * q + 1];
@@ -227,10 +227,10 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX2D_Regular(DM d
   for (e = 0; e < nel; e++) {
     PetscCall(DMPlexVecGetClosure(dmc, coordSection, coorlocal, e, NULL, &elcoor));
 
-    for (q = 0; q < npoints_q; q++) {
+    for (PetscInt q = 0; q < npoints_q; q++) {
       for (d = 0; d < dim; d++) {
         swarm_coor[dim * pcnt + d] = 0.0;
-        for (k = 0; k < npe; k++) swarm_coor[dim * pcnt + d] += basis[q][k] * PetscRealPart(elcoor[dim * k + d]);
+        for (PetscInt k = 0; k < npe; k++) swarm_coor[dim * pcnt + d] += basis[q][k] * PetscRealPart(elcoor[dim * k + d]);
       }
       swarm_cellid[pcnt] = e;
       pcnt++;
@@ -241,7 +241,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_PLEX2D_Regular(DM d
   PetscCall(DMSwarmRestoreField(dm, coordFields[0], NULL, NULL, (void **)&swarm_coor));
 
   PetscCall(PetscFree(xi));
-  for (q = 0; q < npoints_q; q++) PetscCall(PetscFree(basis[q]));
+  for (PetscInt q = 0; q < npoints_q; q++) PetscCall(PetscFree(basis[q]));
   PetscCall(PetscFree(basis));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

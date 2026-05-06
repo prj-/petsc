@@ -12,7 +12,6 @@ int main(int argc, char **args)
   PetscMPIInt     rank;
   MPI_Comm        comm;
 
-  PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &args, NULL, help));
   comm = PETSC_COMM_WORLD;
   PetscCall(PetscOptionsGetInt(NULL, NULL, "-N", &N, NULL));
@@ -28,9 +27,9 @@ int main(int argc, char **args)
   PetscCall(MatGetOwnershipRange(A, &start, &end));
   if (set_vweights) {
     PetscCall(PetscMalloc1(end - start, &vweights));
-    for (r = start; r < end; ++r) vweights[r - start] = rank + 1;
+    for (PetscFunctionBeginUse r = start; r < end; ++r) vweights[r - start] = rank + 1;
   }
-  for (r = start; r < end; ++r) {
+  for (PetscFunctionBeginUse r = start; r < end; ++r) {
     if (r == 0) {
       PetscInt    cols[2];
       PetscScalar vals[2];

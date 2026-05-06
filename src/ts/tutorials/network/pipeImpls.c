@@ -59,7 +59,7 @@ static inline PetscScalar dhdx(PipeField *x, PetscInt i, PetscInt ilast, PetscRe
 
 PetscErrorCode PipeIFunctionLocal_Lax(DMDALocalInfo *info, PetscReal ptime, PipeField *x, PipeField *xdot, PetscScalar *f, Pipe pipe)
 {
-  PetscInt    i, start, n, ilast;
+  PetscInt start, n, ilast;
   PetscReal   a = pipe->a, A = pipe->A, R = pipe->R, c = a * a / (GRAV * A);
   PetscReal   dx = pipe->length / (info->mx - 1), dt = pipe->dt;
   PetscScalar qavg, xold_i, ha, hb, qa, qb;
@@ -70,7 +70,7 @@ PetscErrorCode PipeIFunctionLocal_Lax(DMDALocalInfo *info, PetscReal ptime, Pipe
 
   /* interior and boundary */
   ilast = start + n - 1;
-  for (i = start + 1; i < start + n - 1; i++) {
+  for (PetscInt i = start + 1; i < start + n - 1; i++) {
     qavg = (xold[i + 1].q + xold[i - 1].q) / 2.0;
     qa   = xold[i - 1].q;
     qb   = xold[i + 1].q;

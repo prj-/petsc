@@ -319,7 +319,7 @@ PetscErrorCode KSPDestroy_DGMRES(KSP ksp)
 static PetscErrorCode KSPDGMRESBuildSoln(PetscScalar *nrs, Vec vs, Vec vdest, KSP ksp, PetscInt it)
 {
   PetscScalar tt;
-  PetscInt    ii, k, j;
+  PetscInt k, j;
   KSP_DGMRES *dgmres = (KSP_DGMRES *)ksp->data;
 
   /* Solve for solution vector that minimizes the residual */
@@ -334,7 +334,7 @@ static PetscErrorCode KSPDGMRESBuildSoln(PetscScalar *nrs, Vec vs, Vec vdest, KS
   if (*HH(it, it) != 0.0) nrs[it] = *GRS(it) / *HH(it, it);
   else nrs[it] = 0.0;
 
-  for (ii = 1; ii <= it; ii++) {
+  for (PetscInt ii = 1; ii <= it; ii++) {
     k  = it - ii;
     tt = *GRS(k);
     for (j = k + 1; j <= it; j++) tt = tt - *HH(k, j) * nrs[j];

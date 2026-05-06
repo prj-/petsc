@@ -882,7 +882,7 @@ PetscErrorCode DMGetLocalBoundingBox_Coordinates(DM dm, PetscReal lmin[], PetscR
   Vec         coords = NULL;
   PetscReal   min[3] = {PETSC_MAX_REAL, PETSC_MAX_REAL, PETSC_MAX_REAL};
   PetscReal   max[3] = {PETSC_MIN_REAL, PETSC_MIN_REAL, PETSC_MIN_REAL};
-  PetscInt    cdim, i, j;
+  PetscInt cdim, i;
   PetscMPIInt size;
 
   PetscFunctionBegin;
@@ -905,7 +905,7 @@ PetscErrorCode DMGetLocalBoundingBox_Coordinates(DM dm, PetscReal lmin[], PetscR
     const PetscScalar *local_coords;
     PetscInt           N, Ni;
 
-    for (j = cdim; j < 3; ++j) {
+    for (PetscInt j = cdim; j < 3; ++j) {
       min[j] = 0;
       max[j] = 0;
     }
@@ -913,7 +913,7 @@ PetscErrorCode DMGetLocalBoundingBox_Coordinates(DM dm, PetscReal lmin[], PetscR
     PetscCall(VecGetLocalSize(coords, &N));
     Ni = N / cdim;
     for (i = 0; i < Ni; ++i) {
-      for (j = 0; j < cdim; ++j) {
+      for (PetscInt j = 0; j < cdim; ++j) {
         min[j] = PetscMin(min[j], PetscRealPart(local_coords[i * cdim + j]));
         max[j] = PetscMax(max[j], PetscRealPart(local_coords[i * cdim + j]));
       }
@@ -925,7 +925,7 @@ PetscErrorCode DMGetLocalBoundingBox_Coordinates(DM dm, PetscReal lmin[], PetscR
       PetscCall(VecGetLocalSize(coords, &N));
       Ni = N / cdim;
       for (i = 0; i < Ni; ++i) {
-        for (j = 0; j < cdim; ++j) {
+        for (PetscInt j = 0; j < cdim; ++j) {
           min[j] = PetscMin(min[j], PetscRealPart(local_coords[i * cdim + j]));
           max[j] = PetscMax(max[j], PetscRealPart(local_coords[i * cdim + j]));
         }

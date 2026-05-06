@@ -667,7 +667,7 @@ static void FormGradientOperatorQ13D(PetscScalar Ke[], PetscScalar coords[])
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][NSD];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, di;
+  PetscInt p, i, j;
   PetscScalar Ni_p[NODES_PER_EL];
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
@@ -683,7 +683,7 @@ static void FormGradientOperatorQ13D(PetscScalar Ke[], PetscScalar coords[])
     fac = gp_weight[p] * J_p;
 
     for (i = 0; i < NODES_PER_EL; i++) {     /* u nodes */
-      for (di = 0; di < NSD; di++) {         /* u dofs */
+      for (PetscInt di = 0; di < NSD; di++) {         /* u dofs */
         for (j = 0; j < NODES_PER_EL; j++) { /* p nodes, p dofs = 1 (ie no loop) */
           PetscInt IJ;
           IJ = ASS_MAP_wIwDI_uJuDJ(i, di, NODES_PER_EL, 3, j, 0, NODES_PER_EL, 1);
@@ -1544,7 +1544,7 @@ PetscErrorCode DAViewVTK_write_PieceExtend(FILE *vtk_fp, PetscInt indent_level, 
   const PetscInt *lx, *ly, *lz;
   PetscInt        M, N, P, pM, pN, pP, sum, *olx, *oly, *olz;
   PetscInt       *osx, *osy, *osz, *oex, *oey, *oez;
-  PetscInt        i, j, k, II, stencil;
+  PetscInt i, k, stencil;
 
   PetscFunctionBeginUser;
   /* create file name */
@@ -1605,12 +1605,12 @@ PetscErrorCode DAViewVTK_write_PieceExtend(FILE *vtk_fp, PetscInt indent_level, 
   }
 
   for (k = 0; k < pP; k++) {
-    for (j = 0; j < pN; j++) {
+    for (PetscInt j = 0; j < pN; j++) {
       for (i = 0; i < pM; i++) {
         char     name[PETSC_MAX_PATH_LEN];
         PetscInt procid = i + j * pM + k * pM * pN; /* convert proc(i,j,k) to pid */
         PetscCall(PetscSNPrintf(name, sizeof(name), "subdomain-%s-p%1.4" PetscInt_FMT ".vts", local_file_prefix, procid));
-        for (II = 0; II < indent_level; II++) PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "  "));
+        for (PetscInt II = 0; II < indent_level; II++) PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "  "));
 
         PetscCall(PetscFPrintf(PETSC_COMM_SELF, vtk_fp, "<Piece Extent=\"%" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT " %" PetscInt_FMT "\"      Source=\"%s\"/>\n", osx[i], oex[i] - 1, osy[j], oey[j] - 1, osz[k], oez[k] - 1, name));
       }
@@ -1785,7 +1785,7 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
   PetscInt       its;
   KSP            ksp_S;
   PetscInt       model_definition = 0;
-  PetscInt       ei, ej, ek, sex, sey, sez, Imx, Jmy, Kmz;
+  PetscInt sex, sey, sez, Imx, Jmy, Kmz;
   CellProperties cell_properties;
   PetscBool      write_output = PETSC_FALSE, resolve = PETSC_FALSE;
 
@@ -1818,9 +1818,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
   PetscCall(DMDAVecGetArray(vel_cda, vel_coords, &_vel_coords));
   PetscCall(DMDAGetElementsCorners(da_Stokes, &sex, &sey, &sez));
   PetscCall(DMDAGetElementsSizes(da_Stokes, &Imx, &Jmy, &Kmz));
-  for (ek = sez; ek < sez + Kmz; ek++) {
-    for (ej = sey; ej < sey + Jmy; ej++) {
-      for (ei = sex; ei < sex + Imx; ei++) {
+  for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+    for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+      for (PetscInt ei = sex; ei < sex + Imx; ei++) {
         /* get coords for the element */
         PetscInt                ngp;
         PetscScalar             gp_xi[GAUSS_POINTS][NSD], gp_weight[GAUSS_POINTS];
@@ -1858,9 +1858,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
 
   switch (model_definition) {
   case 0: /* isoviscous */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           GaussPointCoefficients *cell;
 
           PetscCall(CellPropertiesGetCell(cell_properties, ei, ej, ek, &cell));
@@ -1882,9 +1882,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 1: /* manufactured */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           PetscReal               eta, Fm[NSD], Fc, pos[NSD];
           GaussPointCoefficients *cell;
 
@@ -1912,9 +1912,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 2: /* solcx */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           GaussPointCoefficients *cell;
 
           PetscCall(CellPropertiesGetCell(cell_properties, ei, ej, ek, &cell));
@@ -1936,9 +1936,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 3: /* sinker */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           GaussPointCoefficients *cell;
 
           PetscCall(CellPropertiesGetCell(cell_properties, ei, ej, ek, &cell));
@@ -1964,9 +1964,9 @@ static PetscErrorCode solve_stokes_3d_coupled(PetscInt mx, PetscInt my, PetscInt
     break;
 
   case 4: /* subdomain jumps */
-    for (ek = sez; ek < sez + Kmz; ek++) {
-      for (ej = sey; ej < sey + Jmy; ej++) {
-        for (ei = sex; ei < sex + Imx; ei++) {
+    for (PetscInt ek = sez; ek < sez + Kmz; ek++) {
+      for (PetscInt ej = sey; ej < sey + Jmy; ej++) {
+        for (PetscInt ei = sex; ei < sex + Imx; ei++) {
           PetscReal               opts_mag, opts_eta0;
           PetscInt                px, py, pz;
           PetscBool               jump;

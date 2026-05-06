@@ -1177,7 +1177,7 @@ PetscErrorCode PetscSFLinkFetchAndOpLocal(PetscSF sf, PetscSFLink link, void *ro
 */
 static PetscErrorCode PetscSFCreatePackOpt(PetscInt n, const PetscInt *offset, const PetscInt *idx, PetscSFPackOpt *out)
 {
-  PetscInt       r, p, start, i, j, k, dx, dy, dz, dydz, m, X, Y;
+  PetscInt p, start, i, j, dx, dy, dz, dydz, m, X, Y;
   PetscBool      optimizable = PETSC_TRUE;
   PetscSFPackOpt opt;
 
@@ -1193,7 +1193,7 @@ static PetscErrorCode PetscSFCreatePackOpt(PetscInt n, const PetscInt *offset, c
   opt->X                 = opt->array + 5 * n + 2;
   opt->Y                 = opt->array + 6 * n + 2;
 
-  for (r = 0; r < n; r++) {            /* For each destination rank */
+  for (PetscInt r = 0; r < n; r++) {            /* For each destination rank */
     m     = offset[r + 1] - offset[r]; /* Total number of indices for this rank. We want to see if m can be factored into dx*dy*dz */
     p     = offset[r];
     start = idx[p]; /* First index for this rank */
@@ -1232,7 +1232,7 @@ static PetscErrorCode PetscSFCreatePackOpt(PetscInt n, const PetscInt *offset, c
       optimizable = PETSC_FALSE;
       goto finish;
     }
-    for (k = 1; k < dz; k++) { /* Go through Z dimension to see if remaining indices follow the pattern */
+    for (PetscInt k = 1; k < dz; k++) { /* Go through Z dimension to see if remaining indices follow the pattern */
       for (j = 0; j < dy; j++) {
         for (i = 0; i < dx; i++, p++) {
           if (start + X * Y * k + X * j + i != idx[p]) {
@@ -1258,7 +1258,7 @@ finish:
     *out = NULL;
   } else {
     opt->offset[0] = 0;
-    for (r = 0; r < n; r++) opt->offset[r + 1] = opt->offset[r] + opt->dx[r] * opt->dy[r] * opt->dz[r];
+    for (PetscInt r = 0; r < n; r++) opt->offset[r + 1] = opt->offset[r] + opt->dx[r] * opt->dy[r] * opt->dz[r];
     *out = opt;
   }
   PetscFunctionReturn(PETSC_SUCCESS);

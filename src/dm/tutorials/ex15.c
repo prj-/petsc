@@ -69,7 +69,7 @@ PetscErrorCode MyVecLoad(const char fname[], PetscBool skippheader, PetscBool us
 PetscErrorCode DMDAVecGenerateEntries(DM dm, Vec a)
 {
   PetscScalar ****LA_v;
-  PetscInt        i, j, k, l, si, sj, sk, ni, nj, nk, M, N, dof;
+  PetscInt i, j, k, si, sj, sk, ni, nj, nk, M, N, dof;
 
   PetscFunctionBeginUser;
   PetscCall(DMDAGetInfo(dm, NULL, &M, &N, NULL, NULL, NULL, NULL, &dof, NULL, NULL, NULL, NULL, NULL));
@@ -81,7 +81,7 @@ PetscErrorCode DMDAVecGenerateEntries(DM dm, Vec a)
         PetscScalar test_value_s;
 
         test_value_s = dmda_i_val[i] * ((PetscScalar)i) + dmda_j_val[j] * ((PetscScalar)(i + j * M)) + dmda_k_val[k] * ((PetscScalar)(i + j * M + k * M * N));
-        for (l = 0; l < dof; l++) LA_v[k][j][i][l] = (PetscScalar)dof * test_value_s + (PetscScalar)l;
+        for (PetscInt l = 0; l < dof; l++) LA_v[k][j][i][l] = (PetscScalar)dof * test_value_s + (PetscScalar)l;
       }
     }
   }
@@ -93,7 +93,7 @@ PetscErrorCode HeaderlessBinaryReadCheck(DM dm, const char name[])
 {
   int         fdes;
   PetscScalar buffer[DMDA_I * DMDA_J * DMDA_K * 10];
-  PetscInt    len, d, i, j, k, M, N, dof;
+  PetscInt len, M, N, dof;
   PetscMPIInt rank;
   PetscBool   dataverified = PETSC_TRUE;
 
@@ -106,10 +106,10 @@ PetscErrorCode HeaderlessBinaryReadCheck(DM dm, const char name[])
     PetscCall(PetscBinaryRead(fdes, buffer, len, NULL, PETSC_SCALAR));
     PetscCall(PetscBinaryClose(fdes));
 
-    for (k = 0; k < DMDA_K; k++) {
-      for (j = 0; j < DMDA_J; j++) {
-        for (i = 0; i < DMDA_I; i++) {
-          for (d = 0; d < dof; d++) {
+    for (PetscInt k = 0; k < DMDA_K; k++) {
+      for (PetscInt j = 0; j < DMDA_J; j++) {
+        for (PetscInt i = 0; i < DMDA_I; i++) {
+          for (PetscInt d = 0; d < dof; d++) {
             PetscScalar v, test_value_s, test_value;
             PetscInt    index;
 

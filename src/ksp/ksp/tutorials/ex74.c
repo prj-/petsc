@@ -316,7 +316,7 @@ static PetscErrorCode RKCreate_Gauss(PetscInt nstages, PetscScalar **gauss_A, Pe
 
 static PetscErrorCode Assemble_AdvDiff(MPI_Comm comm, UserContext *user, Mat *J)
 {
-  PetscInt  matis, matie, i;
+  PetscInt matis, matie;
   PetscReal dx, dx2;
 
   PetscFunctionBegin;
@@ -327,7 +327,7 @@ static PetscErrorCode Assemble_AdvDiff(MPI_Comm comm, UserContext *user, Mat *J)
   PetscCall(MatSetSizes(*J, PETSC_DECIDE, PETSC_DECIDE, user->imax, user->imax));
   PetscCall(MatSetUp(*J));
   PetscCall(MatGetOwnershipRange(*J, &matis, &matie));
-  for (i = matis; i < matie; i++) {
+  for (PetscInt i = matis; i < matie; i++) {
     PetscScalar values[3];
     PetscInt    col[3];
     switch (user->physics_type) {

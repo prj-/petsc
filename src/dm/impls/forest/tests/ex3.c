@@ -12,7 +12,7 @@ int main(int argc, char **argv)
   Vec          g = NULL, g2 = NULL;
   PetscReal    nrm;
   PetscBool    adapt = PETSC_FALSE, userSection = PETSC_FALSE;
-  PetscInt     vStart, vEnd, v, i;
+  PetscInt vStart, vEnd;
 
   PetscFunctionBeginUser;
   PetscCall(PetscInitialize(&argc, &argv, NULL, help));
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
   if (adapt) {
     /* Adaptively refine the cell 0 of the mesh */
-    for (i = 0; i < 3; ++i) {
+    for (PetscInt i = 0; i < 3; ++i) {
       DM      postforest;
       DMLabel adaptLabel = NULL;
 
@@ -50,16 +50,16 @@ int main(int argc, char **argv)
     }
   } else {
     /* Adaptively refine all cells of the mesh */
-    PetscInt cStart, cEnd, c;
+    PetscInt cStart, cEnd;
 
-    for (i = 0; i < 3; ++i) {
+    for (PetscInt i = 0; i < 3; ++i) {
       DM      postforest;
       DMLabel adaptLabel = NULL;
 
       PetscCall(DMLabelCreate(PETSC_COMM_SELF, "adapt", &adaptLabel));
 
       PetscCall(DMForestGetCellChart(forest, &cStart, &cEnd));
-      for (c = cStart; c < cEnd; ++c) PetscCall(DMLabelSetValue(adaptLabel, c, DM_ADAPT_REFINE));
+      for (PetscInt c = cStart; c < cEnd; ++c) PetscCall(DMLabelSetValue(adaptLabel, c, DM_ADAPT_REFINE));
 
       PetscCall(DMForestTemplate(forest, PETSC_COMM_WORLD, &postforest));
       PetscCall(DMForestSetAdaptivityLabel(postforest, adaptLabel));
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     PetscCall(PetscSectionCreate(PetscObjectComm((PetscObject)forest), &s));
     PetscCall(PetscSectionSetNumFields(s, 1));
     PetscCall(PetscSectionSetChart(s, vStart, vEnd));
-    for (v = vStart; v < vEnd; ++v) {
+    for (PetscInt v = vStart; v < vEnd; ++v) {
       PetscCall(PetscSectionSetDof(s, v, 1));
       PetscCall(PetscSectionSetFieldDof(s, v, 0, 1));
     }

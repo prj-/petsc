@@ -22,7 +22,7 @@ int main(int argc, char **args)
   KSP         ksp;            /* linear solver context */
   PetscInt    n1, n2, n3;     /* parameters */
   PetscReal   h, gamma, beta; /* parameters */
-  PetscInt    i, j, k, Ii, J, Istart, Iend;
+  PetscInt i, j, k, J, Istart, Iend;
   PetscScalar v, co1, co2;
 
   PetscFunctionBeginUser;
@@ -61,7 +61,7 @@ int main(int argc, char **args)
    */
   co1 = gamma * h * h / 2.0;
   co2 = beta * h * h;
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     i = Ii / (n2 * n3);
     j = (Ii - i * n2 * n3) / n3;
     k = Ii - i * n2 * n3 - j * n3;

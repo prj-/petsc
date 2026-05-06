@@ -171,7 +171,7 @@ static PetscErrorCode SNESMonitorFields_ASCII(SNES snes, PetscInt its, PetscReal
   PetscSection       s;
   const PetscScalar *r;
   PetscReal         *lnorms, *norms;
-  PetscInt           numFields, f, pStart, pEnd, p;
+  PetscInt numFields, f, pStart, pEnd;
 
   PetscFunctionBegin;
   PetscCall(SNESGetFunction(snes, &res, NULL, NULL));
@@ -181,13 +181,13 @@ static PetscErrorCode SNESMonitorFields_ASCII(SNES snes, PetscInt its, PetscReal
   PetscCall(PetscSectionGetChart(s, &pStart, &pEnd));
   PetscCall(PetscCalloc2(numFields, &lnorms, numFields, &norms));
   PetscCall(VecGetArrayRead(res, &r));
-  for (p = pStart; p < pEnd; ++p) {
+  for (PetscInt p = pStart; p < pEnd; ++p) {
     for (f = 0; f < numFields; ++f) {
-      PetscInt fdof, foff, d;
+      PetscInt fdof, foff;
 
       PetscCall(PetscSectionGetFieldDof(s, p, f, &fdof));
       PetscCall(PetscSectionGetFieldOffset(s, p, f, &foff));
-      for (d = 0; d < fdof; ++d) lnorms[f] += PetscRealPart(PetscSqr(r[foff + d]));
+      for (PetscInt d = 0; d < fdof; ++d) lnorms[f] += PetscRealPart(PetscSqr(r[foff + d]));
     }
   }
   PetscCall(VecRestoreArrayRead(res, &r));

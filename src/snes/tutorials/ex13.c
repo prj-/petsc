@@ -114,7 +114,7 @@ static PetscErrorCode CreateSpectralPlanes(DM dm, PetscInt numPlanes, const Pets
   PetscSection       coordSection;
   Vec                coordinates;
   const PetscScalar *coords;
-  PetscInt           dim, p, vStart, vEnd, v;
+  PetscInt dim, p, vStart, vEnd;
 
   PetscFunctionBeginUser;
   PetscCall(DMGetCoordinateDim(dm, &dim));
@@ -130,7 +130,7 @@ static PetscErrorCode CreateSpectralPlanes(DM dm, PetscInt numPlanes, const Pets
     PetscCall(DMCreateLabel(dm, name));
     PetscCall(DMGetLabel(dm, name, &label));
     PetscCall(DMLabelAddStratum(label, 1));
-    for (v = vStart; v < vEnd; ++v) {
+    for (PetscInt v = vStart; v < vEnd; ++v) {
       PetscInt off;
 
       PetscCall(PetscSectionGetOffset(coordSection, v, &off));

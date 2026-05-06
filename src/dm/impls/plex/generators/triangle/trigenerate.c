@@ -232,7 +232,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
   struct triangulateio in;
   struct triangulateio out;
   DMLabel              label;
-  PetscInt             vStart, vEnd, v, gcStart, cStart, cEnd, c, depth, depthGlobal;
+  PetscInt vStart, vEnd, gcStart, cStart, cEnd, depth, depthGlobal;
   PetscMPIInt          rank;
   double              *maxVolumes;
 
@@ -257,12 +257,12 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
     PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
     PetscCall(DMGetCoordinateSection(dm, &coordSection));
     PetscCall(VecGetArray(coordinates, &array));
-    for (v = vStart; v < vEnd; ++v) {
+    for (PetscInt v = vStart; v < vEnd; ++v) {
       const PetscInt idx = v - vStart;
-      PetscInt       off, d, val;
+      PetscInt off, val;
 
       PetscCall(PetscSectionGetOffset(coordSection, v, &off));
-      for (d = 0; d < dim; ++d) in.pointlist[idx * dim + d] = PetscRealPart(array[off + d]);
+      for (PetscInt d = 0; d < dim; ++d) in.pointlist[idx * dim + d] = PetscRealPart(array[off + d]);
       if (label) {
         PetscCall(DMLabelGetValue(label, v, &val));
         PetscCall(PetscCIntCast(val, &in.pointmarkerlist[idx]));
@@ -279,7 +279,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
 
 #if !defined(PETSC_USE_REAL_DOUBLE)
   PetscCall(PetscMalloc1(cEnd - cStart, &maxVolumes));
-  for (c = 0; c < cEnd - cStart; ++c) maxVolumes[c] = (double)inmaxVolumes[c];
+  for (PetscInt c = 0; c < cEnd - cStart; ++c) maxVolumes[c] = (double)inmaxVolumes[c];
 #else
   maxVolumes = inmaxVolumes;
 #endif
@@ -287,14 +287,14 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
   in.trianglearealist = (double *)maxVolumes;
   if (in.numberoftriangles > 0) {
     PetscCall(PetscMalloc1(in.numberoftriangles * in.numberofcorners, &in.trianglelist));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       const PetscInt idx     = c - cStart;
       PetscInt      *closure = NULL;
       PetscInt       closureSize;
 
       PetscCall(DMPlexGetTransitiveClosure(dm, c, PETSC_TRUE, &closureSize, &closure));
       PetscCheck(!(closureSize != 4) || !(closureSize != 7), comm, PETSC_ERR_ARG_WRONG, "Mesh has cell which is not a triangle, %" PetscInt_FMT " vertices in closure", closureSize);
-      for (v = 0; v < 3; ++v) PetscCall(PetscCIntCast(closure[(v + closureSize - 3) * 2] - vStart, &in.trianglelist[idx * in.numberofcorners + v]));
+      for (PetscInt v = 0; v < 3; ++v) PetscCall(PetscCIntCast(closure[(v + closureSize - 3) * 2] - vStart, &in.trianglelist[idx * in.numberofcorners + v]));
       PetscCall(DMPlexRestoreTransitiveClosure(dm, c, PETSC_TRUE, &closureSize, &closure));
     }
   }
@@ -342,7 +342,7 @@ PETSC_EXTERN PetscErrorCode DMPlexRefine_Triangle(DM dm, PetscReal *inmaxVolumes
     if (sizeof(PetscReal) != sizeof(out.pointlist[0])) PetscCall(PetscFree(meshCoords));
     if (sizeof(PetscInt) != sizeof(out.trianglelist[0])) PetscCall(PetscFree(cells));
     /* Set labels */
-    for (v = 0; v < numVertices; ++v) {
+    for (PetscInt v = 0; v < numVertices; ++v) {
       if (out.pointmarkerlist[v] && rlabel) PetscCall(DMLabelSetValue(rlabel, v + numCells, out.pointmarkerlist[v]));
     }
     if (interpolate) {

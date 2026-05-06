@@ -538,7 +538,7 @@ static PetscErrorCode MatCreateSubMatrix_BlockMat(Mat A, IS isrow, IS iscol, Mat
 {
   Mat_BlockMat *a = (Mat_BlockMat *)A->data;
   Mat_SeqAIJ   *c;
-  PetscInt      i, k, first, step, lensi, nrows, ncols;
+  PetscInt i, first, step, lensi, nrows, ncols;
   PetscInt     *j_new, *i_new, *aj = a->j, *ailen = a->ilen;
   PetscScalar  *a_new;
   Mat           C, *aa = a->a;
@@ -579,7 +579,7 @@ static PetscErrorCode MatCreateSubMatrix_BlockMat(Mat A, IS isrow, IS iscol, Mat
 
   for (i = 0; i < nrows; i++) {
     lensi = ailen[i];
-    for (k = 0; k < lensi; k++) {
+    for (PetscInt k = 0; k < lensi; k++) {
       *j_new++ = *aj++;
       PetscCall(MatGetValue(*aa++, first, first, a_new++));
     }

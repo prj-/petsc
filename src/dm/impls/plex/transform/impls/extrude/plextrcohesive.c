@@ -765,7 +765,7 @@ static PetscErrorCode DMPlexTransformSetUp_Cohesive(DMPlexTransform tr)
   DMPlexTransform_Cohesive *ex = (DMPlexTransform_Cohesive *)tr->data;
   DM                        dm;
   DMLabel                   active, celltype;
-  PetscInt                  numRt, pStart, pEnd, ict;
+  PetscInt numRt, pStart, pEnd;
 
   PetscFunctionBegin;
   PetscCall(DMPlexTransformGetDM(tr, &dm));
@@ -811,7 +811,7 @@ static PetscErrorCode DMPlexTransformSetUp_Cohesive(DMPlexTransform tr)
   }
   numRt = DM_NUM_POLYTOPES * 2 * 100;
   PetscCall(PetscMalloc5(numRt, &ex->Nt, numRt, &ex->target, numRt, &ex->size, numRt, &ex->cone, numRt, &ex->ornt));
-  for (ict = 0; ict < numRt; ++ict) {
+  for (PetscInt ict = 0; ict < numRt; ++ict) {
     ex->Nt[ict]     = -1;
     ex->target[ict] = NULL;
     ex->size[ict]   = NULL;

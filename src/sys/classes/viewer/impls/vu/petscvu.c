@@ -295,10 +295,8 @@ PetscErrorCode PetscViewerVUFlushDeferred(PetscViewer viewer)
   PetscViewer_VU *vu   = (PetscViewer_VU *)viewer->data;
   PrintfQueue     next = vu->queueBase;
   PrintfQueue     previous;
-  int             i;
-
   PetscFunctionBegin;
-  for (i = 0; i < vu->queueLength; i++) {
+  for (int i = 0; i < vu->queueLength; i++) {
     PetscCall(PetscFPrintf(PetscObjectComm((PetscObject)viewer), vu->fd, "%s", next->string));
     previous = next;
     next     = next->next;

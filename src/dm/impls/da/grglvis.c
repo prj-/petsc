@@ -340,7 +340,7 @@ static PetscErrorCode DMDAView_GLVis_ASCII(DM dm, PetscViewer viewer)
   const PetscScalar *array;
   PetscContainer     glvis_container;
   PetscInt           dim, sdim, i, vid[8], mid, cid, cdof;
-  PetscInt           sx, sy, sz, ie, je, ke, ien, jen, ken, nel;
+  PetscInt sx, sy, sz, ien, jen, ken, nel;
   PetscInt           gsx, gsy, gsz, gm, gn, gp, kst, jst, ist;
   PetscBool          enabled = PETSC_TRUE, isascii;
   const char        *fmt;
@@ -393,7 +393,7 @@ static PetscErrorCode DMDAView_GLVis_ASCII(DM dm, PetscViewer viewer)
   PetscCall(PetscViewerASCIIPrintf(viewer, "%" PetscInt_FMT "\n", nel));
   switch (dim) {
   case 1:
-    for (ie = 0; ie < ien; ie++) {
+    for (PetscInt ie = 0; ie < ien; ie++) {
       vid[0] = ie;
       vid[1] = ie + 1;
       mid    = 1; /* material id */
@@ -402,8 +402,8 @@ static PetscErrorCode DMDAView_GLVis_ASCII(DM dm, PetscViewer viewer)
     }
     break;
   case 2:
-    for (je = 0; je < jen; je++) {
-      for (ie = 0; ie < ien; ie++) {
+    for (PetscInt je = 0; je < jen; je++) {
+      for (PetscInt ie = 0; ie < ien; ie++) {
         vid[0] = je * (ien + 1) + ie;
         vid[1] = je * (ien + 1) + ie + 1;
         vid[2] = (je + 1) * (ien + 1) + ie + 1;
@@ -415,9 +415,9 @@ static PetscErrorCode DMDAView_GLVis_ASCII(DM dm, PetscViewer viewer)
     }
     break;
   case 3:
-    for (ke = 0; ke < ken; ke++) {
-      for (je = 0; je < jen; je++) {
-        for (ie = 0; ie < ien; ie++) {
+    for (PetscInt ke = 0; ke < ken; ke++) {
+      for (PetscInt je = 0; je < jen; je++) {
+        for (PetscInt ie = 0; ie < ien; ie++) {
           vid[0] = ke * (jen + 1) * (ien + 1) + je * (ien + 1) + ie;
           vid[1] = ke * (jen + 1) * (ien + 1) + je * (ien + 1) + ie + 1;
           vid[2] = ke * (jen + 1) * (ien + 1) + (je + 1) * (ien + 1) + ie + 1;
@@ -486,9 +486,9 @@ static PetscErrorCode DMDAView_GLVis_ASCII(DM dm, PetscViewer viewer)
         ist = gsx != sx ? 1 : 0;
       }
     }
-    for (ke = kst; ke < kst + ken; ke++) {
-      for (je = jst; je < jst + jen; je++) {
-        for (ie = ist; ie < ist + ien; ie++) {
+    for (PetscInt ke = kst; ke < kst + ken; ke++) {
+      for (PetscInt je = jst; je < jst + jen; je++) {
+        for (PetscInt ie = ist; ie < ist + ien; ie++) {
           i = ke * gm * gn + je * gm + ie;
           for (PetscInt c = 0; c < cdof / sdim; c++) {
             for (PetscInt d = 0; d < sdim; d++) PetscCall(PetscViewerASCIIPrintf(viewer, fmt, PetscRealPart(array[cdof * i + c * sdim + d])));

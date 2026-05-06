@@ -492,7 +492,7 @@ PetscErrorCode PetscDrawHGSave(PetscDrawHG hg)
 PetscErrorCode PetscDrawHGView(PetscDrawHG hist, PetscViewer viewer)
 {
   PetscReal xmax, xmin, *bins, *values, *weights, binSize, binLeft, binRight, mean, var, totwt = 0.;
-  PetscInt  numBins, numBinsOld, numValues, initSize, i, p;
+  PetscInt numBins, numBinsOld, numValues, initSize;
   PetscBool usewt = PETSC_FALSE;
   int       inumBins;
 
@@ -515,7 +515,7 @@ PetscErrorCode PetscDrawHGView(PetscDrawHG hist, PetscViewer viewer)
     /* Calculate number of points in the bin */
     bins    = hist->bins;
     bins[0] = 0.;
-    for (p = 0; p < numValues; p++) {
+    for (PetscInt p = 0; p < numValues; p++) {
       if (values[p] == xmin) bins[0] += weights[0];
       mean += values[p] * weights[p];
       var += values[p] * values[p] * weights[p];
@@ -541,10 +541,10 @@ PetscErrorCode PetscDrawHGView(PetscDrawHG hist, PetscViewer viewer)
 
     /* Calculate number of points in each bin */
     PetscCall(PetscArrayzero(bins, numBins));
-    for (i = 0; i < numBins; i++) {
+    for (PetscInt i = 0; i < numBins; i++) {
       binLeft  = xmin + binSize * i;
       binRight = xmin + binSize * (i + 1);
-      for (p = 0; p < numValues; p++) {
+      for (PetscInt p = 0; p < numValues; p++) {
         if ((values[p] >= binLeft) && (values[p] < binRight)) bins[i] += weights[p];
         /* Handle last bin separately */
         if ((i == numBins - 1) && (values[p] == binRight)) bins[i] += weights[p];
@@ -557,7 +557,7 @@ PetscErrorCode PetscDrawHGView(PetscDrawHG hist, PetscViewer viewer)
       }
     }
     /* Draw bins */
-    for (i = 0; i < numBins; i++) {
+    for (PetscInt i = 0; i < numBins; i++) {
       binLeft  = xmin + binSize * i;
       binRight = xmin + binSize * (i + 1);
       PetscCall(PetscViewerASCIIPrintf(viewer, "Bin %2" PetscInt_FMT " (%6.2g - %6.2g): %.0g\n", i, (double)binLeft, (double)binRight, (double)bins[i]));

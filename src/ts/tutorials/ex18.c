@@ -861,14 +861,14 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
   PetscCall(VecGetArrayRead(X, &x));
   for (p = pStart; p < pEnd; ++p) {
     for (f = 0; f < Nf; ++f) {
-      PetscInt dof, cdof, d;
+      PetscInt dof, cdof;
 
       PetscCall(PetscSectionGetFieldDof(s, p, f, &dof));
       PetscCall(PetscSectionGetFieldConstraintDof(s, p, f, &cdof));
       PetscCall(DMPlexPointGlobalFieldRead(dm, p, f, x, &a));
       /* TODO Use constrained indices here */
-      for (d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 0] = PetscMax(xnorms[f * 2 + 0], PetscAbsScalar(a[d]));
-      for (d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 1] += PetscAbsScalar(a[d]);
+      for (PetscInt d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 0] = PetscMax(xnorms[f * 2 + 0], PetscAbsScalar(a[d]));
+      for (PetscInt d = 0; d < dof - cdof; ++d) xnorms[f * 2 + 1] += PetscAbsScalar(a[d]);
     }
   }
   PetscCall(VecRestoreArrayRead(X, &x));
@@ -878,7 +878,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     const PetscScalar *cgeom;
     PetscScalar      **fx;
     PetscReal         *fmin, *fmax, *fint, *ftmp, t;
-    PetscInt           cStart, cEnd, c, fcount, f, num;
+    PetscInt cStart, cEnd, fcount, num;
 
     size_t ftableused, ftablealloc;
 
@@ -886,7 +886,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     fcount = user->numMonitorFuncs;
     PetscCall(PetscMalloc4(fcount, &fmin, fcount, &fmax, fcount, &fint, fcount, &ftmp));
     PetscCall(PetscMalloc3(fcount, &fdm, fcount, &fv, fcount, &fx));
-    for (f = 0; f < fcount; ++f) {
+    for (PetscInt f = 0; f < fcount; ++f) {
       PetscSection fs;
       const char  *name = user->monitorFuncs[f]->name;
 
@@ -910,14 +910,14 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     PetscCall(VecGetDM(cellgeom, &dmCell));
     PetscCall(VecGetArrayRead(cellgeom, &cgeom));
     PetscCall(VecGetArrayRead(X, &x));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscFVCellGeom *cg;
       PetscScalar     *cx;
 
       PetscCall(DMPlexPointLocalRead(dmCell, c, cgeom, &cg));
       PetscCall(DMPlexPointGlobalFieldRead(dm, c, 1, x, &cx));
       if (!cx) continue; /* not a global cell */
-      for (f = 0; f < user->numMonitorFuncs; ++f) {
+      for (PetscInt f = 0; f < user->numMonitorFuncs; ++f) {
         Functional   func = user->monitorFuncs[f];
         PetscScalar *fxc;
 
@@ -926,7 +926,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
         PetscCall((*func->func)(dm, time, cg->centroid, cx, ftmp, func->ctx));
         fxc[0] = ftmp[user->monitorFuncs[f]->offset];
       }
-      for (f = 0; f < fcount; ++f) {
+      for (PetscInt f = 0; f < fcount; ++f) {
         fmin[f] = PetscMin(fmin[f], ftmp[f]);
         fmax[f] = PetscMax(fmax[f], ftmp[f]);
         fint[f] += cg->volume * ftmp[f];
@@ -941,7 +941,7 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     ftablealloc = fcount * 100;
     ftableused  = 0;
     PetscCall(PetscCalloc1(ftablealloc, &ftable));
-    for (f = 0; f < user->numMonitorFuncs; ++f) {
+    for (PetscInt f = 0; f < user->numMonitorFuncs; ++f) {
       Functional func      = user->monitorFuncs[f];
       PetscInt   id        = func->offset;
       char       newline[] = "\n";
@@ -988,12 +988,12 @@ static PetscErrorCode MonitorFunctionals(TS ts, PetscInt stepnum, PetscReal time
     PetscCall(PetscFree4(fmin, fmax, fint, ftmp));
     PetscCall(PetscFree3(fdm, fv, fx));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "% 3" PetscInt_FMT "  time %8.4g  |x| (", stepnum, (double)time));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       if (f > 0) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), ", "));
       PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "%8.4g", (double)xnorms[f * 2 + 0]));
     }
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), ") |x|_1 ("));
-    for (f = 0; f < Nf; ++f) {
+    for (PetscInt f = 0; f < Nf; ++f) {
       if (f > 0) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), ", "));
       PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "%8.4g", (double)xnorms[f * 2 + 1]));
     }

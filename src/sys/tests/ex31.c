@@ -5,11 +5,11 @@ static char help[] = "Tests PetscGetFullPath().\n\n";
 /* for windows - fix up path - so that we can do diff test */
 PetscErrorCode path_to_unix(char filein[])
 {
-  size_t i, n;
+  size_t n;
 
   PetscFunctionBegin;
   PetscCall(PetscStrlen(filein, &n));
-  for (i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     if (filein[i] == '\\') filein[i] = '/';
   }
   PetscFunctionReturn(PETSC_SUCCESS);

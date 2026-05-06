@@ -264,7 +264,6 @@ static PetscErrorCode DMDAVTKWriteAll_VTR(DM da, PetscViewer viewer)
 #endif
   MPI_Comm                 comm;
   PetscViewer_VTK         *vtk = (PetscViewer_VTK *)viewer->data;
-  PetscViewerVTKObjectLink link;
   FILE                    *fp;
   PetscMPIInt              rank, size, tag;
   DMDALocalInfo            info;
@@ -321,7 +320,7 @@ static PetscErrorCode DMDAVTKWriteAll_VTR(DM da, PetscViewer viewer)
     boffset += zm * sizeof(PetscScalar) + sizeof(PetscInt64);
     PetscCall(PetscFPrintf(comm, fp, "      </Coordinates>\n"));
     PetscCall(PetscFPrintf(comm, fp, "      <PointData Scalars=\"ScalarPointData\">\n"));
-    for (link = vtk->link; link; link = link->next) {
+    for (PetscViewerVTKObjectLink link = vtk->link; link; link = link->next) {
       Vec         X = (Vec)link->vec;
       PetscInt    bs;
       DM          daCurr;
@@ -446,7 +445,7 @@ static PetscErrorCode DMDAVTKWriteAll_VTR(DM da, PetscViewer viewer)
     }
 
     /* Write each of the objects queued up for this file */
-    for (link = vtk->link; link; link = link->next) {
+    for (PetscViewerVTKObjectLink link = vtk->link; link; link = link->next) {
       Vec                X = (Vec)link->vec;
       const PetscScalar *x;
       PetscInt           bs;

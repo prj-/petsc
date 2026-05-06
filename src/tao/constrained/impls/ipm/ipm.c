@@ -790,7 +790,7 @@ static PetscErrorCode IPMUpdateK(Tao tao)
   TAO_IPM         *ipmP = (TAO_IPM *)tao->data;
   MPI_Comm         comm;
   PetscMPIInt      size;
-  PetscInt         i, j, row;
+  PetscInt row;
   PetscInt         ncols, newcol, newcols[2], newrow;
   const PetscInt  *cols;
   const PetscReal *vals;
@@ -832,7 +832,7 @@ static PetscErrorCode IPMUpdateK(Tao tao)
   if (!ipmP->K) {
     if (size == 1) {
       PetscCall(PetscMalloc1(kend - kstart, &nonzeros));
-      for (i = 0; i < bigsize; i++) {
+      for (PetscInt i = 0; i < bigsize; i++) {
         if (i < r1) {
           PetscCall(MatGetRow(tao->hessian, i, &ncols, NULL, NULL));
           nonzeros[i] = ncols;
@@ -855,7 +855,7 @@ static PetscErrorCode IPMUpdateK(Tao tao)
     } else {
       PetscCall(PetscMalloc1(kend - kstart, &d_nonzeros));
       PetscCall(PetscMalloc1(kend - kstart, &o_nonzeros));
-      for (i = kstart; i < kend; i++) {
+      for (PetscInt i = kstart; i < kend; i++) {
         if (i < r1) {
           /* TODO fix preallocation for mpi mats */
           d_nonzeros[i - kstart] = PetscMin(ipmP->n + ipmP->me + ipmP->nb, kend - kstart);
@@ -883,7 +883,7 @@ static PetscErrorCode IPMUpdateK(Tao tao)
 
   PetscCall(MatZeroEntries(ipmP->K));
   /* Copy H */
-  for (i = hstart; i < hend; i++) {
+  for (PetscInt i = hstart; i < hend; i++) {
     PetscCall(MatGetRow(tao->hessian, i, &ncols, &cols, &vals));
     if (ncols > 0) PetscCall(MatSetValues(ipmP->K, 1, &i, ncols, cols, vals, INSERT_VALUES));
     PetscCall(MatRestoreRow(tao->hessian, i, &ncols, &cols, &vals));
@@ -892,14 +892,14 @@ static PetscErrorCode IPMUpdateK(Tao tao)
   /* Copy Ae and Ae' */
   if (ipmP->me > 0) {
     PetscCall(MatGetOwnershipRange(tao->jacobian_equality, &aestart, &aeend));
-    for (i = aestart; i < aeend; i++) {
+    for (PetscInt i = aestart; i < aeend; i++) {
       PetscCall(MatGetRow(tao->jacobian_equality, i, &ncols, &cols, &vals));
       if (ncols > 0) {
         /*Ae*/
         row = i + r1;
         PetscCall(MatSetValues(ipmP->K, 1, &row, ncols, cols, vals, INSERT_VALUES));
         /*Ae'*/
-        for (j = 0; j < ncols; j++) {
+        for (PetscInt j = 0; j < ncols; j++) {
           newcol = i + c2;
           newrow = cols[j];
           newval = vals[j];
@@ -913,14 +913,14 @@ static PetscErrorCode IPMUpdateK(Tao tao)
   if (ipmP->nb > 0) {
     PetscCall(MatGetOwnershipRange(ipmP->Ai, &aistart, &aiend));
     /* Copy Ai,and Ai' */
-    for (i = aistart; i < aiend; i++) {
+    for (PetscInt i = aistart; i < aiend; i++) {
       row = i + r2;
       PetscCall(MatGetRow(ipmP->Ai, i, &ncols, &cols, &vals));
       if (ncols > 0) {
         /*Ai*/
         PetscCall(MatSetValues(ipmP->K, 1, &row, ncols, cols, vals, INSERT_VALUES));
         /*-Ai'*/
-        for (j = 0; j < ncols; j++) {
+        for (PetscInt j = 0; j < ncols; j++) {
           newcol = i + c3;
           newrow = cols[j];
           newval = -vals[j];
@@ -931,7 +931,7 @@ static PetscErrorCode IPMUpdateK(Tao tao)
     }
 
     /* -I */
-    for (i = kstart; i < kend; i++) {
+    for (PetscInt i = kstart; i < kend; i++) {
       if (i >= r2 && i < r3) {
         newrow = i;
         newcol = i - r2 + c1;
@@ -945,7 +945,7 @@ static PetscErrorCode IPMUpdateK(Tao tao)
     PetscCall(VecGetArrayRead(ipmP->lambdai, &l));
     PetscCall(VecGetArrayRead(ipmP->s, &y));
 
-    for (i = sstart; i < send; i++) {
+    for (PetscInt i = sstart; i < send; i++) {
       newcols[0] = c1 + i;
       newcols[1] = c3 + i;
       newvals[0] = l[i - sstart];

@@ -26,7 +26,7 @@ PetscErrorCode MatGetColumnVector(Mat A, Vec yy, PetscInt col)
 {
   PetscScalar       *y;
   const PetscScalar *v;
-  PetscInt           i, j, nz, N, Rs, Re, rs, re;
+  PetscInt i, nz, N, Rs, Re, rs, re;
   const PetscInt    *idx;
 
   PetscFunctionBegin;
@@ -51,7 +51,7 @@ PetscErrorCode MatGetColumnVector(Mat A, Vec yy, PetscInt col)
         /*
           Should use faster search here
         */
-        for (j = 0; j < nz; j++) {
+        for (PetscInt j = 0; j < nz; j++) {
           if (idx[j] >= col) {
             if (idx[j] == col) y[i - rs] = v[j];
             break;

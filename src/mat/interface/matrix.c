@@ -2087,7 +2087,7 @@ PetscErrorCode MatSetValuesBlocked(Mat mat, PetscInt m, const PetscInt idxm[], P
   if (mat->ops->setvaluesblocked) PetscUseTypeMethod(mat, setvaluesblocked, m, idxm, n, idxn, v, addv);
   else {
     PetscInt buf[8192], *bufr = NULL, *bufc = NULL, *iidxm, *iidxn;
-    PetscInt i, j, bs, cbs;
+    PetscInt i, bs, cbs;
 
     PetscCall(MatGetBlockSizes(mat, &bs, &cbs));
     if ((m * bs + n * cbs) <= (PetscInt)PETSC_STATIC_ARRAY_LENGTH(buf)) {
@@ -2099,11 +2099,11 @@ PetscErrorCode MatSetValuesBlocked(Mat mat, PetscInt m, const PetscInt idxm[], P
       iidxn = bufc;
     }
     for (i = 0; i < m; i++) {
-      for (j = 0; j < bs; j++) iidxm[i * bs + j] = bs * idxm[i] + j;
+      for (PetscInt j = 0; j < bs; j++) iidxm[i * bs + j] = bs * idxm[i] + j;
     }
     if (m != n || bs != cbs || idxm != idxn) {
       for (i = 0; i < n; i++) {
-        for (j = 0; j < cbs; j++) iidxn[i * cbs + j] = cbs * idxn[i] + j;
+        for (PetscInt j = 0; j < cbs; j++) iidxn[i * cbs + j] = cbs * idxn[i] + j;
       }
     } else iidxn = iidxm;
     PetscCall(MatSetValues(mat, m * bs, iidxm, n * cbs, iidxn, v, addv));
@@ -10945,7 +10945,7 @@ PetscErrorCode MatInvertBlockDiagonalMat(Mat A, Mat C)
 {
   const PetscScalar *vals;
   PetscInt          *dnnz;
-  PetscInt           m, rstart, rend, bs, i, j;
+  PetscInt m, rstart, rend, bs;
 
   PetscFunctionBegin;
   PetscCall(MatInvertBlockDiagonal(A, &vals));
@@ -10954,12 +10954,12 @@ PetscErrorCode MatInvertBlockDiagonalMat(Mat A, Mat C)
   PetscCall(MatSetLayouts(C, A->rmap, A->cmap));
   PetscCall(MatSetBlockSizes(C, A->rmap->bs, A->cmap->bs));
   PetscCall(PetscMalloc1(m / bs, &dnnz));
-  for (j = 0; j < m / bs; j++) dnnz[j] = 1;
+  for (PetscInt j = 0; j < m / bs; j++) dnnz[j] = 1;
   PetscCall(MatXAIJSetPreallocation(C, bs, dnnz, NULL, NULL, NULL));
   PetscCall(PetscFree(dnnz));
   PetscCall(MatGetOwnershipRange(C, &rstart, &rend));
   PetscCall(MatSetOption(C, MAT_ROW_ORIENTED, PETSC_FALSE));
-  for (i = rstart / bs; i < rend / bs; i++) PetscCall(MatSetValuesBlocked(C, 1, &i, 1, &i, &vals[(i - rstart / bs) * bs * bs], INSERT_VALUES));
+  for (PetscInt i = rstart / bs; i < rend / bs; i++) PetscCall(MatSetValuesBlocked(C, 1, &i, 1, &i, &vals[(i - rstart / bs) * bs * bs], INSERT_VALUES));
   PetscCall(MatSetOption(C, MAT_NO_OFF_PROC_ENTRIES, PETSC_TRUE));
   PetscCall(MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY));

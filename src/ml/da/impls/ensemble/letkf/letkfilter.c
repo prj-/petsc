@@ -246,14 +246,14 @@ PetscErrorCode PetscDALETKFLocalAnalysis(PetscDA da, PetscDA_LETKF *impl, PetscI
     {
       const PetscScalar *x_array, *mean_array;
       PetscScalar       *e_array, *x_rows_array, *ea_rows_array;
-      PetscInt           j, k, lda_x, lda_e;
+      PetscInt j, lda_x, lda_e;
 
       /* Extract ndof rows starting at (i_grid_point * ndof) from X: X_f[i_grid_point*ndof:(i_grid_point+1)*ndof, :] */
       PetscCall(MatDenseGetArrayRead(X, &x_array));
       PetscCall(MatDenseGetArray(X_rows, &x_rows_array));
       PetscCall(MatDenseGetLDA(X, &lda_x));
       for (j = 0; j < m; j++) {
-        for (k = 0; k < ndof; k++) x_rows_array[k + j * ndof] = x_array[(i_grid_point * ndof + k) + j * lda_x];
+        for (PetscInt k = 0; k < ndof; k++) x_rows_array[k + j * ndof] = x_array[(i_grid_point * ndof + k) + j * lda_x];
       }
       PetscCall(MatDenseRestoreArray(X_rows, &x_rows_array));
       PetscCall(MatDenseRestoreArrayRead(X, &x_array));
@@ -265,7 +265,7 @@ PetscErrorCode PetscDALETKFLocalAnalysis(PetscDA da, PetscDA_LETKF *impl, PetscI
       PetscCall(VecGetArrayRead(impl->mean, &mean_array));
       PetscCall(MatDenseGetArray(E_analysis_rows, &ea_rows_array));
       for (j = 0; j < m; j++) {
-        for (k = 0; k < ndof; k++) ea_rows_array[k + j * ndof] += mean_array[i_grid_point * ndof + k];
+        for (PetscInt k = 0; k < ndof; k++) ea_rows_array[k + j * ndof] += mean_array[i_grid_point * ndof + k];
       }
       PetscCall(MatDenseRestoreArray(E_analysis_rows, &ea_rows_array));
       PetscCall(VecRestoreArrayRead(impl->mean, &mean_array));
@@ -275,7 +275,7 @@ PetscErrorCode PetscDALETKFLocalAnalysis(PetscDA da, PetscDA_LETKF *impl, PetscI
       PetscCall(MatDenseGetLDA(en->ensemble, &lda_e));
       PetscCall(MatDenseGetArrayRead(E_analysis_rows, (const PetscScalar **)&ea_rows_array));
       for (j = 0; j < m; j++) {
-        for (k = 0; k < ndof; k++) e_array[(i_grid_point * ndof + k) + j * lda_e] = ea_rows_array[k + j * ndof];
+        for (PetscInt k = 0; k < ndof; k++) e_array[(i_grid_point * ndof + k) + j * lda_e] = ea_rows_array[k + j * ndof];
       }
       PetscCall(MatDenseRestoreArrayRead(E_analysis_rows, (const PetscScalar **)&ea_rows_array));
       PetscCall(MatDenseRestoreArrayWrite(en->ensemble, &e_array));
@@ -530,7 +530,7 @@ static PetscErrorCode PetscDALETKFGetObsPerVertex_LETKF(PetscDA da, PetscInt *n_
 static PetscErrorCode PetscDALETKFSetLocalization_LETKF(PetscDA da, Mat Q, Mat H)
 {
   PetscDA_LETKF *impl = (PetscDA_LETKF *)da->data;
-  PetscInt       i, nrows, ncols, nnz, rstart, rend;
+  PetscInt nrows, ncols, nnz, rstart, rend;
 
   PetscFunctionBegin;
   PetscCheck(impl, PetscObjectComm((PetscObject)da), PETSC_ERR_ARG_WRONGSTATE, "PetscDA not properly initialized for LETKF");
@@ -544,7 +544,7 @@ static PetscErrorCode PetscDALETKFSetLocalization_LETKF(PetscDA da, Mat Q, Mat H
 
   /* Validate that each row has const non-zero entries */
   PetscCall(MatGetOwnershipRange(Q, &rstart, &rend));
-  for (i = rstart; i < rend; i++) {
+  for (PetscInt i = rstart; i < rend; i++) {
     const PetscInt    *cols;
     const PetscScalar *vals;
     PetscCall(MatGetRow(Q, i, &nnz, &cols, &vals));

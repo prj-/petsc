@@ -519,7 +519,7 @@ PetscErrorCode HessianProduct(void *ptr, Vec svec, Vec y)
   PetscReal          p5 = 0.5, zero = 0.0, one = 1.0, hx, hy, val, area;
   const PetscScalar *x, *s;
   PetscReal          v, vb, vl, vr, vt, hxhx, hyhy;
-  PetscInt           nx, ny, i, j, k, ind;
+  PetscInt nx, ny, k, ind;
 
   PetscFunctionBeginUser;
   nx   = user->mx;
@@ -537,8 +537,8 @@ PetscErrorCode HessianProduct(void *ptr, Vec svec, Vec y)
   PetscCall(VecSet(y, zero));
 
   /* Compute f''(x)*s over the lower triangular elements */
-  for (j = -1; j < ny; j++) {
-    for (i = -1; i < nx; i++) {
+  for (PetscInt j = -1; j < ny; j++) {
+    for (PetscInt i = -1; i < nx; i++) {
       k  = nx * j + i;
       v  = zero;
       vr = zero;
@@ -565,8 +565,8 @@ PetscErrorCode HessianProduct(void *ptr, Vec svec, Vec y)
   }
 
   /* Compute f''(x)*s over the upper triangular elements */
-  for (j = 0; j <= ny; j++) {
-    for (i = 0; i <= nx; i++) {
+  for (PetscInt j = 0; j <= ny; j++) {
+    for (PetscInt i = 0; i <= nx; i++) {
       k  = nx * j + i;
       v  = zero;
       vl = zero;

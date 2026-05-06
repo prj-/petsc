@@ -353,7 +353,7 @@ static PetscErrorCode KSPDestroy_LGMRES(KSP ksp)
 static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest, KSP ksp, PetscInt it)
 {
   PetscScalar tt;
-  PetscInt    ii, k, j;
+  PetscInt k, j;
   KSP_LGMRES *lgmres = (KSP_LGMRES *)ksp->data;
   /* LGMRES_MOD */
   PetscInt it_arnoldi, it_aug;
@@ -396,7 +396,7 @@ static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest
     nrs[it] = 0.0;
   }
 
-  for (ii = 1; ii <= it; ii++) {
+  for (PetscInt ii = 1; ii <= it; ii++) {
     k  = it - ii;
     tt = *GRS(k);
     for (j = k + 1; j <= it; j++) tt = tt - *HH(k, j) * nrs[j];
@@ -413,7 +413,7 @@ static PetscErrorCode KSPLGMRESBuildSoln(PetscScalar *nrs, Vec vguess, Vec vdest
     PetscCall(VecMAXPBY(VEC_TEMP, it_arnoldi, nrs, 0, &VEC_VV(0)));
     /* now add augmented portions - add contribution of aug vectors one at a time*/
 
-    for (ii = 0; ii < it_aug; ii++) {
+    for (PetscInt ii = 0; ii < it_aug; ii++) {
       for (jj = 0; jj < lgmres->aug_dim; jj++) {
         if (lgmres->aug_order[jj] == (ii + 1)) {
           spot = jj;

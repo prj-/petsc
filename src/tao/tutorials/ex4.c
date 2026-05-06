@@ -48,7 +48,7 @@ static PetscErrorCode CreateRHS(UserCtx ctx)
 
 static PetscErrorCode CreateMatrix(UserCtx ctx)
 {
-  PetscInt      Istart, Iend, i, j, Ii, gridN, I_n, I_s, I_e, I_w;
+  PetscInt Istart, Iend, i, j, gridN, I_n, I_s, I_e, I_w;
   PetscLogStage stage;
 
   PetscFunctionBegin;
@@ -68,7 +68,7 @@ static PetscErrorCode CreateMatrix(UserCtx ctx)
     PetscCheck(ctx->m == ctx->n, PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, "Stencil matrix must be square");
     gridN = (PetscInt)PetscSqrtReal((PetscReal)ctx->m);
     PetscCheck(gridN * gridN == ctx->m, PETSC_COMM_WORLD, PETSC_ERR_ARG_SIZ, "Number of rows must be square");
-    for (Ii = Istart; Ii < Iend; Ii++) {
+    for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
       i   = Ii / gridN;
       j   = Ii % gridN;
       I_n = i * gridN + j + 1;

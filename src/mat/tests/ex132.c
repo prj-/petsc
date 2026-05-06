@@ -6,7 +6,7 @@ int main(int argc, char **args)
 {
   Mat         C, C1, C2, CU;
   PetscScalar v;
-  PetscInt    Ii, J, Istart, Iend;
+  PetscInt J, Istart, Iend;
   PetscInt    i, j, m = 3, n;
   PetscMPIInt size;
   PetscBool   mat_nonsymmetric = PETSC_FALSE, flg;
@@ -28,7 +28,7 @@ int main(int argc, char **args)
   PetscCall(MatMPIAIJSetPreallocation(C, 5, NULL, 5, NULL));
 
   PetscCall(MatGetOwnershipRange(C, &Istart, &Iend));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = -1.0;
     i = Ii / n;
     j = Ii - i * n;
@@ -54,7 +54,7 @@ int main(int argc, char **args)
 
   /* Make the matrix nonsymmetric if desired */
   if (mat_nonsymmetric) {
-    for (Ii = Istart; Ii < Iend; Ii++) {
+    for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
       v = -1.5;
       i = Ii / n;
       if (i > 1) {
@@ -77,7 +77,7 @@ int main(int argc, char **args)
   PetscCall(MatSetFromOptions(C1));
   PetscCall(MatSeqAIJSetPreallocation(C1, 1, NULL));
   PetscCall(MatMPIAIJSetPreallocation(C1, 1, NULL, 1, NULL));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = 1.0;
     i = m * n - Ii - 1;
     j = Ii;
@@ -106,7 +106,7 @@ int main(int argc, char **args)
   PetscCall(MatDuplicate(C, MAT_DO_NOT_COPY_VALUES, &C2));
   PetscCall(MatDuplicate(C1, MAT_COPY_VALUES, &CU));
 
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = 1.0;
     PetscCall(MatSetValues(C2, 1, &Ii, 1, &Ii, &v, ADD_VALUES));
   }

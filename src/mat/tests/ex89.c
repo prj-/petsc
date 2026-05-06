@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
   DM              coarsedm, finedm;
   PetscMPIInt     size, rank;
-  PetscInt        M, N, Z, i, nrows;
+  PetscInt M, N, Z, nrows;
   PetscScalar     one  = 1.0;
   PetscReal       fill = 2.0;
   Mat             A, P, C;
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     PetscCall(MatGetRowIJ(A, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     if (flg) {
       PetscCall(MatSeqAIJGetArray(A, &array));
-      for (i = 0; i < ia[nrows]; i++) array[i] = one;
+      for (PetscInt i = 0; i < ia[nrows]; i++) array[i] = one;
       PetscCall(MatSeqAIJRestoreArray(A, &array));
     }
     PetscCall(MatRestoreRowIJ(A, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
@@ -61,14 +61,14 @@ int main(int argc, char **argv)
     PetscCall(MatGetRowIJ(AA, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     if (flg) {
       PetscCall(MatSeqAIJGetArray(AA, &array));
-      for (i = 0; i < ia[nrows]; i++) array[i] = one;
+      for (PetscInt i = 0; i < ia[nrows]; i++) array[i] = one;
       PetscCall(MatSeqAIJRestoreArray(AA, &array));
     }
     PetscCall(MatRestoreRowIJ(AA, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     PetscCall(MatGetRowIJ(AB, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
     if (flg) {
       PetscCall(MatSeqAIJGetArray(AB, &array));
-      for (i = 0; i < ia[nrows]; i++) array[i] = one;
+      for (PetscInt i = 0; i < ia[nrows]; i++) array[i] = one;
       PetscCall(MatSeqAIJRestoreArray(AB, &array));
     }
     PetscCall(MatRestoreRowIJ(AB, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &ia, &ja, &flg));
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
   PetscCall(MatPtAP(A, P, MAT_INITIAL_MATRIX, fill, &C));
   /* Test MAT_REUSE_MATRIX - reuse symbolic C */
   alpha = 1.0;
-  for (i = 0; i < 1; i++) {
+  for (PetscInt i = 0; i < 1; i++) {
     alpha -= 0.1;
     PetscCall(MatScale(A, alpha));
     PetscCall(MatPtAP(A, P, MAT_REUSE_MATRIX, fill, &C));

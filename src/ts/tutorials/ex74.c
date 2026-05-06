@@ -144,14 +144,14 @@ PetscErrorCode ExactSolution(Vec u, void *c, PetscReal t)
 static PetscErrorCode RHSJacobian(TS ts, PetscReal t, Vec U, Mat J, Mat Jpre, PetscCtx ctx)
 {
   UserContext *user = (UserContext *)ctx;
-  PetscInt     matis, matie, i;
+  PetscInt matis, matie;
   PetscReal    dx, dx2;
 
   PetscFunctionBeginUser;
   dx  = (user->xmax - user->xmin) / ((PetscReal)user->imax);
   dx2 = dx * dx;
   PetscCall(MatGetOwnershipRange(J, &matis, &matie));
-  for (i = matis; i < matie; i++) {
+  for (PetscInt i = matis; i < matie; i++) {
     PetscScalar values[3];
     PetscInt    col[3];
     switch (user->physics_type) {

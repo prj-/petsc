@@ -2071,7 +2071,7 @@ PetscErrorCode MatMatSolve_SeqSBAIJ_1_NaturalOrdering(Mat A, Mat B, Mat X)
   const MatScalar   *aa = a->a, *v;
   const PetscScalar *b;
   PetscScalar       *x, xi;
-  PetscInt           nz, i, j, neq, ldb, ldx;
+  PetscInt nz, i, j, ldb, ldx;
   PetscBool          isdense;
 
   PetscFunctionBegin;
@@ -2086,7 +2086,7 @@ PetscErrorCode MatMatSolve_SeqSBAIJ_1_NaturalOrdering(Mat A, Mat B, Mat X)
   PetscCall(MatDenseGetLDA(B, &ldb));
   PetscCall(MatDenseGetArray(X, &x));
   PetscCall(MatDenseGetLDA(X, &ldx));
-  for (neq = 0; neq < B->cmap->n; neq++) {
+  for (PetscInt neq = 0; neq < B->cmap->n; neq++) {
     /* solve U^T*D*y = b by forward substitution */
     PetscCall(PetscArraycpy(x, b, mbs));
     for (i = 0; i < mbs; i++) {

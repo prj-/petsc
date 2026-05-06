@@ -3166,10 +3166,10 @@ PetscErrorCode SNESComputeJacobian(SNES snes, Vec X, Mat A, Mat B)
       if (flag_contour) PetscCall(PetscViewerPopFormat(vdraw));
 
       if (flag_threshold) {
-        PetscInt bs, rstart, rend, i;
+        PetscInt bs, rstart, rend;
         PetscCall(MatGetBlockSize(B, &bs));
         PetscCall(MatGetOwnershipRange(B, &rstart, &rend));
-        for (i = rstart; i < rend; i++) {
+        for (PetscInt i = rstart; i < rend; i++) {
           const PetscScalar *ba, *ca;
           const PetscInt    *bj, *cj;
           PetscInt           bn, cn, j, maxentrycol = -1, maxdiffcol = -1, maxrdiffcol = -1;
@@ -5313,7 +5313,7 @@ PetscErrorCode SNESRegister(const char sname[], PetscErrorCode (*function)(SNES)
 
 PetscErrorCode SNESTestLocalMin(SNES snes)
 {
-  PetscInt    N, i, j;
+  PetscInt N;
   Vec         u, uh, fh;
   PetscScalar value;
   PetscReal   norm;
@@ -5326,10 +5326,10 @@ PetscErrorCode SNESTestLocalMin(SNES snes)
   /* currently only works for sequential */
   PetscCall(PetscPrintf(PetscObjectComm((PetscObject)snes), "Testing FormFunction() for local min\n"));
   PetscCall(VecGetSize(u, &N));
-  for (i = 0; i < N; i++) {
+  for (PetscInt i = 0; i < N; i++) {
     PetscCall(VecCopy(u, uh));
     PetscCall(PetscPrintf(PetscObjectComm((PetscObject)snes), "i = %" PetscInt_FMT "\n", i));
-    for (j = -10; j < 11; j++) {
+    for (PetscInt j = -10; j < 11; j++) {
       value = PetscSign(j) * PetscExpReal(PetscAbs(j) - 10.0);
       PetscCall(VecSetValue(uh, i, value, ADD_VALUES));
       PetscCall(SNESComputeFunction(snes, uh, fh));

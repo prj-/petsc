@@ -2578,7 +2578,7 @@ PetscErrorCode PetscSFConcatenate(MPI_Comm comm, PetscInt nsfs, PetscSF sfs[], P
       iremote_new[i].index = -1;
     }
     for (s = 0; s < nsfs; s++) {
-      PetscInt           i, nl, nr;
+      PetscInt nl, nr;
       PetscSF            tmp_sf;
       const PetscSFNode *iremote;
       PetscSFNode       *tmp_rootdata;
@@ -2591,13 +2591,13 @@ PetscErrorCode PetscSFConcatenate(MPI_Comm comm, PetscInt nsfs, PetscSF sfs[], P
       PetscCall(PetscSFSetUp(tmp_sf));
       PetscCall(PetscMalloc1(nr, &tmp_rootdata));
       if (rootMode == PETSCSF_CONCATENATE_ROOTMODE_LOCAL) {
-        for (i = 0; i < nr; i++) {
+        for (PetscInt i = 0; i < nr; i++) {
           tmp_rootdata[i].index = i + rootOffset;
           tmp_rootdata[i].rank  = rank;
         }
         rootOffset += nr;
       } else {
-        for (i = 0; i < nr; i++) {
+        for (PetscInt i = 0; i < nr; i++) {
           tmp_rootdata[i].index = i;
           tmp_rootdata[i].rank  = rank;
         }

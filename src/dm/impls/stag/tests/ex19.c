@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     PetscCall(MatInterpolate(Ai, globalCoarse, globalFine));
     PetscCall(DMGlobalToLocal(dm, globalFine, INSERT_VALUES, localFine));
     {
-      PetscInt       i, j, startx, starty, nx, ny, extrax, extray;
+      PetscInt startx, starty, nx, ny, extrax, extray;
       PetscInt       p, vx, vy;
       PetscScalar ***arr;
       PetscCall(DMStagGetCorners(dm, &startx, &starty, NULL, &nx, &ny, NULL, &extrax, &extray, NULL));
@@ -58,8 +58,8 @@ int main(int argc, char **argv)
       PetscCall(DMStagGetLocationSlot(dm, DMSTAG_LEFT, 0, &vx));
       PetscCall(DMStagGetLocationSlot(dm, DMSTAG_DOWN, 0, &vy));
       PetscCall(DMStagGetLocationSlot(dm, DMSTAG_ELEMENT, 0, &p));
-      for (j = starty; j < starty + ny + extray; ++j) {
-        for (i = startx; i < startx + nx + extrax; ++i) {
+      for (PetscInt j = starty; j < starty + ny + extray; ++j) {
+        for (PetscInt i = startx; i < startx + nx + extrax; ++i) {
           const PetscScalar expected_vy = (i < startx + nx) ? 10.0 : -1;
           const PetscScalar expected_vx = (j < starty + ny) ? 20.0 : -1;
           const PetscScalar expected_p  = (i < startx + nx) && (j < starty + ny) ? 30.0 : -1;

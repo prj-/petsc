@@ -60,7 +60,7 @@ static PetscErrorCode PetscFEOpenCLGenerateIntegrationCode(PetscFE fem, char **s
   PetscBool        useF1          = PETSC_TRUE;
   const PetscReal *points, *weights;
   PetscTabulation  T;
-  PetscInt         dim, qNc, N_b, N_c, N_q, N_t, p, d, b, c;
+  PetscInt dim, qNc, N_b, N_c, N_q, N_t, d, b, c;
   size_t           count;
 
   PetscFunctionBegin;
@@ -94,7 +94,7 @@ static PetscErrorCode PetscFEOpenCLGenerateIntegrationCode(PetscFE fem, char **s
                                   "   - (x1,y1,x2,y2,...) */\n"
                                   "  const %s points[%d] = {\n",
                                   &count, numeric_str, N_q * dim));
-  for (p = 0; p < N_q; ++p) {
+  for (PetscInt p = 0; p < N_q; ++p) {
     for (d = 0; d < dim; ++d) PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "%g,\n", &count, points[p * dim + d]));
   }
   PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "};\n", &count));
@@ -103,7 +103,7 @@ static PetscErrorCode PetscFEOpenCLGenerateIntegrationCode(PetscFE fem, char **s
                                   "   - (v1,v2,...) */\n"
                                   "  const %s weights[%d] = {\n",
                                   &count, numeric_str, N_q));
-  for (p = 0; p < N_q; ++p) PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "%g,\n", &count, weights[p]));
+  for (PetscInt p = 0; p < N_q; ++p) PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "%g,\n", &count, weights[p]));
   PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "};\n", &count));
   /* Basis Functions */
   PetscCall(PetscFEGetCellTabulation(fem, 1, &T));
@@ -112,7 +112,7 @@ static PetscErrorCode PetscFEOpenCLGenerateIntegrationCode(PetscFE fem, char **s
                                   "    - basis component is fastest varying, the basis function, then point */\n"
                                   "  const %s Basis[%d] = {\n",
                                   &count, numeric_str, N_q * N_b * N_c));
-  for (p = 0; p < N_q; ++p) {
+  for (PetscInt p = 0; p < N_q; ++p) {
     for (b = 0; b < N_b; ++b) {
       for (c = 0; c < N_c; ++c) PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "%g,\n", &count, T->T[0][(p * N_b + b) * N_c + c]));
     }
@@ -124,7 +124,7 @@ static PetscErrorCode PetscFEOpenCLGenerateIntegrationCode(PetscFE fem, char **s
                                   "      - derivative direction is fastest varying, then basis component, then basis function, then point */\n"
                                   "  const %s%d BasisDerivatives[%d] = {\n",
                                   &count, numeric_str, dim, N_q * N_b * N_c));
-  for (p = 0; p < N_q; ++p) {
+  for (PetscInt p = 0; p < N_q; ++p) {
     for (b = 0; b < N_b; ++b) {
       for (c = 0; c < N_c; ++c) {
         PetscCallSTR(PetscSNPrintfCount(string_tail, end_of_buffer - string_tail, "(%s%d)(", &count, numeric_str, dim));
@@ -577,10 +577,10 @@ static PetscErrorCode PetscFEIntegrateResidual_OpenCL(PetscDS prob, PetscFormKey
   /* Generate code */
   if (probAux) {
     PetscSpace P;
-    PetscInt   NfAux, order, f;
+    PetscInt NfAux, order;
 
     PetscCall(PetscDSGetNumFields(probAux, &NfAux));
-    for (f = 0; f < NfAux; ++f) {
+    for (PetscInt f = 0; f < NfAux; ++f) {
       PetscFE feAux;
 
       PetscCall(PetscDSGetDiscretization(probAux, f, (PetscObject *)&feAux));

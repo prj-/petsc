@@ -15,7 +15,7 @@ static PetscErrorCode PCDestroy_Kaczmarz(PC pc)
 static PetscErrorCode PCApply_Kaczmarz(PC pc, Vec x, Vec y)
 {
   PC_Kaczmarz       *jac = (PC_Kaczmarz *)pc->data;
-  PetscInt           xs, xe, ys, ye, ncols, i, j;
+  PetscInt xs, xe, ys, ye, ncols;
   const PetscInt    *cols;
   const PetscScalar *vals, *xarray;
   PetscScalar        r;
@@ -29,33 +29,33 @@ static PetscErrorCode PCApply_Kaczmarz(PC pc, Vec x, Vec y)
   PetscCall(VecSet(y, 0.));
   PetscCall(VecGetArrayRead(x, &xarray));
   PetscCall(VecGetArray(y, &yarray));
-  for (i = xs; i < xe; i++) {
+  for (PetscInt i = xs; i < xe; i++) {
     /* get the maximum row width and row norms */
     PetscCall(MatGetRow(pc->pmat, i, &ncols, &cols, &vals));
     r    = xarray[i - xs];
     anrm = 0.;
-    for (j = 0; j < ncols; j++) {
+    for (PetscInt j = 0; j < ncols; j++) {
       if (cols[j] >= ys && cols[j] < ye) r -= yarray[cols[j] - ys] * vals[j];
       anrm += PetscRealPart(PetscSqr(vals[j]));
     }
     if (anrm > 0.) {
-      for (j = 0; j < ncols; j++) {
+      for (PetscInt j = 0; j < ncols; j++) {
         if (cols[j] >= ys && cols[j] < ye) yarray[cols[j] - ys] += vals[j] * lambda * r / anrm;
       }
     }
     PetscCall(MatRestoreRow(pc->pmat, i, &ncols, &cols, &vals));
   }
   if (jac->symmetric) {
-    for (i = xe - 1; i >= xs; i--) {
+    for (PetscInt i = xe - 1; i >= xs; i--) {
       PetscCall(MatGetRow(pc->pmat, i, &ncols, &cols, &vals));
       r    = xarray[i - xs];
       anrm = 0.;
-      for (j = 0; j < ncols; j++) {
+      for (PetscInt j = 0; j < ncols; j++) {
         if (cols[j] >= ys && cols[j] < ye) r -= yarray[cols[j] - ys] * vals[j];
         anrm += PetscRealPart(PetscSqr(vals[j]));
       }
       if (anrm > 0.) {
-        for (j = 0; j < ncols; j++) {
+        for (PetscInt j = 0; j < ncols; j++) {
           if (cols[j] >= ys && cols[j] < ye) yarray[cols[j] - ys] += vals[j] * lambda * r / anrm;
         }
       }

@@ -248,7 +248,7 @@ PetscErrorCode PetscGarbageCleanup(MPI_Comm comm)
 PetscErrorCode PetscGarbageView(MPI_Comm comm, PetscViewer viewer)
 {
   char         text[64];
-  PetscInt     ii, entries, offset;
+  PetscInt entries, offset;
   PetscInt64  *keys;
   PetscObject  obj;
   PetscGarbage garbage;
@@ -281,7 +281,7 @@ PetscErrorCode PetscGarbageView(MPI_Comm comm, PetscViewer viewer)
     PetscCall(PetscSynchronizedPrintf(comm, "| Key   | Type                   | Name                             | Object ID |\n"));
     PetscCall(PetscSynchronizedPrintf(comm, "|-------|------------------------|----------------------------------|-----------|\n"));
   }
-  for (ii = 0; ii < entries; ii++) {
+  for (PetscInt ii = 0; ii < entries; ii++) {
     PetscCall(PetscHMapObjGet(garbage.map, keys[ii], &obj));
     PetscCall(PetscFormatConvert("| %5" PetscInt64_FMT " | %-22s | %-32s | %6" PetscInt_FMT "    |\n", text));
     PetscCall(PetscSynchronizedPrintf(comm, text, keys[ii], obj->class_name, obj->description, obj->id));

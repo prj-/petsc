@@ -2647,7 +2647,7 @@ static PetscErrorCode MatGetRowSumAbs_SeqBAIJ(Mat A, Vec v)
   PetscReal    atmp;
   PetscScalar *x, zero = 0.0;
   MatScalar   *aa;
-  PetscInt     ncols, brow, krow, kcol;
+  PetscInt ncols, brow;
 
   PetscFunctionBegin;
   PetscCheck(!A->factortype, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Not for factored matrix");
@@ -2665,8 +2665,8 @@ static PetscErrorCode MatGetRowSumAbs_SeqBAIJ(Mat A, Vec v)
     ai++;
     brow = bs * i;
     for (j = 0; j < ncols; j++) {
-      for (kcol = 0; kcol < bs; kcol++) {
-        for (krow = 0; krow < bs; krow++) {
+      for (PetscInt kcol = 0; kcol < bs; kcol++) {
+        for (PetscInt krow = 0; krow < bs; krow++) {
           atmp = PetscAbsScalar(*aa);
           aa++;
           row = brow + krow; /* row index */

@@ -3,7 +3,7 @@ static char help[] = "Test VecScatter of different block sizes across processes\
 #include <petscvec.h>
 int main(int argc, char **argv)
 {
-  PetscInt           i, bs, n, low, high;
+  PetscInt bs, n, low, high;
   PetscMPIInt        nproc, rank;
   Vec                x, y, z;
   IS                 ix, iy;
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   /* Create an MPI vector x of size 12 on two processes, and set x = {0, 1, 2, .., 11} */
   PetscCall(VecCreateMPI(PETSC_COMM_WORLD, 6, PETSC_DECIDE, &x));
   PetscCall(VecGetOwnershipRange(x, &low, &high));
-  for (i = low; i < high; i++) PetscCall(VecSetValue(x, i, (PetscScalar)i, INSERT_VALUES));
+  for (PetscInt i = low; i < high; i++) PetscCall(VecSetValue(x, i, (PetscScalar)i, INSERT_VALUES));
   PetscCall(VecAssemblyBegin(x));
   PetscCall(VecAssemblyEnd(x));
 

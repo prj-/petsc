@@ -165,8 +165,6 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, PetscScalar **x, Mat jac, 
   MatStencil  col[5], row;
   PetscScalar D, K, A, v[5], hx, hy, hxdhy, hydhx, ux, uy;
   PetscReal   normGradZ;
-  PetscInt    i, j, k;
-
   PetscFunctionBeginUser;
   D     = user->D;
   K     = user->K;
@@ -186,8 +184,8 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, PetscScalar **x, Mat jac, 
       - We can set matrix entries either using either
         MatSetValuesLocal() or MatSetValues(), as discussed above.
   */
-  for (j = info->ys; j < info->ys + info->ym; j++) {
-    for (i = info->xs; i < info->xs + info->xm; i++) {
+  for (PetscInt j = info->ys; j < info->ys + info->ym; j++) {
+    for (PetscInt i = info->xs; i < info->xs + info->xm; i++) {
       row.j = j;
       row.i = i;
       if (i == 0 || j == 0 || i == info->mx - 1 || j == info->my - 1) {
@@ -217,7 +215,7 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, PetscScalar **x, Mat jac, 
         v[4]     = -D * hxdhy + K * A * hx * hy / (2.0 * normGradZ);
         col[4].j = j + 1;
         col[4].i = i;
-        for (k = 0; k < 5; ++k) PetscCheck(!PetscIsInfOrNanScalar(v[k]), PETSC_COMM_SELF, PETSC_ERR_FP, "Invalid residual: %g", (double)PetscRealPart(v[k]));
+        for (PetscInt k = 0; k < 5; ++k) PetscCheck(!PetscIsInfOrNanScalar(v[k]), PETSC_COMM_SELF, PETSC_ERR_FP, "Invalid residual: %g", (double)PetscRealPart(v[k]));
         PetscCall(MatSetValuesStencil(jac, 1, &row, 5, col, v, INSERT_VALUES));
       }
     }

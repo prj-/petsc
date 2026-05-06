@@ -16,7 +16,7 @@ int main(int argc, char **args)
 {
   Mat             A;    /* matrix */
   PetscInt        m, n; /* mesh dimensions in x- and y- directions */
-  PetscInt        i, j, Ii, J, Istart, Iend;
+  PetscInt i, j, J, Istart, Iend;
   PetscMPIInt     size;
   PetscScalar     v;
   MatPartitioning part;
@@ -43,7 +43,7 @@ int main(int argc, char **args)
   PetscCall(MatSetFromOptions(A));
   PetscCall(MatSetUp(A));
   PetscCall(MatGetOwnershipRange(A, &Istart, &Iend));
-  for (Ii = Istart; Ii < Iend; Ii++) {
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) {
     v = -1.0;
     i = Ii / n;
     j = Ii - i * n;

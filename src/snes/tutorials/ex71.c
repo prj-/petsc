@@ -190,7 +190,7 @@ PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     Vec          coordinates;
     PetscScalar *coords;
     PetscReal    alpha;
-    PetscInt     cdim, N, bs, i;
+    PetscInt cdim, N, bs;
 
     PetscCall(DMGetCoordinateDim(*dm, &cdim));
     PetscCall(DMGetCoordinates(*dm, &coordinates));
@@ -200,7 +200,7 @@ PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
     PetscCall(VecGetArray(coordinates, &coords));
     PetscCall(PetscBagGetData(user->bag, &param));
     alpha = param->alpha;
-    for (i = 0; i < N; i += cdim) {
+    for (PetscInt i = 0; i < N; i += cdim) {
       PetscScalar x = coords[i + 0];
       PetscScalar y = coords[i + 1];
 

@@ -1942,13 +1942,13 @@ PetscErrorCode ISSetBlockSize(IS is, PetscInt bs)
   PetscCheck(bs >= 1, PetscObjectComm((PetscObject)is), PETSC_ERR_ARG_OUTOFRANGE, "Block size %" PetscInt_FMT ", must be positive", bs);
   if (PetscDefined(USE_DEBUG)) {
     const PetscInt *indices;
-    PetscInt        length, i, j;
+    PetscInt length, i;
     PetscCall(ISGetIndices(is, &indices));
     if (indices) {
       PetscCall(ISGetLocalSize(is, &length));
       PetscCheck(length % bs == 0, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Local size %" PetscInt_FMT " not compatible with proposed block size %" PetscInt_FMT, length, bs);
       for (i = 1; i < length / bs; i += bs) {
-        for (j = 1; j < bs - 1; j++) {
+        for (PetscInt j = 1; j < bs - 1; j++) {
           PetscCheck(indices[i * bs + j] == indices[(i - 1) * bs + j] + indices[i * bs] - indices[(i - 1) * bs], PETSC_COMM_SELF, PETSC_ERR_ARG_WRONG, "Proposed block size %" PetscInt_FMT " is incompatible with the indices", bs);
         }
       }

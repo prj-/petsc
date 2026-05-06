@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
   Mat         A;
   KSP         ksp;
   PC          pc;
-  PetscInt    Istart, Iend, local_m, local_n, i;
+  PetscInt Istart, Iend, local_m, local_n;
   PetscMPIInt rank;
   PetscInt    method = 2, mat_size = 40, block_size = 2, *A_indices = NULL, *B_indices = NULL, A_size = 0, B_size = 0;
   IS          A_IS, B_IS;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
   PetscCall(MatGetOwnershipRange(A, &Istart, &Iend));
 
-  for (i = Istart; i < Iend; ++i) {
+  for (PetscInt i = Istart; i < Iend; ++i) {
     PetscCall(MatSetValue(A, i, i, 2, INSERT_VALUES));
     if (i < mat_size - 1) PetscCall(MatSetValue(A, i, i + 1, -1, INSERT_VALUES));
     if (i > 0) PetscCall(MatSetValue(A, i, i - 1, -1, INSERT_VALUES));
@@ -55,15 +55,15 @@ int main(int argc, char *argv[])
     }
     PetscCall(PetscCalloc1(A_size, &A_indices));
     PetscCall(PetscCalloc1(B_size, &B_indices));
-    for (i = 0; i < A_size; ++i) A_indices[i] = Istart + i;
-    for (i = 0; i < B_size; ++i) B_indices[i] = Istart + i + A_size;
+    for (PetscInt i = 0; i < A_size; ++i) A_indices[i] = Istart + i;
+    for (PetscInt i = 0; i < B_size; ++i) B_indices[i] = Istart + i + A_size;
   } else if (rank == 1) {
     A_size = (Iend - Istart) / 2;
     B_size = (Iend - Istart) / 2;
     PetscCall(PetscCalloc1(A_size, &A_indices));
     PetscCall(PetscCalloc1(B_size, &B_indices));
-    for (i = 0; i < A_size; ++i) A_indices[i] = Istart + i;
-    for (i = 0; i < B_size; ++i) B_indices[i] = Istart + i + A_size;
+    for (PetscInt i = 0; i < A_size; ++i) A_indices[i] = Istart + i;
+    for (PetscInt i = 0; i < B_size; ++i) B_indices[i] = Istart + i + A_size;
   }
 
   PetscCall(ISCreateGeneral(PETSC_COMM_WORLD, A_size, A_indices, PETSC_OWN_POINTER, &A_IS));

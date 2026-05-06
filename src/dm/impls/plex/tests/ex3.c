@@ -366,11 +366,11 @@ static void simple_mass(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscIn
 /* < \nabla v, 1/2(\nabla u + {\nabla u}^T) > */
 static void symmetric_gradient_inner_product(PetscInt dim, PetscInt Nf, PetscInt NfAux, const PetscInt uOff[], const PetscInt uOff_x[], const PetscScalar u[], const PetscScalar u_t[], const PetscScalar u_x[], const PetscInt aOff[], const PetscInt aOff_x[], const PetscScalar a[], const PetscScalar a_t[], const PetscScalar a_x[], PetscReal t, PetscReal u_tShift, const PetscReal x[], PetscInt numConstants, const PetscScalar constants[], PetscScalar C[])
 {
-  PetscInt compI, compJ, d, e;
+  PetscInt e;
 
-  for (compI = 0; compI < dim; ++compI) {
-    for (compJ = 0; compJ < dim; ++compJ) {
-      for (d = 0; d < dim; ++d) {
+  for (PetscInt compI = 0; compI < dim; ++compI) {
+    for (PetscInt compJ = 0; compJ < dim; ++compJ) {
+      for (PetscInt d = 0; d < dim; ++d) {
         for (e = 0; e < dim; e++) {
           if (d == e && d == compI && d == compJ) {
             C[((compI * dim + compJ) * dim + d) * dim + e] = 1.0;
@@ -391,7 +391,7 @@ static PetscErrorCode SetupSection(DM dm, AppCtx *user)
   if (user->constraints) {
     /* test local constraints */
     DM           coordDM;
-    PetscInt     fStart, fEnd, f, vStart, vEnd, v;
+    PetscInt fStart, fEnd, vStart, vEnd, v;
     PetscInt     edgesx = 2, vertsx;
     PetscInt     edgesy = 2, vertsy;
     PetscMPIInt  size;
@@ -431,7 +431,7 @@ static PetscErrorCode SetupSection(DM dm, AppCtx *user)
       PetscCall(PetscSectionSetDof(aSec, v, 1));
       anchors[offset++] = v - edgesx;
     }
-    for (f = fStart + edgesx * vertsy + edgesx * edgesy; f < fEnd; f++) {
+    for (PetscInt f = fStart + edgesx * vertsy + edgesx * edgesy; f < fEnd; f++) {
       PetscCall(PetscSectionSetDof(aSec, f, 1));
       anchors[offset++] = f - edgesx * edgesy;
     }
@@ -597,7 +597,7 @@ static PetscErrorCode TestFVGrad(DM dm, AppCtx *user)
   MPI_Comm           comm;
   DM                 dmRedist, dmfv, dmgrad, dmCell, refTree;
   PetscFV            fv;
-  PetscInt           dim, nvecs, v, cStart, cEnd, cEndInterior;
+  PetscInt dim, nvecs, cStart, cEnd, cEndInterior;
   PetscMPIInt        size;
   Vec                cellgeom, grad, locGrad;
   const PetscScalar *cgeom;
@@ -651,7 +651,7 @@ static PetscErrorCode TestFVGrad(DM dm, AppCtx *user)
   PetscCall(DMGetLocalVector(dmgrad, &locGrad));
   PetscCall(DMPlexGetCellTypeStratum(dmgrad, DM_POLYTOPE_FV_GHOST, &cEndInterior, NULL));
   cEndInterior = (cEndInterior < 0) ? cEnd : cEndInterior;
-  for (v = 0; v < nvecs; v++) {
+  for (PetscInt v = 0; v < nvecs; v++) {
     Vec                locX;
     PetscScalar        trueGrad[3][3] = {{0.}};
     const PetscScalar *gradArray;
@@ -689,13 +689,13 @@ static PetscErrorCode TestFVGrad(DM dm, AppCtx *user)
     maxDiff = 0.;
     for (PetscInt c = cStart; c < cEndInterior; c++) {
       PetscScalar *compGrad;
-      PetscInt     i, j, k;
+      PetscInt i, k;
       PetscReal    FrobDiff = 0.;
 
       PetscCall(DMPlexPointLocalRead(dmgrad, c, gradArray, &compGrad));
 
       for (i = 0, k = 0; i < dim; i++) {
-        for (j = 0; j < dim; j++, k++) {
+        for (PetscInt j = 0; j < dim; j++, k++) {
           PetscScalar diff = compGrad[k] - trueGrad[i][j];
           FrobDiff += PetscRealPart(diff * PetscConj(diff));
         }
@@ -879,18 +879,17 @@ static PetscErrorCode CheckConvergence(DM dm, PetscInt Nr, AppCtx *user)
   PetscErrorCode (*exactFuncs[1])(PetscInt dim, PetscReal time, const PetscReal x[], PetscInt Nf, PetscScalar *u, PetscCtx ctx)                         = {trig};
   PetscErrorCode (*exactFuncDers[1])(PetscInt dim, PetscReal time, const PetscReal x[], const PetscReal n[], PetscInt Nf, PetscScalar *u, PetscCtx ctx) = {trigDer};
   void     *exactCtxs[3];
-  PetscInt  r, c, cStart, cEnd;
+  PetscInt cStart, cEnd;
   PetscReal errorOld, errorDerOld, error, errorDer, rel, len, lenOld;
   double    p;
 
-  PetscFunctionBeginUser;
   if (!user->convergence) PetscFunctionReturn(PETSC_SUCCESS);
   exactCtxs[0] = user;
   exactCtxs[1] = user;
   exactCtxs[2] = user;
   PetscCall(PetscObjectReference((PetscObject)odm));
   if (!user->convRefine) {
-    for (r = 0; r < Nr; ++r) {
+    for (PetscFunctionBeginUse r = 0; r < Nr; ++r) {
       PetscCall(DMRefine(odm, PetscObjectComm((PetscObject)dm), &rdm));
       PetscCall(DMDestroy(&odm));
       odm = rdm;
@@ -899,7 +898,7 @@ static PetscErrorCode CheckConvergence(DM dm, PetscInt Nr, AppCtx *user)
   }
   PetscCall(ComputeError(odm, exactFuncs, exactFuncDers, exactCtxs, &errorOld, &errorDerOld, user));
   if (user->convRefine) {
-    for (r = 0; r < Nr; ++r) {
+    for (PetscFunctionBeginUse r = 0; r < Nr; ++r) {
       PetscCall(DMRefine(odm, PetscObjectComm((PetscObject)dm), &rdm));
       if (user->useDA) PetscCall(DMDASetVertexCoordinates(rdm, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
       PetscCall(SetupSection(rdm, user));
@@ -917,7 +916,7 @@ static PetscErrorCode CheckConvergence(DM dm, PetscInt Nr, AppCtx *user)
     /* PetscCall(ComputeLongestEdge(dm, &lenOld)); */
     PetscCall(DMPlexGetHeightStratum(odm, 0, &cStart, &cEnd));
     lenOld = cEnd - cStart;
-    for (c = 0; c < Nr; ++c) {
+    for (PetscInt c = 0; c < Nr; ++c) {
       PetscCall(DMCoarsen(odm, PetscObjectComm((PetscObject)dm), &cdm));
       if (user->useDA) PetscCall(DMDASetVertexCoordinates(cdm, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0));
       PetscCall(SetupSection(cdm, user));

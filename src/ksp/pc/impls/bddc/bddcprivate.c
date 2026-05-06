@@ -1972,11 +1972,9 @@ boundary:
             PetscCall(PetscArraycpy(pcbddc->mat_graph->coords, coords, cdim * n * dof));
           } else { /* BDDC graph does not use any blocked information, we need to replicate the data */
             PetscReal *bcoords = pcbddc->mat_graph->coords;
-            PetscInt   i, b, d;
-
-            for (i = 0; i < n; i++) {
-              for (b = 0; b < dof; b++) {
-                for (d = 0; d < cdim; d++) bcoords[i * dof * cdim + b * cdim + d] = PetscRealPart(coords[i * cdim + d]);
+            for (PetscInt i = 0; i < n; i++) {
+              for (PetscInt b = 0; b < dof; b++) {
+                for (PetscInt d = 0; d < cdim; d++) bcoords[i * dof * cdim + b * cdim + d] = PetscRealPart(coords[i * cdim + d]);
               }
             }
           }
@@ -3732,10 +3730,10 @@ PetscErrorCode PCBDDCAdaptiveSelection(PC pc)
 #endif
             PetscCall(PetscLogFlops((4.0 * subset_size * subset_size * subset_size) / 3.0));
             {
-              PetscInt e, k, ne;
+              PetscInt e, ne;
               for (e = 0, ne = 0; e < B_neigs; e++) {
                 if (eigs[e] < lthresh || eigs[e] > uthresh) {
-                  for (k = 0; k < B_N; k++) S[ne * B_N + k] = eigv[e * B_N + k];
+                  for (PetscInt k = 0; k < B_N; k++) S[ne * B_N + k] = eigv[e * B_N + k];
                   eigs[ne] = eigs[e];
                   ne++;
                 }
@@ -4765,12 +4763,12 @@ PetscErrorCode PCBDDCSetUpCorrection(PC pc, Mat *coarse_submat)
           for (i = 0; i < reuse_solver->benign_n; i++) {
             const PetscScalar *vals;
             const PetscInt    *idxs, *idxs_zero;
-            PetscInt           n, j, nz;
+            PetscInt n, nz;
 
             PetscCall(ISGetLocalSize(reuse_solver->benign_zerodiag_subs[i], &nz));
             PetscCall(ISGetIndices(reuse_solver->benign_zerodiag_subs[i], &idxs_zero));
             PetscCall(MatGetRow(A_RV_bcorr, i, &n, &idxs, &vals));
-            for (j = 0; j < n; j++) {
+            for (PetscInt j = 0; j < n; j++) {
               PetscScalar val = vals[j];
               PetscInt    k, col = idxs[j];
               for (k = 0; k < nz; k++) marr[idxs_zero[k] + lda_rhs * col] -= val;
@@ -4946,16 +4944,16 @@ PetscErrorCode PCBDDCSetUpCorrection(PC pc, Mat *coarse_submat)
         for (i = 0; i < reuse_solver->benign_n; i++) {
           const PetscScalar *vals;
           const PetscInt    *idxs, *idxs_zero;
-          PetscInt           n, j, nz;
+          PetscInt n, nz;
 
           PetscCall(ISGetLocalSize(reuse_solver->benign_zerodiag_subs[i], &nz));
           PetscCall(ISGetIndices(reuse_solver->benign_zerodiag_subs[i], &idxs_zero));
-          for (j = 0; j < n_vertices; j++) {
+          for (PetscInt j = 0; j < n_vertices; j++) {
             sums[j] = 0.;
             for (PetscInt k = 0; k < nz; k++) sums[j] += marr[idxs_zero[k] + j * n_R];
           }
           PetscCall(MatGetRow(A_RV_bcorr, i, &n, &idxs, &vals));
-          for (j = 0; j < n; j++) {
+          for (PetscInt j = 0; j < n; j++) {
             PetscScalar val = vals[j];
             for (PetscInt k = 0; k < n_vertices; k++) PetscCall(MatSetValue(*coarse_submat, idx_V[idxs[j]], idx_V[k], val * sums[k], ADD_VALUES));
           }

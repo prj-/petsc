@@ -477,7 +477,7 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
   const PetscInt     ostep = ((AppCtx *)ctx)->ostep;
   DM                 sw;
   const PetscScalar *u;
-  PetscInt           dim, Np, p;
+  PetscInt dim, Np;
 
   PetscFunctionBeginUser;
   if (step % ostep == 0) {
@@ -487,7 +487,7 @@ static PetscErrorCode EnergyMonitor(TS ts, PetscInt step, PetscReal t, Vec U, Pe
     PetscCall(VecGetLocalSize(U, &Np));
     Np /= 2 * dim;
     if (!step) PetscCall(PetscPrintf(PetscObjectComm((PetscObject)ts), "Time     Step Part     Energy\n"));
-    for (p = 0; p < Np; ++p) {
+    for (PetscInt p = 0; p < Np; ++p) {
       const PetscReal v2 = DMPlex_DotRealD_Internal(dim, &u[(p * 2 + 1) * dim], &u[(p * 2 + 1) * dim]);
 
       PetscCall(PetscSynchronizedPrintf(PetscObjectComm((PetscObject)ts), "%.6lf %4" PetscInt_FMT " %4" PetscInt_FMT " %10.4lf\n", (double)t, step, p, (double)(0.5 * v2)));

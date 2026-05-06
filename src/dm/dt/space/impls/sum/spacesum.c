@@ -442,7 +442,7 @@ static PetscErrorCode PetscSpaceEvaluate_Sum(PetscSpace sp, PetscInt npoints, co
     for (i = 0; i < numelH; ++i) H[i] = 0.;
 
   for (s = 0, offset = 0, ncoffset = 0; s < Ns; ++s) {
-    PetscInt sNv, spdim, sNc, p;
+    PetscInt sNv, spdim, sNc;
 
     PetscCall(PetscSpaceGetNumVariables(sum->sumspaces[s], &sNv));
     PetscCall(PetscSpaceGetNumComponents(sum->sumspaces[s], &sNc));
@@ -450,7 +450,7 @@ static PetscErrorCode PetscSpaceEvaluate_Sum(PetscSpace sp, PetscInt npoints, co
     PetscCheck(offset + spdim <= pdimfull, PetscObjectComm((PetscObject)sp), PETSC_ERR_ARG_OUTOFRANGE, "Subspace dimensions exceed target space dimension.");
     if (s == 0 || !sum->uniform) PetscCall(PetscSpaceEvaluate(sum->sumspaces[s], npoints, points, sB, sD, sH));
     if (B || D || H) {
-      for (p = 0; p < npoints; ++p) {
+      for (PetscInt p = 0; p < npoints; ++p) {
         for (PetscInt j = 0; j < spdim; ++j) {
           PetscInt b = sum->interleave_basis ? (j * Ns + s) : (j + offset);
 

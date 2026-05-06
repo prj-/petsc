@@ -21,7 +21,7 @@ PetscErrorCode DMPlexCreateClosureIndex(DM dm, PetscSection section)
   PetscSection closureSection;
   IS           closureIS;
   PetscInt    *clPoints;
-  PetscInt     pStart, pEnd, sStart, sEnd, point, clSize;
+  PetscInt pStart, pEnd, sStart, sEnd, clSize;
 
   PetscFunctionBegin;
   PetscValidHeaderSpecific(dm, DM_CLASSID, 1);
@@ -31,7 +31,7 @@ PetscErrorCode DMPlexCreateClosureIndex(DM dm, PetscSection section)
   PetscCall(DMPlexGetChart(dm, &pStart, &pEnd));
   PetscCall(PetscSectionCreate(PetscObjectComm((PetscObject)section), &closureSection));
   PetscCall(PetscSectionSetChart(closureSection, pStart, pEnd));
-  for (point = pStart; point < pEnd; ++point) {
+  for (PetscInt point = pStart; point < pEnd; ++point) {
     PetscInt *points = NULL, numPoints, p, dof, cldof = 0;
 
     PetscCall(DMPlexGetTransitiveClosure(dm, point, PETSC_TRUE, &numPoints, &points));
@@ -47,7 +47,7 @@ PetscErrorCode DMPlexCreateClosureIndex(DM dm, PetscSection section)
   PetscCall(PetscSectionSetUp(closureSection));
   PetscCall(PetscSectionGetStorageSize(closureSection, &clSize));
   PetscCall(PetscMalloc1(clSize, &clPoints));
-  for (point = pStart; point < pEnd; ++point) {
+  for (PetscInt point = pStart; point < pEnd; ++point) {
     PetscInt *points = NULL, numPoints, p, q, dof, cldof, cloff;
 
     PetscCall(PetscSectionGetDof(closureSection, point, &cldof));

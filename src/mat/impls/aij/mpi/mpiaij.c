@@ -6159,7 +6159,7 @@ static PetscErrorCode MatSplitEntries_Internal(Mat mat, PetscCount n, const Pets
   PetscInt    cstart, cend, rstart, rend, row, col;
   PetscCount  Atot = 0, Btot = 0; /* Total number of nonzeros in the diagonal and off-diagonal blocks */
   PetscCount  Annz = 0, Bnnz = 0; /* Number of unique nonzeros in the diagonal and off-diagonal blocks */
-  PetscCount  k, m, p, q, r, s, mid;
+  PetscCount k, m, p, q, s, mid;
   PetscCount *Aperm, *Bperm, *Ajmap, *Bjmap;
 
   PetscFunctionBegin;
@@ -6224,7 +6224,7 @@ static PetscErrorCode MatSplitEntries_Internal(Mat mat, PetscCount n, const Pets
 
   /* Re-scan indices and copy diag/offdiag permutation indices to Aperm, Bperm and also fill Ajmap and Bjmap */
   Ajmap[0] = Bjmap[0] = Atot = Btot = Annz = Bnnz = 0;
-  for (r = 0; r < m; r++) {
+  for (PetscCount r = 0; r < m; r++) {
     k   = rowBegin[r];
     mid = rowMid[r];
     s   = rowEnd[r];

@@ -528,7 +528,7 @@ static PetscErrorCode PCGAMGCreateGraph_GEO(PC pc, Mat Amat, Mat *a_Gmat)
 
 static PetscErrorCode PCGAMGCoarsen_GEO(PC a_pc, Mat *a_Gmat, PetscCoarsenData **a_llist_parent)
 {
-  PetscInt   Istart, Iend, nloc, kk, Ii, ncols;
+  PetscInt Istart, Iend, nloc, kk, ncols;
   IS         perm;
   GAMGNode  *gnodes;
   PetscInt  *permute;
@@ -546,7 +546,7 @@ static PetscErrorCode PCGAMGCoarsen_GEO(PC a_pc, Mat *a_Gmat, PetscCoarsenData *
   PetscCall(PetscMalloc1(nloc, &gnodes));
   PetscCall(PetscMalloc1(nloc, &permute));
 
-  for (Ii = Istart; Ii < Iend; Ii++) { /* locals only? */
+  for (PetscInt Ii = Istart; Ii < Iend; Ii++) { /* locals only? */
     PetscCall(MatGetRow(Gmat, Ii, &ncols, NULL, NULL));
     {
       PetscInt lid       = Ii - Istart;
@@ -563,7 +563,7 @@ static PetscErrorCode PCGAMGCoarsen_GEO(PC a_pc, Mat *a_Gmat, PetscCoarsenData *
 
     PetscCall(PetscRandomCreate(comm, &rand));
     PetscCall(PetscCalloc1(nloc, &bIndexSet));
-    for (Ii = 0; Ii < nloc; Ii++) {
+    for (PetscInt Ii = 0; Ii < nloc; Ii++) {
       PetscCall(PetscRandomGetValueReal(rand, &rr));
       iSwapIndex = (PetscInt)(rr * nloc);
       if (!bIndexSet[iSwapIndex] && iSwapIndex != Ii) {

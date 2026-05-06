@@ -76,7 +76,7 @@ static PetscErrorCode bc_func_fv(PetscReal time, const PetscReal *c, const Petsc
 static PetscErrorCode IdentifyBadPoints(DM dm, Vec vec, PetscReal tol)
 {
   DM           dmplex;
-  PetscInt     p, pStart, pEnd, maxDof;
+  PetscInt pStart, pEnd, maxDof;
   Vec          vecLocal;
   DMLabel      depthLabel;
   PetscSection section;
@@ -90,7 +90,7 @@ static PetscErrorCode IdentifyBadPoints(DM dm, Vec vec, PetscReal tol)
   PetscCall(DMPlexGetDepthLabel(dmplex, &depthLabel));
   PetscCall(DMGetLocalSection(dmplex, &section));
   PetscCall(PetscSectionGetMaxDof(section, &maxDof));
-  for (p = pStart; p < pEnd; p++) {
+  for (PetscInt p = pStart; p < pEnd; p++) {
     PetscInt     s, c, cSize, parent, childID, numChildren;
     PetscInt     cl, closureSize, *closure = NULL;
     PetscScalar *values = NULL;

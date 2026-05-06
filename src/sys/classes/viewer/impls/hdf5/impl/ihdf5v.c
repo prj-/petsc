@@ -448,7 +448,7 @@ static PetscErrorCode PetscViewerHDF5PushGroup_HDF5(PetscViewer viewer, const ch
 {
   PetscViewer_HDF5         *hdf5 = (PetscViewer_HDF5 *)viewer->data;
   PetscViewerHDF5GroupList *groupNode;
-  size_t                    i, len;
+  size_t len;
   char                      buf[PETSC_MAX_PATH_LEN];
   const char               *gname;
 
@@ -461,7 +461,7 @@ static PetscErrorCode PetscViewerHDF5PushGroup_HDF5(PetscViewer viewer, const ch
       gname = (hdf5->groups && hdf5->groups->name) ? hdf5->groups->name : NULL;
     } else if (name[0] == '/') {
       /* absolute */
-      for (i = 1; i < len; i++) {
+      for (size_t i = 1; i < len; i++) {
         if (name[i] != '/') {
           gname = name;
           break;

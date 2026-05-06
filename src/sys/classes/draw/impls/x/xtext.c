@@ -118,10 +118,10 @@ static PetscErrorCode PetscDrawXiInitFonts(PetscDraw_X *XBWin)
 
 static PetscErrorCode PetscDrawXiMatchFontSize(PetscDrawXiFont *font, int w, int h)
 {
-  int i, max, imax, tmp;
+  int max, imax, tmp;
 
   PetscFunctionBegin;
-  for (i = 0; i < act_nfonts; i++) {
+  for (int i = 0; i < act_nfonts; i++) {
     if (nfonts[i].w == w && nfonts[i].h == h) {
       font->font_w       = w;
       font->font_h       = h;
@@ -133,7 +133,7 @@ static PetscErrorCode PetscDrawXiMatchFontSize(PetscDrawXiFont *font, int w, int
   /* determine closest fit,per max. norm */
   imax = 0;
   max  = PetscMax(PetscAbsInt(nfonts[0].w - w), PetscAbsInt(nfonts[0].h - h));
-  for (i = 1; i < act_nfonts; i++) {
+  for (int i = 1; i < act_nfonts; i++) {
     tmp = PetscMax(PetscAbsInt(nfonts[i].w - w), PetscAbsInt(nfonts[i].h - h));
     if (tmp < max) {
       max  = tmp;

@@ -4,7 +4,7 @@ static char help[] = "Tests repeated PetscInitialize/PetscFinalize calls.\n\n";
 
 int main(int argc, char **argv)
 {
-  int i, imax;
+  int imax;
 #if defined(PETSC_HAVE_ELEMENTAL)
   PetscBool initialized;
 #endif
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
   PetscCall(PetscElementalInitialized(&initialized));
   PetscCheck(initialized, MPI_COMM_WORLD, PETSC_ERR_PLIB, "Error in Elemental package processing");
 #endif
-  for (i = 0; i < imax; ++i) {
+  for (int i = 0; i < imax; ++i) {
     PetscFunctionBeginUser;
     PetscCall(PetscInitialize(&argc, &argv, NULL, help));
     PetscCall(PetscFinalize());
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   PetscCall(PetscElementalFinalizePackage());
   PetscCall(PetscElementalInitialized(&initialized));
   PetscCheck(!initialized, MPI_COMM_WORLD, PETSC_ERR_PLIB, "Error in Elemental package processing");
-  for (i = 0; i < 32; ++i) { /* increasing the upper bound will generate an error in Elemental */
+  for (int i = 0; i < 32; ++i) { /* increasing the upper bound will generate an error in Elemental */
     PetscFunctionBeginUser;
     PetscCall(PetscInitialize(&argc, &argv, NULL, help));
     PetscCall(PetscElementalInitialized(&initialized));

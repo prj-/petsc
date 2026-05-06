@@ -12,7 +12,7 @@ PetscErrorCode MatLoad_AIJ_HDF5(Mat mat, PetscViewer viewer)
   const PetscScalar *a      = NULL;
   char              *a_name = NULL, *i_name = NULL, *j_name = NULL, *c_name = NULL;
   const char        *mat_name = NULL;
-  PetscInt           p, m, M, N;
+  PetscInt m, M, N;
   PetscInt           bs = mat->rmap->bs;
   PetscInt          *range;
   PetscBool          flg;
@@ -105,7 +105,7 @@ PetscErrorCode MatLoad_AIJ_HDF5(Mat mat, PetscViewer viewer)
   /* Last rank has global number of nonzeros (= length of j and a arrays) in i[m] (last i entry) so broadcast it */
   range[size] = i[m];
   PetscCallMPI(MPI_Bcast(&range[size], 1, MPIU_INT, size - 1, comm));
-  for (p = size - 1; p > 0; p--) {
+  for (PetscInt p = size - 1; p > 0; p--) {
     if (!range[p]) range[p] = range[p + 1]; /* for ranks with 0 rows, take the value from the next processor */
   }
   i[m] = range[rank + 1]; /* i[m] (last i entry) is equal to next rank's offset */
@@ -113,7 +113,7 @@ PetscErrorCode MatLoad_AIJ_HDF5(Mat mat, PetscViewer viewer)
   PetscCall(PetscLayoutCreateFromRanges(comm, range, PETSC_OWN_POINTER, 1, &jmap));
 
   /* Convert global to local indexing of rows */
-  for (p = 1; p < m + 1; ++p) i[p] -= i[0];
+  for (PetscInt p = 1; p < m + 1; ++p) i[p] -= i[0];
   i[0] = 0;
 
   /* Read array j (array of column indices) */

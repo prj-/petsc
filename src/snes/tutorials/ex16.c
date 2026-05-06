@@ -478,7 +478,7 @@ void FormElementJacobian(Field *ex, CoordField *ec, Field *ef, Field *eq, PetscS
   PetscScalar invJ[9];
   PetscScalar F[9], S[9], dF[9], dS[9], dFS[9], FdS[9], FS[9];
   PetscReal   scl;
-  PetscInt    i, j, k, l, ii, jj, kk, ll, qi, qj, qk, m;
+  PetscInt i, j, k, l, ii, jj, kk, ll, m;
 
   if (ej)
     for (i = 0; i < NPB * NPB; i++) ej[i] = 0.;
@@ -495,9 +495,9 @@ void FormElementJacobian(Field *ex, CoordField *ec, Field *ef, Field *eq, PetscS
       eq[i][2] = 0.;
     }
   /* loop over quadrature */
-  for (qk = 0; qk < NQ; qk++) {
-    for (qj = 0; qj < NQ; qj++) {
-      for (qi = 0; qi < NQ; qi++) {
+  for (PetscInt qk = 0; qk < NQ; qk++) {
+    for (PetscInt qj = 0; qj < NQ; qj++) {
+      for (PetscInt qi = 0; qi < NQ; qi++) {
         QuadraturePointGeometricJacobian(ec, qi, qj, qk, J);
         InvertTensor(J, invJ, &vol);
         scl = vol * wts[qi] * wts[qj] * wts[qk];
@@ -572,16 +572,16 @@ void FormElementJacobian(Field *ex, CoordField *ec, Field *ef, Field *eq, PetscS
 
 void ApplyBCsElement(PetscInt mx, PetscInt my, PetscInt mz, PetscInt i, PetscInt j, PetscInt k, PetscScalar *jacobian)
 {
-  PetscInt ii, jj, kk, ll, ei, ej, ek, el;
+  PetscInt ii, jj, kk, ej;
   for (kk = 0; kk < NB; kk++) {
     for (jj = 0; jj < NB; jj++) {
       for (ii = 0; ii < NB; ii++) {
-        for (ll = 0; ll < 3; ll++) {
+        for (PetscInt ll = 0; ll < 3; ll++) {
           PetscInt tridx = ll + 3 * (ii + jj * NB + kk * NB * NB);
-          for (ek = 0; ek < NB; ek++) {
+          for (PetscInt ek = 0; ek < NB; ek++) {
             for (ej = 0; ej < NB; ej++) {
-              for (ei = 0; ei < NB; ei++) {
-                for (el = 0; el < 3; el++) {
+              for (PetscInt ei = 0; ei < NB; ei++) {
+                for (PetscInt el = 0; el < 3; el++) {
                   if (OnBoundary(i + ii, j + jj, k + kk, mx, my, mz) || OnBoundary(i + ei, j + ej, k + ek, mx, my, mz)) {
                     PetscInt teidx = el + 3 * (ei + ej * NB + ek * NB * NB);
                     if (teidx == tridx) {
@@ -604,7 +604,7 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, Field ***x, Mat jacpre, Ma
 {
   /* values for each basis function at each quadrature point */
   AppCtx     *user = (AppCtx *)ptr;
-  PetscInt    i, j, k, m, l;
+  PetscInt i, j, k, l;
   PetscInt    ii, jj, kk;
   PetscScalar ej[NPB * NPB];
   PetscScalar vals[NPB * NPB];
@@ -651,7 +651,7 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, Field ***x, Mat jacpre, Ma
           for (jj = 0; jj < NB; jj++) {
             for (ii = 0; ii < NB; ii++) {
               PetscInt idx = ii + jj * 2 + kk * 4;
-              for (m = 0; m < 3; m++) {
+              for (PetscInt m = 0; m < 3; m++) {
                 col[3 * idx + m].i = i + ii;
                 col[3 * idx + m].j = j + jj;
                 col[3 * idx + m].k = k + kk;
@@ -690,7 +690,7 @@ PetscErrorCode FormJacobianLocal(DMDALocalInfo *info, Field ***x, Mat jacpre, Ma
     for (j = ys; j < ys + ym; j++) {
       for (i = xs; i < xs + xm; i++) {
         if (OnBoundary(i, j, k, mx, my, mz)) {
-          for (m = 0; m < 3; m++) {
+          for (PetscInt m = 0; m < 3; m++) {
             col[m].i = i;
             col[m].j = j;
             col[m].k = k;
@@ -793,9 +793,7 @@ PetscErrorCode TangentLoad(SNES snes, Vec X, Vec Q, void *ptr)
   DM       da;
   Vec      Xl, Ql;
   Field ***x, ***q;
-  PetscInt i, j, k, l;
-  PetscInt ii, jj, kk;
-
+  PetscInt i, j, k;
   Field      eq[NEB];
   Field      ex[NEB];
   CoordField ec[NEB];
@@ -827,7 +825,7 @@ PetscErrorCode TangentLoad(SNES snes, Vec X, Vec Q, void *ptr)
   for (k = zs; k < zs + zm; k++) {
     for (j = ys; j < ys + ym; j++) {
       for (i = xs; i < xs + xm; i++) {
-        for (l = 0; l < 3; l++) q[k][j][i][l] = 0.;
+        for (PetscInt l = 0; l < 3; l++) q[k][j][i][l] = 0.;
       }
     }
   }
@@ -850,13 +848,13 @@ PetscErrorCode TangentLoad(SNES snes, Vec X, Vec Q, void *ptr)
         GatherElementData(mx, my, mz, x, c, i, j, k, ex, ec, user);
         FormElementJacobian(ex, ec, NULL, eq, NULL, user);
         /* put this element's additions into the residuals */
-        for (kk = 0; kk < NB; kk++) {
-          for (jj = 0; jj < NB; jj++) {
-            for (ii = 0; ii < NB; ii++) {
+        for (PetscInt kk = 0; kk < NB; kk++) {
+          for (PetscInt jj = 0; jj < NB; jj++) {
+            for (PetscInt ii = 0; ii < NB; ii++) {
               PetscInt idx = ii + jj * NB + kk * NB * NB;
               if (k + kk >= zs && j + jj >= ys && i + ii >= xs && k + kk < zs + zm && j + jj < ys + ym && i + ii < xs + xm) {
                 if (!OnBoundary(i + ii, j + jj, k + kk, mx, my, mz)) {
-                  for (l = 0; l < 3; l++) q[k + kk][j + jj][i + ii][l] += eq[idx][l];
+                  for (PetscInt l = 0; l < 3; l++) q[k + kk][j + jj][i + ii][l] += eq[idx][l];
                 }
               }
             }

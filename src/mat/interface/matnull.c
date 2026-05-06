@@ -385,7 +385,7 @@ PetscErrorCode MatNullSpaceTest(MatNullSpace sp, Mat mat, PetscBool *isNull)
 {
   PetscScalar sum;
   PetscReal   nrm, tol = 10. * PETSC_SQRT_MACHINE_EPSILON;
-  PetscInt    j, n, N;
+  PetscInt n, N;
   Vec         l, r;
   PetscBool   flg1 = PETSC_FALSE, flg2 = PETSC_FALSE, consistent = PETSC_TRUE;
   PetscViewer viewer;
@@ -417,7 +417,7 @@ PetscErrorCode MatNullSpaceTest(MatNullSpace sp, Mat mat, PetscBool *isNull)
     PetscCall(VecDestroy(&r));
   }
 
-  for (j = 0; j < n; j++) {
+  for (PetscInt j = 0; j < n; j++) {
     PetscUseTypeMethod(mat, mult, sp->vecs[j], l);
     PetscCall(VecNorm(l, NORM_2, &nrm));
     if (nrm >= tol) consistent = PETSC_FALSE;

@@ -9,7 +9,7 @@
 
 static PetscErrorCode DMCreateFieldDecomposition_Stag(DM dm, PetscInt *len, char ***namelist, IS **islist, DM **dmlist)
 {
-  PetscInt       f0, f1, f2, f3, dof0, dof1, dof2, dof3, n_entries, k, d, cnt, n_fields, dim;
+  PetscInt f0, f1, f2, f3, dof0, dof1, dof2, dof3, n_entries, d, cnt, n_fields, dim;
   DMStagStencil *stencil0, *stencil1, *stencil2, *stencil3;
 
   PetscFunctionBegin;
@@ -34,14 +34,14 @@ static PetscErrorCode DMCreateFieldDecomposition_Stag(DM dm, PetscInt *len, char
   PetscCall(PetscCalloc1(f1 * dof1, &stencil1));
   if (dim >= 2) PetscCall(PetscCalloc1(f2 * dof2, &stencil2));
   if (dim >= 3) PetscCall(PetscCalloc1(f3 * dof3, &stencil3));
-  for (k = 0; k < f0; ++k) {
+  for (PetscInt k = 0; k < f0; ++k) {
     for (d = 0; d < dof0; ++d) {
       stencil0[dof0 * k + d].i = 0;
       stencil0[dof0 * k + d].j = 0;
       stencil0[dof0 * k + d].j = 0;
     }
   }
-  for (k = 0; k < f1; ++k) {
+  for (PetscInt k = 0; k < f1; ++k) {
     for (d = 0; d < dof1; ++d) {
       stencil1[dof1 * k + d].i = 0;
       stencil1[dof1 * k + d].j = 0;
@@ -49,7 +49,7 @@ static PetscErrorCode DMCreateFieldDecomposition_Stag(DM dm, PetscInt *len, char
     }
   }
   if (dim >= 2) {
-    for (k = 0; k < f2; ++k) {
+    for (PetscInt k = 0; k < f2; ++k) {
       for (d = 0; d < dof2; ++d) {
         stencil2[dof2 * k + d].i = 0;
         stencil2[dof2 * k + d].j = 0;
@@ -58,7 +58,7 @@ static PetscErrorCode DMCreateFieldDecomposition_Stag(DM dm, PetscInt *len, char
     }
   }
   if (dim >= 3) {
-    for (k = 0; k < f3; ++k) {
+    for (PetscInt k = 0; k < f3; ++k) {
       for (d = 0; d < dof3; ++d) {
         stencil3[dof3 * k + d].i = 0;
         stencil3[dof3 * k + d].j = 0;

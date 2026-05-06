@@ -816,7 +816,7 @@ static PetscErrorCode PCPatchCompleteCellPatch(PC pc, PetscHSetI ht, PetscHSetI 
   PetscInt     *star = NULL, *closure = NULL;
   PetscInt      ignoredim, iStart = 0, iEnd = -1, starSize, closureSize, si, ci;
   PetscInt     *fStar = NULL, *fClosure = NULL;
-  PetscInt      fBegin, fEnd, fsi, fci, fStarSize, fClosureSize;
+  PetscInt fBegin, fEnd, fStarSize, fClosureSize;
 
   PetscFunctionBegin;
   PetscCall(PCGetDM(pc, &dm));
@@ -848,9 +848,9 @@ static PetscErrorCode PCPatchCompleteCellPatch(PC pc, PetscHSetI ht, PetscHSetI 
         if (patch->usercomputeopintfacet) {
           if (fBegin <= seenpoint && seenpoint < fEnd) {
             PetscCall(DMPlexGetTransitiveClosure(dm, seenpoint, PETSC_FALSE, &fStarSize, &fStar));
-            for (fsi = 0; fsi < fStarSize * 2; fsi += 2) {
+            for (PetscInt fsi = 0; fsi < fStarSize * 2; fsi += 2) {
               PetscCall(DMPlexGetTransitiveClosure(dm, fStar[fsi], PETSC_TRUE, &fClosureSize, &fClosure));
-              for (fci = 0; fci < fClosureSize * 2; fci += 2) PetscCall(PetscHSetIAdd(cht, fClosure[fci]));
+              for (PetscInt fci = 0; fci < fClosureSize * 2; fci += 2) PetscCall(PetscHSetIAdd(cht, fClosure[fci]));
               PetscCall(DMPlexRestoreTransitiveClosure(dm, fStar[fsi], PETSC_TRUE, NULL, &fClosure));
             }
             PetscCall(DMPlexRestoreTransitiveClosure(dm, seenpoint, PETSC_FALSE, NULL, &fStar));
@@ -1570,7 +1570,7 @@ static PetscErrorCode PCPatchCreateCellPatchDiscretisationInfo(PC pc)
   /* Now populate the global to local map.  This could be merged into the above loop if we were willing to deal with reallocs. */
   for (v = vStart; v < vEnd; ++v) {
     PetscHashIter hi;
-    PetscInt      dof, off, Np, ooff, i, j, k, l;
+    PetscInt dof, off, Np, ooff;
 
     PetscCall(PetscHMapIClear(ht));
     PetscCall(PetscHMapIClear(htWithArtificial));
@@ -1581,21 +1581,21 @@ static PetscErrorCode PCPatchCreateCellPatchDiscretisationInfo(PC pc)
     PetscCall(PetscSectionGetOffset(pointCounts, v, &ooff));
     if (dof <= 0) continue;
 
-    for (k = 0; k < patch->nsubspaces; ++k) {
+    for (PetscInt k = 0; k < patch->nsubspaces; ++k) {
       const PetscInt *cellNodeMap    = patch->cellNodeMap[k];
       PetscInt        nodesPerCell   = patch->nodesPerCell[k];
       PetscInt        subspaceOffset = patch->subspaceOffsets[k];
       PetscInt        bs             = patch->bs[k];
       PetscInt        goff;
 
-      for (i = off; i < off + dof; ++i) {
+      for (PetscInt i = off; i < off + dof; ++i) {
         /* Reconstruct mapping of global-to-local on this patch. */
         const PetscInt c    = cellsArray[i];
         PetscInt       cell = c;
 
         if (cellNumbering) PetscCall(PetscSectionGetOffset(cellNumbering, c, &cell));
-        for (j = 0; j < nodesPerCell; ++j) {
-          for (l = 0; l < bs; ++l) {
+        for (PetscInt j = 0; j < nodesPerCell; ++j) {
+          for (PetscInt l = 0; l < bs; ++l) {
             const PetscInt globalDof = cellNodeMap[cell * nodesPerCell + j] * bs + l + subspaceOffset;
             const PetscInt localDof  = dofsArray[key];
             if (localDof >= 0) PetscCall(PetscHMapISet(ht, globalDof, localDof));
@@ -1678,19 +1678,19 @@ static PetscErrorCode PCPatchCreateCellPatchDiscretisationInfo(PC pc)
    contributions of the different function spaces to the right places. So we loop
    over cells, then over subspaces. */
     if (patch->nsubspaces > 1) { /* for nsubspaces = 1, data we need is already in dofsArray */
-      for (i = off; i < off + dof; ++i) {
+      for (PetscInt i = off; i < off + dof; ++i) {
         const PetscInt c    = cellsArray[i];
         PetscInt       cell = c;
 
         if (cellNumbering) PetscCall(PetscSectionGetOffset(cellNumbering, c, &cell));
-        for (k = 0; k < patch->nsubspaces; ++k) {
+        for (PetscInt k = 0; k < patch->nsubspaces; ++k) {
           const PetscInt *cellNodeMap    = patch->cellNodeMap[k];
           PetscInt        nodesPerCell   = patch->nodesPerCell[k];
           PetscInt        subspaceOffset = patch->subspaceOffsets[k];
           PetscInt        bs             = patch->bs[k];
 
-          for (j = 0; j < nodesPerCell; ++j) {
-            for (l = 0; l < bs; ++l) {
+          for (PetscInt j = 0; j < nodesPerCell; ++j) {
+            for (PetscInt l = 0; l < bs; ++l) {
               const PetscInt globalDof = cellNodeMap[cell * nodesPerCell + j] * bs + l + subspaceOffset;
               PetscInt       localDof;
 
@@ -1749,16 +1749,16 @@ static PetscErrorCode PCPatchCreateCellPatchDiscretisationInfo(PC pc)
       }
     }
   } else {
-    PetscInt pStartf, pEndf, f;
+    PetscInt pStartf, pEndf;
     pStart = PETSC_INT_MAX;
     pEnd   = PETSC_INT_MIN;
-    for (f = 0; f < patch->nsubspaces; ++f) {
+    for (PetscInt f = 0; f < patch->nsubspaces; ++f) {
       PetscCall(PetscSectionGetChart(patch->dofSection[f], &pStartf, &pEndf));
       pStart = PetscMin(pStart, pStartf);
       pEnd   = PetscMax(pEnd, pEndf);
     }
     PetscCall(PetscSectionSetChart(patch->patchSection, pStart, pEnd));
-    for (f = 0; f < patch->nsubspaces; ++f) {
+    for (PetscInt f = 0; f < patch->nsubspaces; ++f) {
       PetscCall(PetscSectionGetChart(patch->dofSection[f], &pStartf, &pEndf));
       for (p = pStartf; p < pEndf; ++p) {
         PetscInt fdof;
@@ -1987,13 +1987,13 @@ static PetscErrorCode PCPatchCreateMatrix_Private(PC pc, PetscInt point, Mat *ma
 
       /* Exterior facet preallocation: each exterior facet touches one cell */
       if (patch->usercomputeopextfacet) {
-        PetscInt        i, numExtFacets, extFacetOffset;
+        PetscInt numExtFacets, extFacetOffset;
         const PetscInt *extFacetCells = NULL;
 
         PetscCall(PetscSectionGetDof(patch->extFacetCounts, point, &numExtFacets));
         PetscCall(PetscSectionGetOffset(patch->extFacetCounts, point, &extFacetOffset));
         PetscCall(ISGetIndices(patch->extFacetsToPatchCell, &extFacetCells));
-        for (i = 0; i < numExtFacets; i++) {
+        for (PetscInt i = 0; i < numExtFacets; i++) {
           const PetscInt  cell0    = extFacetCells[extFacetOffset + i];
           const PetscInt *cell0idx = &dofsArray[(offset + cell0) * patch->totalDofsPerCell];
           PetscCall(MatSetValues(preallocator, patch->totalDofsPerCell, cell0idx, patch->totalDofsPerCell, cell0idx, vals, INSERT_VALUES));
@@ -2540,7 +2540,7 @@ PetscErrorCode PCPatch_ScatterLocal_Private(PC pc, PetscInt p, Vec x, Vec y, Ins
   const PetscScalar *xArray    = NULL;
   PetscScalar       *yArray    = NULL;
   const PetscInt    *gtolArray = NULL;
-  PetscInt           dof, offset, lidx;
+  PetscInt dof, offset;
 
   PetscFunctionBeginHot;
   PetscCall(VecGetArrayRead(x, &xArray));
@@ -2560,7 +2560,7 @@ PetscErrorCode PCPatch_ScatterLocal_Private(PC pc, PetscInt p, Vec x, Vec y, Ins
   }
   PetscCheck(mode != INSERT_VALUES || scat == SCATTER_FORWARD, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Can't insert if not scattering forward");
   PetscCheck(mode != ADD_VALUES || scat == SCATTER_REVERSE, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Can't add if not scattering reverse");
-  for (lidx = 0; lidx < dof; ++lidx) {
+  for (PetscInt lidx = 0; lidx < dof; ++lidx) {
     const PetscInt gidx = gtolArray[offset + lidx];
 
     if (mode == INSERT_VALUES) yArray[lidx] = xArray[gidx]; /* Forward */
@@ -2715,12 +2715,12 @@ static PetscErrorCode PCSetUp_PATCH(PC pc)
       numGlobalBcs = 0;
       for (p = pStart; p < pEnd; ++p) {
         const PetscInt *ind;
-        PetscInt        off, cdof, d;
+        PetscInt off, cdof;
 
         PetscCall(PetscSectionGetOffset(s, p, &off));
         PetscCall(PetscSectionGetConstraintDof(s, p, &cdof));
         PetscCall(PetscSectionGetConstraintIndices(s, p, &ind));
-        for (d = 0; d < cdof; ++d) globalBcs[numGlobalBcs++] = off + ind[d];
+        for (PetscInt d = 0; d < cdof; ++d) globalBcs[numGlobalBcs++] = off + ind[d];
       }
 
       PetscCall(PCPatchSetDiscretisationInfoCombined(pc, dm, Nb, (const PetscInt **)cellDofs, numGlobalBcs, globalBcs, numGlobalBcs, globalBcs));
@@ -2980,7 +2980,7 @@ static PetscErrorCode PCApply_PATCH(PC pc, Vec x, Vec y)
   const PetscInt     inc[2]       = {1, -1};
   const PetscScalar *localUpdate;
   const PetscInt    *iterationSet;
-  PetscInt           pStart, numBcs, n, sweep, bc, j;
+  PetscInt pStart, numBcs, n, sweep;
 
   PetscFunctionBegin;
   PetscCall(PetscLogEventBegin(PC_Patch_Apply, pc, 0, 0, 0));
@@ -3005,7 +3005,7 @@ static PetscErrorCode PCApply_PATCH(PC pc, Vec x, Vec y)
   PetscCall(PetscSectionGetChart(patch->gtolCounts, &pStart, NULL));
   PetscCall(PetscLogEventBegin(PC_Patch_Solve, pc, 0, 0, 0));
   for (sweep = 0; sweep < nsweep; sweep++) {
-    for (j = start[sweep]; j * inc[sweep] < end[sweep] * inc[sweep]; j += inc[sweep]) {
+    for (PetscInt j = start[sweep]; j * inc[sweep] < end[sweep] * inc[sweep]; j += inc[sweep]) {
       PetscInt i = patch->user_patches ? iterationSet[j] : j;
       PetscInt start, len;
 
@@ -3037,7 +3037,7 @@ static PetscErrorCode PCApply_PATCH(PC pc, Vec x, Vec y)
   PetscCall(ISGetSize(patch->globalBcNodes, &numBcs));
   PetscCall(ISGetIndices(patch->globalBcNodes, &bcNodes));
   PetscCall(VecGetLocalSize(x, &n));
-  for (bc = 0; bc < numBcs; ++bc) {
+  for (PetscInt bc = 0; bc < numBcs; ++bc) {
     const PetscInt idx = bcNodes[bc];
     if (idx < n) globalUpdate[idx] = globalRHS[idx];
   }

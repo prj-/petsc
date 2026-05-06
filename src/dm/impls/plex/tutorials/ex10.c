@@ -56,7 +56,7 @@ static PetscErrorCode AdaptMesh(DM *dm, AppCtx *ctx)
   const PetscInt *values;
   PetscReal      *volConst; /* Volume constraints for each label value */
   PetscReal       ratio;
-  PetscInt        dim, Nv, v, cStart, cEnd, c;
+  PetscInt dim, Nv, cStart, cEnd;
   PetscBool       adapt = PETSC_TRUE;
 
   PetscFunctionBeginUser;
@@ -75,7 +75,7 @@ static PetscErrorCode AdaptMesh(DM *dm, AppCtx *ctx)
   PetscCall(ISGetLocalSize(valueIS, &Nv));
   PetscCall(ISGetIndices(valueIS, &values));
   PetscCall(PetscMalloc1(Nv, &volConst));
-  for (v = 0; v < Nv; ++v) {
+  for (PetscInt v = 0; v < Nv; ++v) {
     char opt[128];
 
     volConst[v] = PETSC_MAX_REAL;
@@ -107,7 +107,7 @@ static PetscErrorCode AdaptMesh(DM *dm, AppCtx *ctx)
     /* Construct adaptation label */
     PetscCall(DMLabelCreate(PETSC_COMM_SELF, "adapt", &adaptLabel));
     PetscCall(DMPlexGetHeightStratum(dmCur, 0, &cStart, &cEnd));
-    for (c = cStart; c < cEnd; ++c) {
+    for (PetscInt c = cStart; c < cEnd; ++c) {
       PetscReal volume, centroid[3];
       PetscInt  value, vidx;
 

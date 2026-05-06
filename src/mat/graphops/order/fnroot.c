@@ -35,7 +35,7 @@ PetscErrorCode SPARSEPACKfnroot(PetscInt *root, const PetscInt *xadj, const Pets
   PetscInt i__1, i__2;
 
   /* Local variables */
-  PetscInt ndeg, node, j, k, nabor, kstop, jstrt, kstrt, mindeg, ccsize, nunlvl;
+  PetscInt ndeg, node, nabor, kstop, jstrt, kstrt, mindeg, ccsize, nunlvl;
   /*       DETERMINE THE LEVEL STRUCTURE ROOTED AT ROOT. */
 
   PetscFunctionBegin;
@@ -57,13 +57,13 @@ L100:
   *root  = ls[jstrt];
   if (ccsize == jstrt) goto L400;
   i__1 = ccsize;
-  for (j = jstrt; j <= i__1; ++j) {
+  for (PetscInt j = jstrt; j <= i__1; ++j) {
     node  = ls[j];
     ndeg  = 0;
     kstrt = xadj[node];
     kstop = xadj[node + 1] - 1;
     i__2  = kstop;
-    for (k = kstrt; k <= i__2; ++k) {
+    for (PetscInt k = kstrt; k <= i__2; ++k) {
       nabor = adjncy[k];
       if (mask[nabor] > 0) ++ndeg;
     }

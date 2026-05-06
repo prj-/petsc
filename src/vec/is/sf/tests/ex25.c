@@ -6,7 +6,7 @@ static const char help[] = "Test PetscSF with derived data types created with MP
 int main(int argc, char **argv)
 {
   PetscSF        sf;
-  PetscInt       i, nroots, nleaves;
+  PetscInt nroots, nleaves;
   const PetscInt m = 4, n = 64;
   PetscSFNode   *iremote = NULL;
   PetscMPIInt    rank, size;
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     nroots  = 0;
     nleaves = n;
     PetscCall(PetscMalloc1(nleaves, &iremote));
-    for (i = 0; i < nleaves; i++) {
+    for (PetscInt i = 0; i < nleaves; i++) {
       iremote[i].rank  = 0;
       iremote[i].index = i;
     }

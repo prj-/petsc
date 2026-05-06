@@ -8,8 +8,6 @@ static PetscErrorCode private_DMSwarmCreateCellLocalCoords_DA_Q1_Regular(PetscIn
   PetscReal *xi;
   PetscInt   d, npoints = 0, cnt;
   PetscReal  ds[] = {0.0, 0.0, 0.0};
-  PetscInt   ii, jj, kk;
-
   PetscFunctionBegin;
   switch (dim) {
   case 1:
@@ -28,7 +26,7 @@ static PetscErrorCode private_DMSwarmCreateCellLocalCoords_DA_Q1_Regular(PetscIn
   switch (dim) {
   case 1:
     cnt = 0;
-    for (ii = 0; ii < np[0]; ii++) {
+    for (PetscInt ii = 0; ii < np[0]; ii++) {
       xi[dim * cnt + 0] = -1.0 + 0.5 * ds[d] + ii * ds[0];
       cnt++;
     }
@@ -36,8 +34,8 @@ static PetscErrorCode private_DMSwarmCreateCellLocalCoords_DA_Q1_Regular(PetscIn
 
   case 2:
     cnt = 0;
-    for (jj = 0; jj < np[1]; jj++) {
-      for (ii = 0; ii < np[0]; ii++) {
+    for (PetscInt jj = 0; jj < np[1]; jj++) {
+      for (PetscInt ii = 0; ii < np[0]; ii++) {
         xi[dim * cnt + 0] = -1.0 + 0.5 * ds[0] + ii * ds[0];
         xi[dim * cnt + 1] = -1.0 + 0.5 * ds[1] + jj * ds[1];
         cnt++;
@@ -47,9 +45,9 @@ static PetscErrorCode private_DMSwarmCreateCellLocalCoords_DA_Q1_Regular(PetscIn
 
   case 3:
     cnt = 0;
-    for (kk = 0; kk < np[2]; kk++) {
-      for (jj = 0; jj < np[1]; jj++) {
-        for (ii = 0; ii < np[0]; ii++) {
+    for (PetscInt kk = 0; kk < np[2]; kk++) {
+      for (PetscInt jj = 0; jj < np[1]; jj++) {
+        for (PetscInt ii = 0; ii < np[0]; ii++) {
           xi[dim * cnt + 0] = -1.0 + 0.5 * ds[0] + ii * ds[0];
           xi[dim * cnt + 1] = -1.0 + 0.5 * ds[1] + jj * ds[1];
           xi[dim * cnt + 2] = -1.0 + 0.5 * ds[2] + kk * ds[2];
@@ -88,7 +86,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_DA_Q1(DM dm, DM dmc
 {
   DMSwarmCellDM      celldm;
   PetscInt           dim, npoints_q;
-  PetscInt           nel, npe, e, q, k, d;
+  PetscInt nel, npe;
   const PetscInt    *element_list;
   PetscReal        **basis;
   PetscReal         *xi;
@@ -129,7 +127,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_DA_Q1(DM dm, DM dmc
   PetscCall(DMDAGetElements(dmc, &nel, &npe, &element_list));
   PetscCall(PetscMalloc1(dim * npe, &elcoor));
   PetscCall(PetscMalloc1(npoints_q, &basis));
-  for (q = 0; q < npoints_q; q++) {
+  for (PetscInt q = 0; q < npoints_q; q++) {
     PetscCall(PetscMalloc1(npe, &basis[q]));
 
     switch (dim) {
@@ -169,17 +167,17 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_DA_Q1(DM dm, DM dmc
   PetscCall(DMGetCoordinatesLocal(dmc, &coor));
   PetscCall(VecGetArrayRead(coor, &_coor));
   pcnt = 0;
-  for (e = 0; e < nel; e++) {
+  for (PetscInt e = 0; e < nel; e++) {
     const PetscInt *element = &element_list[npe * e];
 
-    for (k = 0; k < npe; k++) {
-      for (d = 0; d < dim; d++) elcoor[dim * k + d] = PetscRealPart(_coor[dim * element[k] + d]);
+    for (PetscInt k = 0; k < npe; k++) {
+      for (PetscInt d = 0; d < dim; d++) elcoor[dim * k + d] = PetscRealPart(_coor[dim * element[k] + d]);
     }
 
-    for (q = 0; q < npoints_q; q++) {
-      for (d = 0; d < dim; d++) swarm_coor[dim * pcnt + d] = 0.0;
-      for (k = 0; k < npe; k++) {
-        for (d = 0; d < dim; d++) swarm_coor[dim * pcnt + d] += basis[q][k] * elcoor[dim * k + d];
+    for (PetscInt q = 0; q < npoints_q; q++) {
+      for (PetscInt d = 0; d < dim; d++) swarm_coor[dim * pcnt + d] = 0.0;
+      for (PetscInt k = 0; k < npe; k++) {
+        for (PetscInt d = 0; d < dim; d++) swarm_coor[dim * pcnt + d] += basis[q][k] * elcoor[dim * k + d];
       }
       swarm_cellid[pcnt] = e;
       pcnt++;
@@ -192,7 +190,7 @@ static PetscErrorCode private_DMSwarmInsertPointsUsingCellDM_DA_Q1(DM dm, DM dmc
 
   PetscCall(PetscFree(xi));
   PetscCall(PetscFree(elcoor));
-  for (q = 0; q < npoints_q; q++) PetscCall(PetscFree(basis[q]));
+  for (PetscInt q = 0; q < npoints_q; q++) PetscCall(PetscFree(basis[q]));
   PetscCall(PetscFree(basis));
   PetscFunctionReturn(PETSC_SUCCESS);
 }

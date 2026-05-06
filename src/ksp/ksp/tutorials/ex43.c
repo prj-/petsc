@@ -493,7 +493,7 @@ static void FormStressOperatorQ1(PetscScalar Ke[], PetscScalar coords[], PetscSc
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][2];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, k;
+  PetscInt p, i, j;
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, tildeD[3];
   PetscScalar B[3][U_DOFS * NODES_PER_EL];
@@ -530,7 +530,7 @@ static void FormStressOperatorQ1(PetscScalar Ke[], PetscScalar coords[], PetscSc
     */
     for (i = 0; i < 8; i++) {
       for (j = 0; j < 8; j++) {
-        for (k = 0; k < 3; k++) { /* Note D is diagonal for stokes */
+        for (PetscInt k = 0; k < 3; k++) { /* Note D is diagonal for stokes */
           Ke[i + 8 * j] = Ke[i + 8 * j] + B[k][i] * tildeD[k] * B[k][j];
         }
       }
@@ -543,7 +543,7 @@ static void FormGradientOperatorQ1(PetscScalar Ke[], PetscScalar coords[])
   PetscInt    ngp;
   PetscScalar gp_xi[GAUSS_POINTS][2];
   PetscScalar gp_weight[GAUSS_POINTS];
-  PetscInt    p, i, j, di;
+  PetscInt p, i, j;
   PetscScalar Ni_p[NODES_PER_EL];
   PetscScalar GNi_p[NSD][NODES_PER_EL], GNx_p[NSD][NODES_PER_EL];
   PetscScalar J_p, fac;
@@ -559,7 +559,7 @@ static void FormGradientOperatorQ1(PetscScalar Ke[], PetscScalar coords[])
     fac = gp_weight[p] * J_p;
 
     for (i = 0; i < NODES_PER_EL; i++) { /* u nodes */
-      for (di = 0; di < NSD; di++) {     /* u dofs */
+      for (PetscInt di = 0; di < NSD; di++) {     /* u dofs */
         for (j = 0; j < 4; j++) {        /* p nodes, p dofs = 1 (ie no loop) */
           PetscInt IJ;
           IJ = ASS_MAP_wIwDI_uJuDJ(i, di, NODES_PER_EL, 2, j, 0, NODES_PER_EL, 1);

@@ -568,7 +568,7 @@ PetscErrorCode PreCheck(SNESLineSearch linesearch, Vec xcurrent, Vec y, PetscBoo
  */
 PetscErrorCode PostCheck(SNESLineSearch linesearch, Vec xcurrent, Vec y, Vec x, PetscBool *changed_y, PetscBool *changed_x, PetscCtx ctx)
 {
-  PetscInt        i, iter, xs, xm;
+  PetscInt iter, xs, xm;
   StepCheckCtx   *check;
   ApplicationCtx *user;
   PetscScalar    *xa, *xa_last, tmp;
@@ -601,7 +601,7 @@ PetscErrorCode PostCheck(SNESLineSearch linesearch, Vec xcurrent, Vec y, Vec x, 
        below is intended simply to demonstrate how to manipulate this data, not
        as a meaningful or appropriate choice.)
     */
-    for (i = xs; i < xs + xm; i++) {
+    for (PetscInt i = xs; i < xs + xm; i++) {
       if (!PetscAbsScalar(xa[i])) rdiff = 2 * check->tolerance;
       else rdiff = PetscAbsScalar((xa[i] - xa_last[i]) / xa[i]);
       if (rdiff > check->tolerance) {

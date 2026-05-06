@@ -6,7 +6,7 @@ static const char help[] = "Test PetscSF with MPI large count (more than 2 billi
 int main(int argc, char **argv)
 {
   PetscSF            sf;
-  PetscInt           i, nroots, nleaves;
+  PetscInt nroots, nleaves;
   PetscInt           n       = (1ULL << 31) + 1024; /* a little over 2G elements */
   PetscSFNode       *iremote = NULL;
   PetscMPIInt        rank, size;
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     nroots  = 0;
     nleaves = n;
     PetscCall(PetscMalloc1(nleaves, &iremote));
-    for (i = 0; i < nleaves; i++) {
+    for (PetscInt i = 0; i < nleaves; i++) {
       iremote[i].rank  = 0;
       iremote[i].index = i;
     }

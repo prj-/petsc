@@ -241,7 +241,7 @@ PetscErrorCode PetscDrawSPAddPoint(PetscDrawSP sp, PetscReal *x, PetscReal *y)
 @*/
 PetscErrorCode PetscDrawSPAddPoints(PetscDrawSP sp, int n, PetscReal *xx[], PetscReal *yy[])
 {
-  PetscInt   i, j, k;
+  PetscInt i, k;
   PetscReal *x, *y;
 
   PetscFunctionBegin;
@@ -262,7 +262,7 @@ PetscErrorCode PetscDrawSPAddPoints(PetscDrawSP sp, int n, PetscReal *xx[], Pets
     sp->z = tmpz;
     sp->len += sp->dim * PETSC_DRAW_SP_CHUNK_SIZE;
   }
-  for (j = 0; j < sp->dim; ++j) {
+  for (PetscInt j = 0; j < sp->dim; ++j) {
     x = xx[j];
     y = yy[j];
     k = sp->loc + j;
