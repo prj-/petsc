@@ -1,7 +1,7 @@
 static char help[] =
   "Test to check the PETSc machinery for the TS\n"
   "Explicit (RK):  ./ex82 -ts_monitor_error -ts_dt 0.1 -ts_type rk -ts_adapt_type none\n"
-  "Implicit (BDF): ./ex82 -ts_monitor_error -ts_dt 0.1 -ts_type bdf -ts_bdf_order 2 -ts_adapt_type none -condition_system -complex_fd -pc_type none\n\n";
+  "Implicit (BDF): ./ex82 -ts_monitor_error -ts_dt 0.01 -ts_type bdf -ts_bdf_order 2 -ts_adapt_type none -condition_system -complex_fd -pc_type none\n\n";
 
 #include <petscdmshell.h>
 #include <petscts.h>
@@ -298,13 +298,9 @@ int main(int argc, char **argv)
 
     if (ctx.complex_fd) {
       PetscCall(MatCreateShell(PETSC_COMM_SELF, prob_size, prob_size, prob_size, prob_size, &ctx, &j_shell));
-      if (ctx.condition_system) {
-        PetscCall(MatShellSetOperation(j_shell, MATOP_MULT, (PetscErrorCodeFn *)ComplexStepDeriv_ChangeOfVariable));
-        PetscCall(TSSetIJacobian(ts, j_shell, NULL, PreJVEval, &ctx));
-      } else {
-        PetscCall(MatShellSetOperation(j_shell, MATOP_MULT, (PetscErrorCodeFn *)ComplexStepDeriv_NoChangeOfVariable));
-        PetscCall(TSSetIJacobian(ts, j_shell, NULL, PreJVEval, &ctx));
-      }
+      if (ctx.condition_system) PetscCall(MatShellSetOperation(j_shell, MATOP_MULT, (PetscErrorCodeFn *)ComplexStepDeriv_ChangeOfVariable));
+      else PetscCall(MatShellSetOperation(j_shell, MATOP_MULT, (PetscErrorCodeFn *)ComplexStepDeriv_NoChangeOfVariable));
+      PetscCall(TSSetIJacobian(ts, j_shell, NULL, PreJVEval, &ctx));
     }
 
     if (ctx.condition_system) {
@@ -332,7 +328,7 @@ int main(int argc, char **argv)
   PetscCheck(error < tol, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Solution error %g exceeds tolerance %g", (double)error, (double)tol);
   PetscCall(VecDestroy(&u_exact));
 
-  if (j_shell) PetscCall(MatDestroy(&j_shell));
+  PetscCall(MatDestroy(&j_shell));
   PetscCall(VecDestroy(&ctx.u_curr));
   PetscCall(VecDestroy(&u_sol));
   PetscCall(TSDestroy(&ts));
