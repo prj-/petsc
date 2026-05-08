@@ -242,13 +242,14 @@ int main(int argc, char **argv)
 {
   TS          ts;
   Vec         u_sol;
+  Vec         u_exact;
   Mat         j_shell = NULL;
   DM          dm;
   AppCtx      ctx     = {PETSC_FALSE, PETSC_FALSE, PETSC_FALSE, 0.0, 1e-30, NULL, NULL, NULL};
   TSType      ts_type;
   PetscInt    prob_size = 3;
   PetscMPIInt size;
-  PetscReal   final_time;
+  PetscReal   final_time, error, tol;
   PetscBool   same;
 
   PetscFunctionBeginUser;
@@ -259,9 +260,6 @@ int main(int argc, char **argv)
 
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-condition_system", &ctx.condition_system, NULL));
   PetscCall(PetscOptionsGetBool(NULL, NULL, "-complex_fd", &ctx.complex_fd, NULL));
-
-  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Complex step deriv : %s\n", ctx.complex_fd ? "true" : "false"));
-  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Change of variable : %s\n", ctx.condition_system ? "true" : "false"));
 
   PetscCall(VecCreateSeq(PETSC_COMM_SELF, prob_size, &u_sol));
   PetscCall(VecSet(u_sol, 1.0));
@@ -292,15 +290,12 @@ int main(int argc, char **argv)
   PetscCall(PetscStrcmp(ts_type, TSROSW, &same));
   if (same) ctx.ts_implicit = PETSC_TRUE;
 
-  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Time int implicit  : %s\n", ctx.ts_implicit ? "true" : "false"));
-
   if (ctx.ts_implicit) {
     PetscCall(TSSetIFunction(ts, NULL, ctx.condition_system ? FunImplicit_ChangeOfVariable : FunImplicit_NoChangeOfVariable, &ctx));
     PetscCall(TSGetDM(ts, &dm));
     PetscCall(DMShellSetGlobalVector(dm, u_sol));
 
     if (ctx.complex_fd) {
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "================================\nComplex FD activated.\n================================\n"));
       PetscCall(MatCreateShell(PETSC_COMM_SELF, prob_size, prob_size, prob_size, prob_size, &ctx, &j_shell));
       if (ctx.condition_system) {
         PetscCall(MatShellSetOperation(j_shell, MATOP_MULT, (PetscErrorCodeFn *)ComplexStepDeriv_ChangeOfVariable));
@@ -312,7 +307,6 @@ int main(int argc, char **argv)
     }
 
     if (ctx.condition_system) {
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "================================\nCondition system activated.\n================================\n"));
       PetscCall(TSSetTransientVariable(ts, PrimitiveToConservative, &ctx));
       PetscCall(UToTilde(u_sol, u_sol));
       PetscCall(TSSetSolutionFunction(ts, SolutionTildeVar, &ctx));
@@ -329,8 +323,13 @@ int main(int argc, char **argv)
   if (ctx.condition_system) PetscCall(TildeToU(u_sol, u_sol));
 
   PetscCall(TSGetTime(ts, &final_time));
-  PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Final Solution at t = %g:\n", (double)final_time));
-  PetscCall(VecView(u_sol, PETSC_VIEWER_STDOUT_WORLD));
+  PetscCall(VecDuplicate(u_sol, &u_exact));
+  PetscCall(Solution(ts, final_time, u_exact, &ctx));
+  PetscCall(VecAXPY(u_exact, -1.0, u_sol));
+  PetscCall(VecNorm(u_exact, NORM_2, &error));
+  tol = ctx.ts_implicit ? 1e-3 : 1e-6;
+  PetscCheck(error < tol, PETSC_COMM_SELF, PETSC_ERR_PLIB, "Solution error %g exceeds tolerance %g", (double)error, (double)tol);
+  PetscCall(VecDestroy(&u_exact));
 
   if (j_shell) PetscCall(MatDestroy(&j_shell));
   PetscCall(VecDestroy(&ctx.u_curr));
@@ -346,13 +345,13 @@ int main(int argc, char **argv)
     suffix: explicit
     args: -ts_monitor_error -ts_dt 0.1 -ts_type rk -ts_adapt_type none -pc_type none
     requires: !complex
-    filter: sed -e '/.*/d' -e '/^$/d'
+    filter: sed -e '/^2-norm of error /d'
     output_file: output/empty.out
 
   test:
     suffix: implicit
     args: -ts_monitor_error -ts_dt 0.01 -ts_type bdf -ts_bdf_order 2 -ts_adapt_type none
     requires: !complex
-    filter: sed -e '/.*/d' -e '/^$/d'
+    filter: sed -e '/^2-norm of error /d'
     output_file: output/empty.out
 TEST*/
