@@ -45,20 +45,20 @@ static void TildeToUComplexArray(PetscInt n, const PetscComplex u_tilde[], Petsc
 
 static void MyRHSArray(TimeInt time_int, const PetscScalar u[], PetscScalar f[])
 {
-  PetscScalar c_type = time_int == TIME_INT_EXPLICIT ? -1.0 : 1.0;
+  PetscScalar coeff = time_int == TIME_INT_EXPLICIT ? -1.0 : 1.0;
 
-  f[0] = c_type * (u[0] - u[1]);
-  f[1] = c_type * (u[1] - u[2]);
-  f[2] = c_type * u[2];
+  f[0] = coeff * (u[0] - u[1]);
+  f[1] = coeff * (u[1] - u[2]);
+  f[2] = coeff * u[2];
 }
 
 static void MyRHSComplexArray(TimeInt time_int, const PetscComplex u[], PetscComplex f[])
 {
-  PetscComplex c_type = time_int == TIME_INT_EXPLICIT ? PetscCMPLX(-1.0, 0.0) : PetscCMPLX(1.0, 0.0);
+  PetscComplex coeff = time_int == TIME_INT_EXPLICIT ? PetscCMPLX(-1.0, 0.0) : PetscCMPLX(1.0, 0.0);
 
-  f[0] = c_type * (u[0] - u[1]);
-  f[1] = c_type * (u[1] - u[2]);
-  f[2] = c_type * u[2];
+  f[0] = coeff * (u[0] - u[1]);
+  f[1] = coeff * (u[1] - u[2]);
+  f[2] = coeff * u[2];
 }
 
 static PetscErrorCode TildeToU(Vec U_tilde, Vec U)
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
   PetscCall(TSDestroy(&ts));
   PetscCall(PetscFree2(ctx.u_plus_iv, ctx.complex_fun_eval));
   PetscCall(PetscFinalize());
-  return 0;
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*TEST
