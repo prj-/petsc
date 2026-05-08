@@ -278,7 +278,10 @@ int main(int argc, char **argv)
   PetscCall(TSGetType(ts, &ts_type));
   for (i = 0; i < (PetscInt)(sizeof(implicit_types) / sizeof(implicit_types[0])); ++i) {
     PetscCall(PetscStrcmp(ts_type, implicit_types[i], &same));
-    if (same) ctx.ts_implicit = PETSC_TRUE;
+    if (same) {
+      ctx.ts_implicit = PETSC_TRUE;
+      break;
+    }
   }
 
   if (ctx.ts_implicit) {
