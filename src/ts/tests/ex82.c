@@ -212,7 +212,8 @@ static PetscErrorCode FunImplicit_Private(TS ts, PetscReal t, Vec U, Vec U_t, Ve
   if (change_of_variable) {
     PetscCall(TildeToU(U, ctx->u_curr));
     PetscCall(VecGetArrayRead(ctx->u_curr, &u));
-  } else PetscCall(VecGetArrayRead(U, &u));
+  }
+  else PetscCall(VecGetArrayRead(U, &u));
   PetscCall(VecGetLocalSize(U, &n));
   PetscCheck(n == 3, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Expected a vector of length 3, got %" PetscInt_FMT, n);
   PetscCall(VecGetArrayWrite(F, &f));
