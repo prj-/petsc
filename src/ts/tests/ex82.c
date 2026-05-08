@@ -68,17 +68,16 @@ static PetscErrorCode TildeToU(Vec U_tilde, Vec U)
   PetscScalar       *u;
 
   PetscFunctionBeginUser;
-  if (U_tilde == U) {
-    PetscCall(VecExp(U));
-    PetscFunctionReturn(PETSC_SUCCESS);
+  if (U_tilde == U) PetscCall(VecExp(U));
+  else {
+    PetscCall(VecGetLocalSize(U_tilde, &n));
+    PetscCheck(n == 3, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Expected a vector of length 3, got %" PetscInt_FMT, n);
+    PetscCall(VecGetArrayRead(U_tilde, &u_tilde));
+    PetscCall(VecGetArrayWrite(U, &u));
+    TildeToUArray(n, u_tilde, u);
+    PetscCall(VecRestoreArrayRead(U_tilde, &u_tilde));
+    PetscCall(VecRestoreArrayWrite(U, &u));
   }
-  PetscCall(VecGetLocalSize(U_tilde, &n));
-  PetscCheck(n == 3, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Expected a vector of length 3, got %" PetscInt_FMT, n);
-  PetscCall(VecGetArrayRead(U_tilde, &u_tilde));
-  PetscCall(VecGetArrayWrite(U, &u));
-  TildeToUArray(n, u_tilde, u);
-  PetscCall(VecRestoreArrayRead(U_tilde, &u_tilde));
-  PetscCall(VecRestoreArrayWrite(U, &u));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -89,17 +88,16 @@ static PetscErrorCode UToTilde(Vec U, Vec U_tilde)
   PetscScalar       *u_tilde;
 
   PetscFunctionBeginUser;
-  if (U == U_tilde) {
-    PetscCall(VecLog(U));
-    PetscFunctionReturn(PETSC_SUCCESS);
+  if (U == U_tilde) PetscCall(VecLog(U));
+  else {
+    PetscCall(VecGetLocalSize(U, &n));
+    PetscCheck(n == 3, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Expected a vector of length 3, got %" PetscInt_FMT, n);
+    PetscCall(VecGetArrayRead(U, &u));
+    PetscCall(VecGetArrayWrite(U_tilde, &u_tilde));
+    UToTildeArray(n, u, u_tilde);
+    PetscCall(VecRestoreArrayRead(U, &u));
+    PetscCall(VecRestoreArrayWrite(U_tilde, &u_tilde));
   }
-  PetscCall(VecGetLocalSize(U, &n));
-  PetscCheck(n == 3, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Expected a vector of length 3, got %" PetscInt_FMT, n);
-  PetscCall(VecGetArrayRead(U, &u));
-  PetscCall(VecGetArrayWrite(U_tilde, &u_tilde));
-  UToTildeArray(n, u, u_tilde);
-  PetscCall(VecRestoreArrayRead(U, &u));
-  PetscCall(VecRestoreArrayWrite(U_tilde, &u_tilde));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -204,6 +202,7 @@ static PetscErrorCode PreJVEval(TS ts, PetscReal t, Vec U, Vec Udot, PetscReal s
 static PetscErrorCode FunImplicit_Private(TS ts, PetscReal t, Vec U, Vec U_t, Vec F, PetscCtx ctx_void, PetscBool change_of_variable)
 {
   AppCtx            *ctx = (AppCtx *)ctx_void;
+  Vec                U_work = U;
   PetscInt           n;
   const PetscScalar *u;
   PetscScalar       *f;
@@ -211,16 +210,15 @@ static PetscErrorCode FunImplicit_Private(TS ts, PetscReal t, Vec U, Vec U_t, Ve
   PetscFunctionBeginUser;
   if (change_of_variable) {
     PetscCall(TildeToU(U, ctx->u_curr));
-    PetscCall(VecGetArrayRead(ctx->u_curr, &u));
+    U_work = ctx->u_curr;
   }
-  else PetscCall(VecGetArrayRead(U, &u));
+  PetscCall(VecGetArrayRead(U_work, &u));
   PetscCall(VecGetLocalSize(U, &n));
   PetscCheck(n == 3, PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, "Expected a vector of length 3, got %" PetscInt_FMT, n);
   PetscCall(VecGetArrayWrite(F, &f));
   MyRHSArray(TIME_INT_IMPLICIT, u, f);
   PetscCall(VecRestoreArrayWrite(F, &f));
-  if (change_of_variable) PetscCall(VecRestoreArrayRead(ctx->u_curr, &u));
-  else PetscCall(VecRestoreArrayRead(U, &u));
+  PetscCall(VecRestoreArrayRead(U_work, &u));
   PetscCall(VecAXPY(F, 1.0, U_t));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -248,7 +246,9 @@ int main(int argc, char **argv)
   DM          dm;
   AppCtx      ctx     = {PETSC_FALSE, PETSC_FALSE, PETSC_FALSE, 0.0, 1e-30, NULL, NULL, NULL};
   TSType      ts_type;
+  const char *implicit_types[] = {TSBDF, TSTHETA, TSALPHA, TSBEULER, TSCN, TSARKIMEX, TSROSW};
   PetscInt    prob_size = 3;
+  PetscInt    i;
   PetscMPIInt size;
   PetscReal   final_time, error, tol;
   PetscBool   same;
@@ -276,20 +276,10 @@ int main(int argc, char **argv)
   PetscCall(TSSetFromOptions(ts));
 
   PetscCall(TSGetType(ts, &ts_type));
-  PetscCall(PetscStrcmp(ts_type, TSBDF, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
-  PetscCall(PetscStrcmp(ts_type, TSTHETA, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
-  PetscCall(PetscStrcmp(ts_type, TSALPHA, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
-  PetscCall(PetscStrcmp(ts_type, TSBEULER, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
-  PetscCall(PetscStrcmp(ts_type, TSCN, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
-  PetscCall(PetscStrcmp(ts_type, TSARKIMEX, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
-  PetscCall(PetscStrcmp(ts_type, TSROSW, &same));
-  if (same) ctx.ts_implicit = PETSC_TRUE;
+  for (i = 0; i < (PetscInt)(sizeof(implicit_types) / sizeof(implicit_types[0])); ++i) {
+    PetscCall(PetscStrcmp(ts_type, implicit_types[i], &same));
+    if (same) ctx.ts_implicit = PETSC_TRUE;
+  }
 
   if (ctx.ts_implicit) {
     PetscCall(TSSetIFunction(ts, NULL, ctx.condition_system ? FunImplicit_ChangeOfVariable : FunImplicit_NoChangeOfVariable, &ctx));
