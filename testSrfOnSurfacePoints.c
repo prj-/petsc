@@ -1107,6 +1107,190 @@ PetscErrorCode makeSurfaceToChargePanelOperators(DM dm, Vec w, Vec n, PQRData *p
   PetscFunctionReturn(0);
 }
 
+typedef struct {
+  PetscReal *surf_coords;
+  PetscReal *surf_weights;
+  PetscReal *surf_normals;
+} PointSurfCtx;
+
+static PetscErrorCode PointSurfCtxDestroy(void **ctx)
+{
+  PointSurfCtx *ectx = (PointSurfCtx *)*ctx;
+
+  PetscFunctionBeginUser;
+  PetscCall(PetscFree(ectx->surf_coords));
+  PetscCall(PetscFree(ectx->surf_weights));
+  PetscCall(PetscFree(ectx->surf_normals));
+  PetscCall(PetscFree(ectx));
+  *ctx = NULL;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode SingleLayerSSKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PointSurfCtx    *ectx = (PointSurfCtx *)ctx;
+  const PetscReal  fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt         j, k, d;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    for (k = 0; k < N; k++) {
+      PetscReal r = 0.0, rvec[3];
+
+      for (d = 0; d < 3; d++) {
+        rvec[d] = ectx->surf_coords[rows[j] * 3 + d] - ectx->surf_coords[cols[k] * 3 + d];
+        r += rvec[d] * rvec[d];
+      }
+      r = PetscSqrtReal(r);
+      if (r > 1e-6) {
+        ptr[j + M * k] = ectx->surf_weights[cols[k]] * fac / r;
+      } else {
+        const PetscReal R0 = PetscSqrtReal(ectx->surf_weights[cols[k]] / PETSC_PI);
+        ptr[j + M * k]    = (2.0 * PETSC_PI * R0) / (4.0 * PETSC_PI);
+      }
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode DoubleLayerSSKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PointSurfCtx    *ectx = (PointSurfCtx *)ctx;
+  const PetscReal  fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt         j, k, d;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    for (k = 0; k < N; k++) {
+      PetscReal r = 0.0, dot = 0.0, rvec[3];
+
+      for (d = 0; d < 3; d++) {
+        rvec[d] = ectx->surf_coords[rows[j] * 3 + d] - ectx->surf_coords[cols[k] * 3 + d];
+        dot += rvec[d] * ectx->surf_normals[cols[k] * 3 + d];
+        r += rvec[d] * rvec[d];
+      }
+      r              = PetscSqrtReal(r);
+      ptr[j + M * k] = (r > 1e-6) ? ectx->surf_weights[cols[k]] * dot * fac / PetscPowRealInt(r, 3) : 0.0;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+typedef struct {
+  PetscReal *surf_coords;
+  PetscReal *surf_weights;
+  PetscReal *surf_normals;
+  PetscReal *charge_coords;
+} PointSurfChargeCtx;
+
+static PetscErrorCode PointSurfChargeCtxDestroy(void **ctx)
+{
+  PointSurfChargeCtx *ectx = (PointSurfChargeCtx *)*ctx;
+
+  PetscFunctionBeginUser;
+  PetscCall(PetscFree(ectx->surf_coords));
+  PetscCall(PetscFree(ectx->surf_weights));
+  PetscCall(PetscFree(ectx->surf_normals));
+  PetscCall(PetscFree(ectx->charge_coords));
+  PetscCall(PetscFree(ectx));
+  *ctx = NULL;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* potential[i,j] = G(surf_i, charge_j): rows=surface (target), cols=charges (source) */
+static PetscErrorCode PotentialSCKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PointSurfChargeCtx *ectx = (PointSurfChargeCtx *)ctx;
+  const PetscReal     fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt            j, k, d;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    for (k = 0; k < N; k++) {
+      PetscReal r = 0.0, rvec[3];
+
+      for (d = 0; d < 3; d++) {
+        rvec[d] = ectx->surf_coords[rows[j] * 3 + d] - ectx->charge_coords[cols[k] * 3 + d];
+        r += rvec[d] * rvec[d];
+      }
+      r              = PetscSqrtReal(r);
+      ptr[j + M * k] = (r >= 1e-10) ? fac / r : 0.0;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* field[i,j] = dG/dn(surf_i, charge_j): rows=surface (target), cols=charges (source) */
+static PetscErrorCode FieldSCKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PointSurfChargeCtx *ectx = (PointSurfChargeCtx *)ctx;
+  const PetscReal     fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt            j, k, d;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    for (k = 0; k < N; k++) {
+      PetscReal r = 0.0, dot = 0.0, rvec[3];
+
+      for (d = 0; d < 3; d++) {
+        rvec[d] = ectx->surf_coords[rows[j] * 3 + d] - ectx->charge_coords[cols[k] * 3 + d];
+        dot += rvec[d] * ectx->surf_normals[rows[j] * 3 + d];
+        r += rvec[d] * rvec[d];
+      }
+      r              = PetscSqrtReal(r);
+      ptr[j + M * k] = (r >= 1e-10) ? -dot * fac / PetscPowRealInt(r, 3) : 0.0;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* singleLayer[j,i] = G(charge_j, surf_i)*w_i: rows=charges (target), cols=surface (source) */
+static PetscErrorCode SingleLayerSCKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PointSurfChargeCtx *ectx = (PointSurfChargeCtx *)ctx;
+  const PetscReal     fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt            j, k, d;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    for (k = 0; k < N; k++) {
+      PetscReal r = 0.0, rvec[3];
+
+      for (d = 0; d < 3; d++) {
+        rvec[d] = ectx->surf_coords[cols[k] * 3 + d] - ectx->charge_coords[rows[j] * 3 + d];
+        r += rvec[d] * rvec[d];
+      }
+      r              = PetscSqrtReal(r);
+      ptr[j + M * k] = (r >= 1e-10) ? fac / r * ectx->surf_weights[cols[k]] : 0.0;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* doubleLayer[j,i] = dG/dn(charge_j, surf_i)*w_i: rows=charges (target), cols=surface (source) */
+static PetscErrorCode DoubleLayerSCKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PointSurfChargeCtx *ectx = (PointSurfChargeCtx *)ctx;
+  const PetscReal     fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt            j, k, d;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    for (k = 0; k < N; k++) {
+      PetscReal r = 0.0, dot = 0.0, rvec[3];
+
+      for (d = 0; d < 3; d++) {
+        rvec[d] = ectx->surf_coords[cols[k] * 3 + d] - ectx->charge_coords[rows[j] * 3 + d];
+        dot += rvec[d] * ectx->surf_normals[cols[k] * 3 + d];
+        r += rvec[d] * rvec[d];
+      }
+      r              = PetscSqrtReal(r);
+      ptr[j + M * k] = (r >= 1e-10) ? -dot * fac / PetscPowRealInt(r, 3) * ectx->surf_weights[cols[k]] : 0.0;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 /*@
   makeSurfaceToChargePointOperators - Make B and C matrices mapping point charges to the surface points
 
@@ -1128,54 +1312,69 @@ PetscErrorCode makeSurfaceToChargePanelOperators(DM dm, Vec w, Vec n, PQRData *p
 @*/
 PetscErrorCode makeSurfaceToChargePointOperators(Vec coordinates, Vec w, Vec n, PQRData *pqr, Mat *potential, Mat *field, Mat *singleLayer, Mat *doubleLayer)
 {
-  const PetscReal    fac = 1.0/4.0/PETSC_PI;
-  const PetscScalar *coords, *xyz, *weights, *normals;
-  PetscInt           Nq, Np;
-  PetscInt           i, j, d;
+  PointSurfChargeCtx *ectx;
+  PetscContainer      ctxContainer;
+  const PetscScalar  *coords, *xyz, *weights, *normals;
+  PetscInt            Nq, Np, i;
 
   PetscFunctionBeginUser;
   PetscCall(PetscLogEventBegin(CalcStoQ_Event, 0, 0, 0, 0));
   PetscCall(VecGetLocalSize(pqr->q, &Nq));
   PetscCall(VecGetLocalSize(w, &Np));
-  if (potential)   {PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, Np, Nq, NULL, potential));}
-  if (field)       {PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, Np, Nq, NULL, field));}
-  if (singleLayer) {PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, Nq, Np, NULL, singleLayer));}
-  if (doubleLayer) {PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, Nq, Np, NULL, doubleLayer));}
+
+  PetscCall(PetscNew(&ectx));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->surf_coords));
+  PetscCall(PetscMalloc1(Np, &ectx->surf_weights));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->surf_normals));
+  PetscCall(PetscMalloc1(Nq * 3, &ectx->charge_coords));
   PetscCall(VecGetArrayRead(coordinates, &coords));
   PetscCall(VecGetArrayRead(pqr->xyz, &xyz));
   PetscCall(VecGetArrayRead(w, &weights));
   PetscCall(VecGetArrayRead(n, &normals));
-  for (i = 0; i < Np; ++i) {
-    for (j = 0; j < Nq; ++j) {
-      PetscScalar G, dGdn;
-      PetscReal   rvec[3];
-      PetscReal   r = 0.0, dot = 0.0;
-
-      for (d = 0; d < 3; ++d) {rvec[d] = coords[i*3+d] - xyz[j*3+d]; dot += rvec[d]*normals[i*3+d]; r += PetscSqr(rvec[d]);}
-      r = PetscSqrtReal(r);
-
-      if (r < 1e-10) {G = 0;     dGdn = 0;}
-      else           {G = fac/r; dGdn = -dot*fac/PetscPowRealInt(r, 3);}
-
-      if (potential)   {PetscCall(MatSetValue(*potential,   i, j, G,               INSERT_VALUES));}
-      if (field)       {PetscCall(MatSetValue(*field,       i, j, dGdn,            INSERT_VALUES));}
-      if (singleLayer) {PetscCall(MatSetValue(*singleLayer, j, i, G*weights[i],    INSERT_VALUES));}
-      if (doubleLayer) {PetscCall(MatSetValue(*doubleLayer, j, i, dGdn*weights[i], INSERT_VALUES));}
-    }
-  }
-  PetscCall(PetscLogFlops(16 * Np*Nq + 2));
-  if (singleLayer) {PetscCall(PetscLogFlops(Np*Nq));}
-  if (doubleLayer) {PetscCall(PetscLogFlops(Np*Nq));}
+  for (i = 0; i < Np * 3; i++) ectx->surf_coords[i]  = PetscRealPart(coords[i]);
+  for (i = 0; i < Np; i++) ectx->surf_weights[i]      = PetscRealPart(weights[i]);
+  for (i = 0; i < Np * 3; i++) ectx->surf_normals[i]  = PetscRealPart(normals[i]);
+  for (i = 0; i < Nq * 3; i++) ectx->charge_coords[i] = PetscRealPart(xyz[i]);
   PetscCall(VecRestoreArrayRead(coordinates, &coords));
   PetscCall(VecRestoreArrayRead(pqr->xyz, &xyz));
   PetscCall(VecRestoreArrayRead(w, &weights));
   PetscCall(VecRestoreArrayRead(n, &normals));
-  if (potential)   {PetscCall(MatAssemblyBegin(*potential,   MAT_FINAL_ASSEMBLY));PetscCall(MatAssemblyEnd(*potential,   MAT_FINAL_ASSEMBLY));}
-  if (field)       {PetscCall(MatAssemblyBegin(*field,       MAT_FINAL_ASSEMBLY));PetscCall(MatAssemblyEnd(*field,       MAT_FINAL_ASSEMBLY));}
-  if (singleLayer) {PetscCall(MatAssemblyBegin(*singleLayer, MAT_FINAL_ASSEMBLY));PetscCall(MatAssemblyEnd(*singleLayer, MAT_FINAL_ASSEMBLY));}
-  if (doubleLayer) {PetscCall(MatAssemblyBegin(*doubleLayer, MAT_FINAL_ASSEMBLY));PetscCall(MatAssemblyEnd(*doubleLayer, MAT_FINAL_ASSEMBLY));}
+
+  PetscCall(PetscContainerCreate(PETSC_COMM_SELF, &ctxContainer));
+  PetscCall(PetscContainerSetPointer(ctxContainer, ectx));
+  PetscCall(PetscContainerSetCtxDestroy(ctxContainer, PointSurfChargeCtxDestroy));
+
+  if (potential) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Np, Nq, Np, Nq, 3, ectx->surf_coords, ectx->charge_coords, PotentialSCKernel, ectx, potential));
+    PetscCall(MatSetFromOptions(*potential));
+    PetscCall(MatAssemblyBegin(*potential, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*potential, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*potential, "kernelctx", (PetscObject)ctxContainer));
+  }
+  if (field) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Np, Nq, Np, Nq, 3, ectx->surf_coords, ectx->charge_coords, FieldSCKernel, ectx, field));
+    PetscCall(MatSetFromOptions(*field));
+    PetscCall(MatAssemblyBegin(*field, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*field, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*field, "kernelctx", (PetscObject)ctxContainer));
+  }
+  if (singleLayer) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Nq, Np, Nq, Np, 3, ectx->charge_coords, ectx->surf_coords, SingleLayerSCKernel, ectx, singleLayer));
+    PetscCall(MatSetFromOptions(*singleLayer));
+    PetscCall(MatAssemblyBegin(*singleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*singleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*singleLayer, "kernelctx", (PetscObject)ctxContainer));
+  }
+  if (doubleLayer) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Nq, Np, Nq, Np, 3, ectx->charge_coords, ectx->surf_coords, DoubleLayerSCKernel, ectx, doubleLayer));
+    PetscCall(MatSetFromOptions(*doubleLayer));
+    PetscCall(MatAssemblyBegin(*doubleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*doubleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*doubleLayer, "kernelctx", (PetscObject)ctxContainer));
+  }
+  PetscCall(PetscContainerDestroy(&ctxContainer));
   PetscCall(PetscLogEventEnd(CalcStoQ_Event, 0, 0, 0, 0));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*@
@@ -1199,44 +1398,50 @@ PetscErrorCode makeSurfaceToChargePointOperators(Vec coordinates, Vec w, Vec n, 
 @*/
 PetscErrorCode makeSurfaceToSurfacePointOperators_Laplace(Vec coordinates, Vec w, Vec n, Mat *V, Mat *K)
 {
-  const PetscReal    fac = 1.0/4.0/PETSC_PI;
+  PointSurfCtx      *ectx;
+  PetscContainer     ctxContainer;
   const PetscScalar *coords, *weights, *normals;
-  PetscInt           Np, i, j, d;
+  PetscInt           Np, i;
 
   PetscFunctionBeginUser;
   PetscCall(PetscLogEventBegin(CalcStoS_Event, 0, 0, 0, 0));
   PetscCall(VecGetLocalSize(w, &Np));
-  if (V) {PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, Np, Np, NULL, V));}
-  if (K) {PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, Np, Np, NULL, K));}
+
+  PetscCall(PetscNew(&ectx));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->surf_coords));
+  PetscCall(PetscMalloc1(Np, &ectx->surf_weights));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->surf_normals));
   PetscCall(VecGetArrayRead(coordinates, &coords));
   PetscCall(VecGetArrayRead(w, &weights));
   PetscCall(VecGetArrayRead(n, &normals));
-  for (i = 0; i < Np; ++i) { /* Target points */
-    for (j = 0; j < Np; ++j) { /* Source points */
-      PetscReal   rvec[3];
-      PetscReal   r = 0.0, dot = 0.0;
-
-      for (d = 0; d < 3; ++d) {rvec[d] = coords[i*3+d] - coords[j*3+d]; dot += rvec[d]*normals[j*3+d]; r += PetscSqr(rvec[d]);}
-      r = PetscSqrtReal(r);
-      if (r > 1e-6) {
-        if (V) {PetscCall(MatSetValue(*V, i, j, weights[j]* fac/r, INSERT_VALUES));}
-        if (K) {PetscCall(MatSetValue(*K, i, j, weights[j]* dot*fac/PetscPowRealInt(r,3), INSERT_VALUES));}
-      } else {
-        const PetscReal R0 = PetscSqrtReal(weights[j]/PETSC_PI); /* radius of a circle with the area assoc with surfpt j */
-        if (V) {PetscCall(MatSetValue(*V, i, j, (2 * PETSC_PI * R0) /4/PETSC_PI, INSERT_VALUES));}
-      }
-    }
-  }
-  PetscCall(PetscLogFlops(16 * Np*Np + 2));
-  if (V) {PetscCall(PetscLogFlops(2 * Np*Np));}
-  if (K) {PetscCall(PetscLogFlops(5 * Np*Np));}
+  for (i = 0; i < Np * 3; i++) ectx->surf_coords[i]  = PetscRealPart(coords[i]);
+  for (i = 0; i < Np; i++) ectx->surf_weights[i]      = PetscRealPart(weights[i]);
+  for (i = 0; i < Np * 3; i++) ectx->surf_normals[i]  = PetscRealPart(normals[i]);
   PetscCall(VecRestoreArrayRead(coordinates, &coords));
   PetscCall(VecRestoreArrayRead(w, &weights));
   PetscCall(VecRestoreArrayRead(n, &normals));
-  if (V) {PetscCall(MatAssemblyBegin(*V, MAT_FINAL_ASSEMBLY));PetscCall(MatAssemblyEnd(*V, MAT_FINAL_ASSEMBLY));}
-  if (K) {PetscCall(MatAssemblyBegin(*K, MAT_FINAL_ASSEMBLY));PetscCall(MatAssemblyEnd(*K, MAT_FINAL_ASSEMBLY));}
+
+  PetscCall(PetscContainerCreate(PETSC_COMM_SELF, &ctxContainer));
+  PetscCall(PetscContainerSetPointer(ctxContainer, ectx));
+  PetscCall(PetscContainerSetCtxDestroy(ctxContainer, PointSurfCtxDestroy));
+
+  if (V) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Np, Np, Np, Np, 3, ectx->surf_coords, ectx->surf_coords, SingleLayerSSKernel, ectx, V));
+    PetscCall(MatSetFromOptions(*V));
+    PetscCall(MatAssemblyBegin(*V, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*V, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*V, "kernelctx", (PetscObject)ctxContainer));
+  }
+  if (K) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Np, Np, Np, Np, 3, ectx->surf_coords, ectx->surf_coords, DoubleLayerSSKernel, ectx, K));
+    PetscCall(MatSetFromOptions(*K));
+    PetscCall(MatAssemblyBegin(*K, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*K, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*K, "kernelctx", (PetscObject)ctxContainer));
+  }
+  PetscCall(PetscContainerDestroy(&ctxContainer));
   PetscCall(PetscLogEventEnd(CalcStoS_Event, 0, 0, 0, 0));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 /*@
@@ -1262,7 +1467,7 @@ PetscErrorCode makeBEMPcmQualMatrices(DM dm, BEMType bem, PetscReal epsIn, Petsc
   const PetscReal epsHat = (epsIn - epsOut)/(epsIn + epsOut);
   KSP             ksp;
   PC              pc;
-  Mat             A, Bp, B, C, S, fact;
+  Mat             A, Bp, B, C, S;
   Vec             d;
 
   PetscFunctionBeginUser;
@@ -1271,6 +1476,13 @@ PetscErrorCode makeBEMPcmQualMatrices(DM dm, BEMType bem, PetscReal epsIn, Petsc
     PetscCall(makeSurfaceToSurfacePointOperators_Laplace(coordinates, w, n, NULL, &A));
     PetscCall(makeSurfaceToChargePointOperators(coordinates, w, n, pqr, NULL, &B, &C, NULL));
     PetscCall(PetscLogEventBegin(CalcL_Event, 0, 0, 0, 0));
+    /* Convert B (MatHtool) to dense before in-place modification */
+    {
+      Mat Bdense;
+      PetscCall(MatConvert(B, MATDENSE, MAT_INITIAL_MATRIX, &Bdense));
+      PetscCall(MatDestroy(&B));
+      B = Bdense;
+    }
     /* B = chargesurfop.dphidnCoul */
     PetscCall(MatDiagonalScale(B, w, NULL));
     PetscCall(MatScale(B, -1/epsIn));
@@ -1290,7 +1502,12 @@ PetscErrorCode makeBEMPcmQualMatrices(DM dm, BEMType bem, PetscReal epsIn, Petsc
   /* C = chargesurfop.slpToCharges */
   PetscCall(MatScale(C, 4.0*PETSC_PI));
   /* A = surfsurfop.K */
-  PetscCall(MatTranspose(A, MAT_INPLACE_MATRIX, &A));
+  {
+    Mat At;
+    PetscCall(MatTranspose(A, MAT_INITIAL_MATRIX, &At));
+    PetscCall(MatDestroy(&A));
+    A = At;
+  }
   PetscCall(MatDiagonalScale(A, NULL, w));
   PetscCall(VecDuplicate(w, &d));
   PetscCall(VecCopy(w, d));
@@ -1304,9 +1521,8 @@ PetscErrorCode makeBEMPcmQualMatrices(DM dm, BEMType bem, PetscReal epsIn, Petsc
   PetscCall(PCSetType(pc, PCLU));
   PetscCall(KSPSetOperators(ksp, A, A));
   PetscCall(KSPSetUp(ksp));
-  PetscCall(PCFactorGetMatrix(pc, &fact));
-  PetscCall(MatDuplicate(B, MAT_DO_NOT_COPY_VALUES, &S));
-  PetscCall(MatMatSolve(fact, B, S));
+  PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, A->rmap->n, B->cmap->n, NULL, &S));
+  PetscCall(KSPMatSolve(ksp, B, S));
   PetscCall(KSPDestroy(&ksp));
   PetscCall(MatDestroy(&A));
   PetscCall(MatDestroy(&B));
@@ -1314,7 +1530,7 @@ PetscErrorCode makeBEMPcmQualMatrices(DM dm, BEMType bem, PetscReal epsIn, Petsc
   PetscCall(MatDestroy(&S));
   PetscCall(MatDestroy(&C));
   PetscCall(PetscLogEventEnd(CalcL_Event, 0, 0, 0, 0));
-  PetscFunctionReturn(0);
+  PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 static PetscErrorCode ComputeBEMResidual(SNES snes, Vec x, Vec r, void *ctx)
@@ -1667,7 +1883,12 @@ PetscErrorCode makeBEMPcmQualReactionPotential(DM dm, BEMType bem, PetscReal eps
   /* C = chargesurfop.slpToCharges */
   PetscCall(MatScale(C, 4.0*PETSC_PI));
   /* A = surfsurfop.K */
-  PetscCall(MatTranspose(A, MAT_INPLACE_MATRIX, &A));
+  {
+    Mat At;
+    PetscCall(MatTranspose(A, MAT_INITIAL_MATRIX, &At));
+    PetscCall(MatDestroy(&A));
+    A = At;
+  }
   PetscCall(MatDiagonalScale(A, NULL, w));
   if (ctx->useSLIC) {
     ctx->slicCtx.w      = w;
@@ -1697,7 +1918,23 @@ PetscErrorCode makeBEMPcmQualReactionPotential(DM dm, BEMType bem, PetscReal eps
          x_2 = x_1 - dx_2 = x_1 - (-p_2 + x_1) = p_2
   */
 
-  PetscCall(MatDuplicate(A, MAT_DO_NOT_COPY_VALUES, &J));
+  if (bem == BEM_POINT_MF) {
+    PetscCall(makeSurfaceToSurfacePointOperators_Laplace(coordinates, w, n, NULL, &J));
+    {
+      Mat Jt;
+      PetscCall(MatTranspose(J, MAT_INITIAL_MATRIX, &Jt));
+      PetscCall(MatDestroy(&J));
+      J = Jt;
+    }
+    PetscCall(MatDiagonalScale(J, NULL, w));
+    if (!ctx->useSLIC) {
+      PetscCall(VecDuplicate(w, &d));
+      PetscCall(VecCopy(w, d));
+      PetscCall(VecScale(d, 1.0/(2.0*epsHat)));
+      PetscCall(MatDiagonalSet(J, d, ADD_VALUES));
+      PetscCall(VecDestroy(&d));
+    }
+  } else PetscCall(MatDuplicate(A, MAT_DO_NOT_COPY_VALUES, &J));
   PetscCall(VecDuplicate(t0, &t2));
   PetscCall(SNESCreate(PetscObjectComm((PetscObject) dm), &snes));
   if (ctx->useSLIC) {
@@ -1949,7 +2186,8 @@ PetscErrorCode CalculateBEMCPPotential(DM dm, const char prefix[], BEMType bem, 
   /* Solve system */
   PetscCall(SNESCreate(comm, &snes));
   PetscCall(SNESSetFromOptions(snes));
-  PetscCall(MatDuplicate(ctx.K, MAT_SHARE_NONZERO_PATTERN, &J));
+  PetscCall(makeSurfaceToSurfacePointOperators_Laplace(coordinatesLocal, w, n, NULL, &J));
+  PetscCall(MatDiagonalScale(J, NULL, w));
   PetscCall(VecDuplicate(ctx.J, &F));
   PetscCall(SNESSetFunction(snes, F, CPComputeResidual, &ctx));
   PetscCall(SNESSetJacobian(snes, J, J, CPComputeJacobian, &ctx));

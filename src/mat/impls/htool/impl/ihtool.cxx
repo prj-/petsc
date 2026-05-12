@@ -1103,6 +1103,7 @@ static PetscErrorCode MatHtoolCreateFromKernel_Htool(Mat A, PetscInt spacedim, c
 
 .seealso: [](ch_matrices), `Mat`, `MATH2OPUS`, `MATDENSE`, `MatCreateHtoolFromKernel()`, `MatHtoolSetKernel()`
 M*/
+
 PETSC_EXTERN PetscErrorCode MatCreate_Htool(Mat A)
 {
   Mat_Htool *a;
