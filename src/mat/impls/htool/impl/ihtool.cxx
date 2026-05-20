@@ -1041,7 +1041,6 @@ PetscErrorCode MatFactorSymbolic_Htool(Mat F, Mat)
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
   if (!container) {
     PetscCall(PetscNew(&factor_data));
-    factor_data->hmatrix = nullptr;
     PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", factor_data, MatHtoolFactorDataDestroy));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
