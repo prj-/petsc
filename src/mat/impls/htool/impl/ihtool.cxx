@@ -913,7 +913,7 @@ static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
 
 struct MatHtoolFactorData {
   htool::HMatrix<PetscScalar> *hmatrix; /* factorized HMatrix filled by MatFactorNumeric_Htool() */
-  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied in MatSolve_Htool<>() wrappers */
+  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied as inverse scaling in MatSolve_Htool<>() wrappers */
 };
 
 static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
