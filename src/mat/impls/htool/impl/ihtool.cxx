@@ -912,7 +912,7 @@ static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
 }
 
 struct MatHtoolFactorData {
-  htool::HMatrix<PetscScalar> *A;
+  htool::HMatrix<PetscScalar> *hmatrix;
   PetscScalar                  scale;
 };
 
@@ -921,8 +921,7 @@ static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
   MatHtoolFactorData *factor_data = (MatHtoolFactorData *)ctx;
 
   PetscFunctionBegin;
-  delete factor_data->A;
-  factor_data->A = nullptr;
+  delete factor_data->hmatrix;
   PetscCall(PetscFree(factor_data));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -951,11 +950,11 @@ static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> 
   PetscFunctionBegin;
   PetscCheck(A->factortype == MAT_FACTOR_LU || A->factortype == MAT_FACTOR_CHOLESKY, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_UNKNOWN_TYPE, "Only MAT_LU_FACTOR and MAT_CHOLESKY_FACTOR are supported");
   PetscCall(PetscObjectQuery((PetscObject)A, "HMatrix", (PetscObject *)&container));
-  PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Must call Mat%sFactorNumeric() before Mat%sSolve%s()", A->factortype == MAT_FACTOR_LU ? "LU" : "Cholesky", X.nb_cols() == 1 ? "" : "Mat", trans == 'N' ? "" : "Transpose");
   PetscCall(PetscContainerGetPointer(container, &factor_data));
+  PetscCheck(factor_data->hmatrix, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Must call Mat%sFactorNumeric() before Mat%sSolve%s()", A->factortype == MAT_FACTOR_LU ? "LU" : "Cholesky", X.nb_cols() == 1 ? "" : "Mat", trans == 'N' ? "" : "Transpose");
   PetscCheck(factor_data->scale != (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Matrix scale must be nonzero for MATHTOOL direct solve");
-  if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *factor_data->A, X));
-  else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *factor_data->A, X));
+  if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *factor_data->hmatrix, X));
+  else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *factor_data->hmatrix, X));
   if (factor_data->scale != (PetscScalar)1.0)
     for (size_t j = 0; j < X.nb_cols(); ++j)
       for (size_t i = 0; i < X.nb_rows(); ++i) X.data()[i + j * X.nb_rows()] /= factor_data->scale;
@@ -1013,10 +1012,10 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
   PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky");
   PetscCall(PetscContainerGetPointer(container, &factor_data));
-  delete factor_data->A;
-  factor_data->A = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
-  if (ftype == MAT_FACTOR_LU) PetscCallExternalVoid("sequential_lu_factorization", htool::sequential_lu_factorization(*factor_data->A));
-  else PetscCallExternalVoid("sequential_cholesky_factorization", htool::sequential_cholesky_factorization('U', *factor_data->A));
+  delete factor_data->hmatrix;
+  factor_data->hmatrix = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
+  if (ftype == MAT_FACTOR_LU) PetscCallExternalVoid("sequential_lu_factorization", htool::sequential_lu_factorization(*factor_data->hmatrix));
+  else PetscCallExternalVoid("sequential_cholesky_factorization", htool::sequential_cholesky_factorization('U', *factor_data->hmatrix));
   factor_data->scale = scale;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
