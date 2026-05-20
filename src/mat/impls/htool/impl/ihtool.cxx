@@ -955,9 +955,10 @@ static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> 
   PetscCheck(factor_data->scale != (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Matrix scale must be nonzero for MATHTOOL direct solve");
   if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *factor_data->hmatrix, X));
   else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *factor_data->hmatrix, X));
-  if (factor_data->scale != (PetscScalar)1.0)
+  if (factor_data->scale != (PetscScalar)1.0) {
     for (size_t j = 0; j < X.nb_cols(); ++j)
       for (size_t i = 0; i < X.nb_rows(); ++i) X.data()[i + j * X.nb_rows()] /= factor_data->scale;
+  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1041,6 +1042,7 @@ PetscErrorCode MatFactorSymbolic_Htool(Mat F, Mat)
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
   if (!container) {
     PetscCall(PetscNew(&factor_data));
+    factor_data->hmatrix = nullptr;
     PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", factor_data, MatHtoolFactorDataDestroy));
   }
   PetscFunctionReturn(PETSC_SUCCESS);
