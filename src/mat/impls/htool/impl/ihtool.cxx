@@ -912,8 +912,8 @@ static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
 }
 
 struct MatHtoolFactorData {
-  htool::HMatrix<PetscScalar> *hmatrix;
-  PetscScalar                  scale;
+  htool::HMatrix<PetscScalar> *hmatrix; /* factorized HMatrix filled by numeric factorization */
+  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied post-solve */
 };
 
 static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
@@ -921,7 +921,7 @@ static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
   MatHtoolFactorData *factor_data = (MatHtoolFactorData *)ctx;
 
   PetscFunctionBegin;
-  delete factor_data->hmatrix;
+  if (factor_data->hmatrix) delete factor_data->hmatrix;
   PetscCall(PetscFree(factor_data));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1013,7 +1013,7 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
   PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky");
   PetscCall(PetscContainerGetPointer(container, &factor_data));
-  delete factor_data->hmatrix;
+  if (factor_data->hmatrix) delete factor_data->hmatrix;
   factor_data->hmatrix = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
   if (ftype == MAT_FACTOR_LU) PetscCallExternalVoid("sequential_lu_factorization", htool::sequential_lu_factorization(*factor_data->hmatrix));
   else PetscCallExternalVoid("sequential_cholesky_factorization", htool::sequential_cholesky_factorization('U', *factor_data->hmatrix));
