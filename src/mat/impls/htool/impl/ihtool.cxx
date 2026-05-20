@@ -975,10 +975,8 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type b, Type x)
   v.assign(n, 1, array, false);
   PetscCall(VecRestoreArrayWrite(x, &array));
   PetscCall(MatSolve_Private<trans>(A, v, &scale));
-  if (scale != (PetscScalar)1.0) {
-    inv_scale = ((PetscScalar)1.0) / scale;
-    PetscCall(VecScale(x, inv_scale));
-  }
+  inv_scale = ((PetscScalar)1.0) / scale;
+  PetscCall(VecScale(x, inv_scale));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -999,10 +997,8 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type B, Type X)
   v.assign(m, N, array, false);
   PetscCall(MatDenseRestoreArrayWrite(X, &array));
   PetscCall(MatSolve_Private<trans>(A, v, &scale));
-  if (scale != (PetscScalar)1.0) {
-    inv_scale = ((PetscScalar)1.0) / scale;
-    PetscCall(MatScale(X, inv_scale));
-  }
+  inv_scale = ((PetscScalar)1.0) / scale;
+  PetscCall(MatScale(X, inv_scale));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
