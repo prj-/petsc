@@ -952,7 +952,7 @@ static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> 
   PetscCall(PetscObjectQuery((PetscObject)A, "HMatrix", (PetscObject *)&container));
   PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Must call Mat%sFactorNumeric() before Mat%sSolve%s()", A->factortype == MAT_FACTOR_LU ? "LU" : "Cholesky", X.nb_cols() == 1 ? "" : "Mat", trans == 'N' ? "" : "Transpose");
   PetscCall(PetscContainerGetPointer(container, &factor_data));
-  PetscCheck(factor_data->scale != (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Matrix scale must be nonzero for solve");
+  PetscCheck(factor_data->scale != (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Matrix scale must be nonzero for MATHTOOL direct solve");
   if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *factor_data->A, X));
   else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *factor_data->A, X));
   if (factor_data->scale != (PetscScalar)1.0)
