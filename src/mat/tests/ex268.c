@@ -56,6 +56,8 @@ int main(int argc, char **argv)
   PetscCall(MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY));
   PetscCall(MatConvert(A, MATDENSE, MAT_INITIAL_MATRIX, &Ad));
+  PetscCall(MatScale(A, 2.0));
+  PetscCall(MatScale(Ad, 2.0));
   PetscCall(MatMultEqual(A, Ad, 10, &flg));
   PetscCheck(flg, PETSC_COMM_WORLD, PETSC_ERR_PLIB, "Ax != Adx");
   PetscCall(MatCreateDense(PETSC_COMM_WORLD, m, PETSC_DECIDE, M, K, NULL, &X));
