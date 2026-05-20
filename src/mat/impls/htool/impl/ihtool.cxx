@@ -922,6 +922,7 @@ static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
 
   PetscFunctionBegin;
   delete factor_data->A;
+  factor_data->A = nullptr;
   PetscCall(PetscFree(factor_data));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -999,6 +1000,7 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type B, Type X)
 template <MatFactorType ftype>
 static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *)
 {
+  PetscContainer      container;
   Mat_Htool          *a;
   PetscScalar         shift, scale;
   MatHtoolFactorData *factor_data;
@@ -1008,18 +1010,23 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED,
                                      (IS *)MAT_SHELL_NOT_ALLOWED));
   PetscCheck(shift == (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Matrix shift not supported in MATHTOOL direct factorization");
-  PetscCall(PetscNew(&factor_data));
+  PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
+  PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky");
+  PetscCall(PetscContainerGetPointer(container, &factor_data));
+  delete factor_data->A;
   factor_data->A = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
   if (ftype == MAT_FACTOR_LU) PetscCallExternalVoid("sequential_lu_factorization", htool::sequential_lu_factorization(*factor_data->A));
   else PetscCallExternalVoid("sequential_cholesky_factorization", htool::sequential_cholesky_factorization('U', *factor_data->A));
   factor_data->scale = scale;
-  PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", factor_data, MatHtoolFactorDataDestroy));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 template <MatFactorType ftype>
 PetscErrorCode MatFactorSymbolic_Htool(Mat F, Mat)
 {
+  PetscContainer      container;
+  MatHtoolFactorData *factor_data;
+
   PetscFunctionBegin;
   F->preallocated  = PETSC_TRUE;
   F->assembled     = PETSC_TRUE;
@@ -1032,6 +1039,11 @@ PetscErrorCode MatFactorSymbolic_Htool(Mat F, Mat)
   F->ops->destroy = MatDestroy_Factor;
   if (ftype == MAT_FACTOR_LU) F->ops->lufactornumeric = MatFactorNumeric_Htool<MAT_FACTOR_LU>;
   else F->ops->choleskyfactornumeric = MatFactorNumeric_Htool<MAT_FACTOR_CHOLESKY>;
+  PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
+  if (!container) {
+    PetscCall(PetscNew(&factor_data));
+    PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", factor_data, MatHtoolFactorDataDestroy));
+  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
