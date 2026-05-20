@@ -913,7 +913,7 @@ static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
 
 struct MatHtoolFactorData {
   htool::HMatrix<PetscScalar> *hmatrix; /* factorized HMatrix filled by MatFactorNumeric_Htool() */
-  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied in MatSolve_Htool() */
+  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied in MatSolve_Htool<>() wrappers */
 };
 
 static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
@@ -1003,16 +1003,18 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
 {
   PetscContainer      container;
   Mat_Htool          *a;
+  const char         *factname;
   PetscScalar         shift, scale;
   MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
+  factname = ftype == MAT_FACTOR_LU ? "LU" : "Cholesky";
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED,
                                      (IS *)MAT_SHELL_NOT_ALLOWED));
   PetscCheck(shift == (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Matrix shift not supported in MATHTOOL direct factorization");
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
-  PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky");
+  PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", factname, factname);
   PetscCall(PetscContainerGetPointer(container, &factor_data));
   if (factor_data->hmatrix) delete factor_data->hmatrix;
   factor_data->hmatrix = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
