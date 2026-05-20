@@ -911,16 +911,22 @@ static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+struct MatHtoolFactorData {
+  htool::HMatrix<PetscScalar> *A;
+  PetscScalar                  scale;
+};
+
 static PetscErrorCode MatDestroy_Factor(Mat F)
 {
-  PetscContainer               container;
-  htool::HMatrix<PetscScalar> *A;
+  PetscContainer      container;
+  MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
   if (container) {
-    PetscCall(PetscContainerGetPointer(container, &A));
-    delete A;
+    PetscCall(PetscContainerGetPointer(container, &factor_data));
+    delete factor_data->A;
+    PetscCall(PetscFree(factor_data));
     PetscCall(PetscObjectCompose((PetscObject)F, "HMatrix", nullptr));
   }
   PetscCall(PetscObjectComposeFunction((PetscObject)F, "MatFactorGetSolverType_C", nullptr));
@@ -937,26 +943,22 @@ static PetscErrorCode MatFactorGetSolverType_Htool(Mat, MatSolverType *type)
 template <char trans>
 static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> &X)
 {
-  PetscContainer               container, container_scale;
-  htool::HMatrix<PetscScalar> *B;
-  PetscScalar                 *scale = nullptr;
+  PetscContainer      container;
+  MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
   PetscCheck(A->factortype == MAT_FACTOR_LU || A->factortype == MAT_FACTOR_CHOLESKY, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_UNKNOWN_TYPE, "Only MAT_LU_FACTOR and MAT_CHOLESKY_FACTOR are supported");
   PetscCall(PetscObjectQuery((PetscObject)A, "HMatrix", (PetscObject *)&container));
   PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Must call Mat%sFactorNumeric() before Mat%sSolve%s()", A->factortype == MAT_FACTOR_LU ? "LU" : "Cholesky", X.nb_cols() == 1 ? "" : "Mat", trans == 'N' ? "" : "Transpose");
-  PetscCall(PetscContainerGetPointer(container, &B));
-  if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *B, X));
-  else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *B, X));
-  PetscCall(PetscObjectQuery((PetscObject)A, "MatHtoolScale", (PetscObject *)&container_scale));
-  if (container_scale) {
-    PetscCall(PetscContainerGetPointer(container_scale, &scale));
-    PetscCheck(*scale != (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Scaling parameter must be nonzero");
+  PetscCall(PetscContainerGetPointer(container, &factor_data));
+  if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *factor_data->A, X));
+  else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *factor_data->A, X));
+  PetscCheck(factor_data->scale != (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Scaling parameter must be nonzero");
+  if (factor_data->scale != (PetscScalar)1.0)
     for (size_t j = 0; j < X.nb_cols(); ++j) {
       PetscScalar *col = X.data() + j * X.nb_rows();
-      for (size_t i = 0; i < X.nb_rows(); ++i) col[i] /= *scale;
+      for (size_t i = 0; i < X.nb_rows(); ++i) col[i] /= factor_data->scale;
     }
-  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -998,20 +1000,19 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type B, Type X)
 template <MatFactorType ftype>
 static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *)
 {
-  Mat_Htool                   *a;
-  htool::HMatrix<PetscScalar> *B;
-  PetscScalar                  shift, scale, *factor_scale;
+  Mat_Htool          *a;
+  PetscScalar         shift, scale;
+  MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
-  B = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
-  if (ftype == MAT_FACTOR_LU) PetscCallExternalVoid("sequential_lu_factorization", htool::sequential_lu_factorization(*B));
-  else PetscCallExternalVoid("sequential_cholesky_factorization", htool::sequential_cholesky_factorization('U', *B));
-  PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", B, nullptr));
-  PetscCall(PetscMalloc1(1, &factor_scale));
-  *factor_scale = scale;
-  PetscCall(PetscObjectContainerCompose((PetscObject)F, "MatHtoolScale", factor_scale, PetscCtxDestroyDefault));
+  PetscCall(PetscNew(&factor_data));
+  factor_data->A = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
+  if (ftype == MAT_FACTOR_LU) PetscCallExternalVoid("sequential_lu_factorization", htool::sequential_lu_factorization(*factor_data->A));
+  else PetscCallExternalVoid("sequential_cholesky_factorization", htool::sequential_cholesky_factorization('U', *factor_data->A));
+  factor_data->scale = scale;
+  PetscCall(PetscObjectContainerCompose((PetscObject)F, "HMatrix", factor_data, PetscCtxDestroyDefault));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
