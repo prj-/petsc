@@ -948,6 +948,7 @@ static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> 
   MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
+  PetscAssertPointer(scale, 3);
   PetscCheck(A->factortype == MAT_FACTOR_LU || A->factortype == MAT_FACTOR_CHOLESKY, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_UNKNOWN_TYPE, "Only MAT_LU_FACTOR and MAT_CHOLESKY_FACTOR are supported");
   PetscCall(PetscObjectQuery((PetscObject)A, "HMatrix", (PetscObject *)&container));
   PetscCall(PetscContainerGetPointer(container, &factor_data));
@@ -1003,18 +1004,16 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
 {
   PetscContainer      container;
   Mat_Htool          *a;
-  const char         *factname;
   PetscScalar         shift, scale;
   MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
-  factname = ftype == MAT_FACTOR_LU ? "LU" : "Cholesky";
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED,
                                      (IS *)MAT_SHELL_NOT_ALLOWED));
   PetscCheck(shift == (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Matrix shift not supported in MATHTOOL direct factorization");
   PetscCall(PetscObjectQuery((PetscObject)F, "HMatrix", (PetscObject *)&container));
-  PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", factname, factname);
+  PetscCheck(container, PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Mat%sFactorSymbolic() must be called before Mat%sFactorNumeric()", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky", ftype == MAT_FACTOR_LU ? "LU" : "Cholesky");
   PetscCall(PetscContainerGetPointer(container, &factor_data));
   if (factor_data->hmatrix) delete factor_data->hmatrix;
   factor_data->hmatrix = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
