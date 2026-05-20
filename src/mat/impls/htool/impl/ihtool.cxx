@@ -956,10 +956,8 @@ static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> 
   if (A->factortype == MAT_FACTOR_LU) PetscCallExternalVoid("lu_solve", htool::lu_solve(trans, *factor_data->A, X));
   else PetscCallExternalVoid("cholesky_solve", htool::cholesky_solve('U', *factor_data->A, X));
   if (factor_data->scale != (PetscScalar)1.0)
-    for (size_t j = 0; j < X.nb_cols(); ++j) {
-      PetscScalar *col = X.data() + j * X.nb_rows();
-      for (size_t i = 0; i < X.nb_rows(); ++i) col[i] /= factor_data->scale;
-    }
+    for (size_t j = 0; j < X.nb_cols(); ++j)
+      for (size_t i = 0; i < X.nb_rows(); ++i) X.data()[i + j * X.nb_rows()] /= factor_data->scale;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1008,7 +1006,7 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
-  /* Shift is intentionally ignored here because the direct-factor solve path corrects scaling only. */
+  // Shift is intentionally ignored here because the direct-factor solve path corrects scaling only.
   (void)shift;
   PetscCall(PetscNew(&factor_data));
   factor_data->A = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
