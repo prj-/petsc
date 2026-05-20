@@ -1005,7 +1005,8 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
 
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
-  PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
+  PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED,
+                                     (IS *)MAT_SHELL_NOT_ALLOWED));
   PetscCheck(shift == (PetscScalar)0.0, PetscObjectComm((PetscObject)A), PETSC_ERR_SUP, "Matrix shift not supported in MATHTOOL direct factorization");
   PetscCall(PetscNew(&factor_data));
   factor_data->A = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
