@@ -913,7 +913,7 @@ static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
 
 struct MatHtoolFactorData {
   htool::HMatrix<PetscScalar> *hmatrix; /* factorized HMatrix filled by MatFactorNumeric_Htool() */
-  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied as inverse scaling in MatSolve_Htool<>() wrappers */
+  PetscScalar                  scale;   /* shell scaling factor from MatShellGetScalingShifts(), applied as inverse scaling in solve wrappers */
 };
 
 static PetscErrorCode MatHtoolFactorDataDestroy(void *ctx)
@@ -948,7 +948,6 @@ static inline PetscErrorCode MatSolve_Private(Mat A, htool::Matrix<PetscScalar> 
   MatHtoolFactorData *factor_data;
 
   PetscFunctionBegin;
-  PetscAssertPointer(scale, 3);
   PetscCheck(A->factortype == MAT_FACTOR_LU || A->factortype == MAT_FACTOR_CHOLESKY, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_UNKNOWN_TYPE, "Only MAT_LU_FACTOR and MAT_CHOLESKY_FACTOR are supported");
   PetscCall(PetscObjectQuery((PetscObject)A, "HMatrix", (PetscObject *)&container));
   PetscCall(PetscContainerGetPointer(container, &factor_data));
@@ -965,6 +964,7 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type b, Type x)
 {
   PetscInt                   n;
   htool::Matrix<PetscScalar> v;
+  PetscScalar                inv_scale;
   PetscScalar                scale;
   PetscScalar               *array;
 
@@ -975,7 +975,10 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type b, Type x)
   v.assign(n, 1, array, false);
   PetscCall(VecRestoreArrayWrite(x, &array));
   PetscCall(MatSolve_Private<trans>(A, v, &scale));
-  if (scale != (PetscScalar)1.0) PetscCall(VecScale(x, ((PetscScalar)1.0) / scale));
+  if (scale != (PetscScalar)1.0) {
+    inv_scale = ((PetscScalar)1.0) / scale;
+    PetscCall(VecScale(x, inv_scale));
+  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -984,6 +987,7 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type B, Type X)
 {
   PetscInt                   m, N;
   htool::Matrix<PetscScalar> v;
+  PetscScalar                inv_scale;
   PetscScalar                scale;
   PetscScalar               *array;
 
@@ -995,7 +999,10 @@ static PetscErrorCode MatSolve_Htool(Mat A, Type B, Type X)
   v.assign(m, N, array, false);
   PetscCall(MatDenseRestoreArrayWrite(X, &array));
   PetscCall(MatSolve_Private<trans>(A, v, &scale));
-  if (scale != (PetscScalar)1.0) PetscCall(MatScale(X, ((PetscScalar)1.0) / scale));
+  if (scale != (PetscScalar)1.0) {
+    inv_scale = ((PetscScalar)1.0) / scale;
+    PetscCall(MatScale(X, inv_scale));
+  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
