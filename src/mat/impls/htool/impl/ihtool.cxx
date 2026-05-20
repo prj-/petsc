@@ -1006,7 +1006,7 @@ static PetscErrorCode MatFactorNumeric_Htool(Mat F, Mat A, const MatFactorInfo *
   PetscFunctionBegin;
   PetscCall(MatShellGetContext(A, &a));
   PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
-  /* Shift is intentionally ignored here because the direct-factor solve path corrects scaling only. */
+  /* Shift is intentionally ignored because this direct-factor path stores only multiplicative scaling for post-solve correction. */
   (void)shift;
   PetscCall(PetscNew(&factor_data));
   factor_data->A = new htool::HMatrix<PetscScalar>(*a->local_hmatrix);
