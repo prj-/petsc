@@ -117,4 +117,10 @@ int main(int argc, char **argv)
       args: -ksp_max_it 20 -mat_htool_epsilon 1e-2 -m_local 200 -ksp_error_if_not_converged
       output_file: output/empty.out
 
+   test:
+      suffix: asm
+      nsize: 4
+      args: -ksp_max_it 20 -mat_htool_epsilon 1e-2 -m_local 200 -pc_type asm -pc_asm_sub_mat_type nest -sub_pc_type {{lu cholesky}shared output} -sub_pc_factor_mat_solver_type htool -ksp_error_if_not_converged
+      output_file: output/empty.out
+
 TEST*/
