@@ -83,6 +83,7 @@ static PetscErrorCode MatGetDiagonalBlock_Htool(Mat A, Mat *b)
     c->distributed_operator   = &c->distributed_operator_holder_wo_assembly->distributed_operator;
     c->block_diagonal_hmatrix = a->block_diagonal_hmatrix;
     c->local_hmatrix          = a->block_diagonal_hmatrix;
+    c->hcomm                  = PetscObjectComm((PetscObject)A);
     PetscCall(MatPropagateSymmetryOptions(A, B));
     PetscCall(PetscObjectCompose((PetscObject)A, "DiagonalBlock", (PetscObject)B));
     *b = B;
@@ -555,10 +556,6 @@ static PetscErrorCode MatAssemblyEnd_Htool(Mat A, MatAssemblyType)
   for (size_t i = 0; i < PETSC_STATIC_ARRAY_LENGTH(HtoolCite); ++i) PetscCall(PetscCitationsRegister(HtoolCitations[i], HtoolCite + i));
   PetscCall(MatShellGetContext(A, &a));
   if (a->distributed_operator_holder_wo_assembly) PetscFunctionReturn(PETSC_SUCCESS);
-  if (!a->gcoords_target || !a->gcoords_source) {
-    PetscCheck(a->distributed_operator, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONGSTATE, "Missing coordinates to assemble MATHTOOL matrix");
-    PetscFunctionReturn(PETSC_SUCCESS);
-  }
   delete a->wrapper;
   a->target_cluster.reset();
   a->source_cluster.reset();
@@ -869,7 +866,64 @@ static PetscErrorCode GenEntriesTranspose(PetscInt sdim, PetscInt M, PetscInt N,
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-/* naive implementation which keeps a reference to the original Mat */
+static PetscErrorCode MatDuplicate_Htool(Mat A, MatDuplicateOption op, Mat *B)
+{
+  Mat_Htool  *a, *b;
+  Mat         C;
+  PetscScalar shift, scale;
+
+  PetscFunctionBegin;
+  PetscCall(MatShellGetScalingShifts(A, &shift, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
+  PetscCall(MatShellGetContext(A, &a));
+  PetscCall(MatCreate(PetscObjectComm((PetscObject)A), &C));
+  PetscCall(MatSetSizes(C, A->rmap->n, A->cmap->n, A->rmap->N, A->cmap->N));
+  PetscCall(MatSetType(C, MATHTOOL));
+  PetscCall(MatSetUp(C));
+  PetscCall(MatShellGetContext(C, &b));
+  b->dim                    = a->dim;
+  b->max_cluster_leaf_size  = a->max_cluster_leaf_size;
+  b->epsilon                = a->epsilon;
+  b->eta                    = a->eta;
+  b->depth[0]               = a->depth[0];
+  b->depth[1]               = a->depth[1];
+  b->block_tree_consistency = a->block_tree_consistency;
+  b->permutation            = a->permutation;
+  b->recompression          = a->recompression;
+  b->compressor             = a->compressor;
+  b->clustering             = a->clustering;
+  b->hcomm                  = a->hcomm;
+  PetscCall(MatPropagateSymmetryOptions(A, C));
+  if (a->distributed_operator_holder_wo_assembly) {
+    /* wo_assembly diagonal block: create independent wrappers around the same underlying HMatrix */
+    MPI_Comm comm = a->hcomm ? a->hcomm : PetscObjectComm((PetscObject)A);
+    b->local_to_local_operator             = std::make_unique<htool::LocalToLocalHMatrix<PetscScalar>>(*a->block_diagonal_hmatrix);
+    b->distributed_operator_holder_wo_assembly = std::make_unique<htool::CustomApproximationBuilder<PetscScalar>>(a->block_diagonal_hmatrix->get_target_cluster(), a->block_diagonal_hmatrix->get_source_cluster(), comm, *b->local_to_local_operator);
+    b->distributed_operator   = &b->distributed_operator_holder_wo_assembly->distributed_operator;
+    b->block_diagonal_hmatrix = a->block_diagonal_hmatrix;
+    b->local_hmatrix          = a->block_diagonal_hmatrix;
+    C->assembled              = PETSC_TRUE;
+    C->preallocated           = PETSC_TRUE;
+  } else if (a->gcoords_target) {
+    /* w_assembly: copy coordinates and kernel, re-assemble when values are requested */
+    b->kernel    = a->kernel;
+    b->kernelctx = a->kernelctx;
+    PetscCall(PetscMalloc1(A->rmap->N * a->dim, &b->gcoords_target));
+    PetscCall(PetscArraycpy(b->gcoords_target, a->gcoords_target, A->rmap->N * a->dim));
+    if (a->gcoords_target != a->gcoords_source) {
+      PetscCall(PetscMalloc1(A->cmap->N * a->dim, &b->gcoords_source));
+      PetscCall(PetscArraycpy(b->gcoords_source, a->gcoords_source, A->cmap->N * a->dim));
+    } else b->gcoords_source = b->gcoords_target;
+    if (op != MAT_DO_NOT_COPY_VALUES) {
+      PetscCall(MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY));
+      PetscCall(MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY));
+    }
+  }
+  PetscCall(MatShift(C, shift));
+  PetscCall(MatScale(C, scale));
+  *B = C;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 static PetscErrorCode MatTranspose_Htool(Mat A, MatReuse reuse, Mat *B)
 {
   Mat                      C;
@@ -1172,6 +1226,7 @@ PETSC_EXTERN PetscErrorCode MatCreate_Htool(Mat A)
   PetscCall(MatShellSetOperation(A, MATOP_GET_ROW, (PetscErrorCodeFn *)MatGetRow_Htool));
   PetscCall(MatShellSetOperation(A, MATOP_RESTORE_ROW, (PetscErrorCodeFn *)MatRestoreRow_Htool));
   PetscCall(MatShellSetOperation(A, MATOP_ASSEMBLY_END, (PetscErrorCodeFn *)MatAssemblyEnd_Htool));
+  PetscCall(MatShellSetOperation(A, MATOP_DUPLICATE, (PetscErrorCodeFn *)MatDuplicate_Htool));
   PetscCall(MatShellSetOperation(A, MATOP_TRANSPOSE, (PetscErrorCodeFn *)MatTranspose_Htool));
   PetscCall(MatShellSetOperation(A, MATOP_DESTROY, (PetscErrorCodeFn *)MatDestroy_Htool));
   a->dim                    = 0;
