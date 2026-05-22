@@ -555,6 +555,10 @@ static PetscErrorCode MatAssemblyEnd_Htool(Mat A, MatAssemblyType)
   for (size_t i = 0; i < PETSC_STATIC_ARRAY_LENGTH(HtoolCite); ++i) PetscCall(PetscCitationsRegister(HtoolCitations[i], HtoolCite + i));
   PetscCall(MatShellGetContext(A, &a));
   if (a->distributed_operator_holder_wo_assembly) PetscFunctionReturn(PETSC_SUCCESS);
+  if (!a->gcoords_target || !a->gcoords_source) {
+    PetscCheck(a->distributed_operator, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONGSTATE, "Missing coordinates to assemble MATHTOOL matrix");
+    PetscFunctionReturn(PETSC_SUCCESS);
+  }
   delete a->wrapper;
   a->target_cluster.reset();
   a->source_cluster.reset();
