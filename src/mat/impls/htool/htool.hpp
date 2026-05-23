@@ -38,7 +38,6 @@ struct Mat_Htool {
   PetscInt                                                         dim;
   PetscReal                                                       *gcoords_target;
   PetscReal                                                       *gcoords_source;
-  MPI_Comm                                                         hcomm; /* communicator of the parent distributed operator, used by wo_assembly diagonal blocks */
   PetscInt                                                         max_cluster_leaf_size;
   PetscReal                                                        epsilon;
   PetscReal                                                        eta;

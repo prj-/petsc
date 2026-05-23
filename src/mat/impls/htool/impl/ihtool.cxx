@@ -83,7 +83,6 @@ static PetscErrorCode MatGetDiagonalBlock_Htool(Mat A, Mat *b)
     c->distributed_operator   = &c->distributed_operator_holder_wo_assembly->distributed_operator;
     c->block_diagonal_hmatrix = a->block_diagonal_hmatrix;
     c->local_hmatrix          = a->block_diagonal_hmatrix;
-    c->hcomm                  = PetscObjectComm((PetscObject)A);
     PetscCall(MatPropagateSymmetryOptions(A, B));
     PetscCall(PetscObjectCompose((PetscObject)A, "DiagonalBlock", (PetscObject)B));
     *b = B;
@@ -891,13 +890,11 @@ static PetscErrorCode MatDuplicate_Htool(Mat A, MatDuplicateOption op, Mat *B)
   b->recompression          = a->recompression;
   b->compressor             = a->compressor;
   b->clustering             = a->clustering;
-  b->hcomm                  = a->hcomm;
   PetscCall(MatPropagateSymmetryOptions(A, C));
   if (a->distributed_operator_holder_wo_assembly) {
     /* wo_assembly diagonal block: create independent wrappers around the same underlying HMatrix */
-    MPI_Comm comm = a->hcomm ? a->hcomm : PetscObjectComm((PetscObject)A);
     b->local_to_local_operator             = std::make_unique<htool::LocalToLocalHMatrix<PetscScalar>>(*a->block_diagonal_hmatrix);
-    b->distributed_operator_holder_wo_assembly = std::make_unique<htool::CustomApproximationBuilder<PetscScalar>>(a->block_diagonal_hmatrix->get_target_cluster(), a->block_diagonal_hmatrix->get_source_cluster(), comm, *b->local_to_local_operator);
+    b->distributed_operator_holder_wo_assembly = std::make_unique<htool::CustomApproximationBuilder<PetscScalar>>(a->block_diagonal_hmatrix->get_target_cluster(), a->block_diagonal_hmatrix->get_source_cluster(), PetscObjectComm((PetscObject)A), *b->local_to_local_operator);
     b->distributed_operator   = &b->distributed_operator_holder_wo_assembly->distributed_operator;
     b->block_diagonal_hmatrix = a->block_diagonal_hmatrix;
     b->local_hmatrix          = a->block_diagonal_hmatrix;
