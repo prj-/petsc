@@ -481,6 +481,7 @@ static PetscErrorCode MatGetRow_Htool(Mat A, PetscInt row, PetscInt *nz, PetscIn
   Mat_Htool   *a;
   PetscScalar  shift, scale;
   PetscInt    *idxc;
+  PetscInt     rstart;
   PetscBLASInt one = 1, bn;
 
   PetscFunctionBegin;
@@ -495,7 +496,19 @@ static PetscErrorCode MatGetRow_Htool(Mat A, PetscInt row, PetscInt *nz, PetscIn
   if (v) {
     PetscCall(PetscMalloc1(A->cmap->N, v));
     if (a->wrapper) a->wrapper->copy_submatrix(1, A->cmap->N, &row, idxc, *v);
-    else reinterpret_cast<htool::VirtualGenerator<PetscScalar> *>(a->kernelctx)->copy_submatrix(1, A->cmap->N, &row, idxc, *v);
+    else if (a->kernelctx) reinterpret_cast<htool::VirtualGenerator<PetscScalar> *>(a->kernelctx)->copy_submatrix(1, A->cmap->N, &row, idxc, *v);
+    else {
+      PetscScalar *array;
+      PetscInt     lda = A->rmap->n;
+
+      PetscCheck(a->local_hmatrix, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_WRONGSTATE, "No generator or local hmatrix available for MatGetRow()");
+      PetscCall(MatGetOwnershipRange(A, &rstart, nullptr));
+      PetscCheck(row >= rstart && row < rstart + A->rmap->n, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_OUTOFRANGE, "Row %" PetscInt_FMT " not owned by this rank [%" PetscInt_FMT ",%" PetscInt_FMT ")", row, rstart, rstart + A->rmap->n);
+      PetscCall(PetscMalloc1(A->rmap->n * A->cmap->N, &array));
+      PetscCallExternalVoid("copy_to_dense_in_user_numbering", htool::copy_to_dense_in_user_numbering(*a->local_hmatrix, array));
+      for (PetscInt i = 0; i < A->cmap->N; ++i) (*v)[i] = array[(row - rstart) + i * lda];
+      PetscCall(PetscFree(array));
+    }
     PetscCall(PetscBLASIntCast(A->cmap->N, &bn));
     PetscCallCXX(htool::Blas<PetscScalar>::scal(&bn, &scale, *v, &one));
     if (row < A->cmap->N) (*v)[row] += shift;
