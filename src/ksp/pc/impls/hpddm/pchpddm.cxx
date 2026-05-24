@@ -1465,13 +1465,19 @@ static PetscErrorCode PCHPDDMCheckMatStructure_Private(PC pc, Mat A, Mat B)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-static PetscErrorCode PCHPDDMCheckMatAXPYTypeCompatibility_Private(PC pc, Mat Y, Mat X, const char lhs[], const char rhs[])
+static PetscErrorCode PCHPDDMMatAXPYWithConvert_Private(PC pc, Mat Y, PetscScalar a, Mat X, MatStructure str, const char lhs_name[], const char rhs_name[])
 {
   PetscBool sametype;
+  Mat       C = X;
 
   PetscFunctionBegin;
   PetscCall(PetscObjectObjectTypeCompare((PetscObject)Y, (PetscObject)X, &sametype));
-  PetscCheck(sametype, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_INCOMP, "Incompatible MatTypes in %s += %s: %s vs %s", lhs, rhs, ((PetscObject)Y)->type_name, ((PetscObject)X)->type_name);
+  if (!sametype) {
+    PetscCall(PetscInfo(pc, "Converting %s from type %s to %s before MatAXPY() in %s += %s\n", rhs_name, ((PetscObject)X)->type_name, ((PetscObject)Y)->type_name, lhs_name, rhs_name));
+    PetscCall(MatConvert(X, ((PetscObject)Y)->type_name, MAT_INITIAL_MATRIX, &C));
+  }
+  PetscCall(MatAXPY(Y, a, C, str));
+  if (!sametype) PetscCall(MatDestroy(&C));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -2636,12 +2642,10 @@ static PetscErrorCode PCSetUp_HPDDM(PC pc)
               if (!cmp[0] && !cmp[2]) {
                 if (!block) {
                   if (PetscDefined(USE_DEBUG)) PetscCall(PCHPDDMCheckMatStructure_Private(pc, D, C));
-                  PetscCall(PCHPDDMCheckMatAXPYTypeCompatibility_Private(pc, D, C, "D", "C"));
-                  PetscCall(MatAXPY(D, 1.0, C, SUBSET_NONZERO_PATTERN));
+                  PetscCall(PCHPDDMMatAXPYWithConvert_Private(pc, D, 1.0, C, SUBSET_NONZERO_PATTERN, "D", "C"));
                 } else {
                   structure = DIFFERENT_NONZERO_PATTERN;
-                  PetscCall(PCHPDDMCheckMatAXPYTypeCompatibility_Private(pc, D, data->aux, "D", "data->aux"));
-                  PetscCall(MatAXPY(D, 1.0, data->aux, structure));
+                  PetscCall(PCHPDDMMatAXPYWithConvert_Private(pc, D, 1.0, data->aux, structure, "D", "data->aux"));
                 }
               } else {
                 Mat mat[2];
@@ -2653,8 +2657,7 @@ static PetscErrorCode PCSetUp_HPDDM(PC pc)
                   PetscCall(MatNormalHermitianGetMat(D, mat));
                   PetscCall(MatNormalHermitianGetMat(C, mat + 1));
                 }
-                PetscCall(PCHPDDMCheckMatAXPYTypeCompatibility_Private(pc, mat[0], mat[1], "mat[0]", "mat[1]"));
-                PetscCall(MatAXPY(mat[0], 1.0, mat[1], SUBSET_NONZERO_PATTERN));
+                PetscCall(PCHPDDMMatAXPYWithConvert_Private(pc, mat[0], 1.0, mat[1], SUBSET_NONZERO_PATTERN, "mat[0]", "mat[1]"));
               }
               PetscCall(MatPropagateSymmetryOptions(C, D));
               PetscCall(MatDestroy(&C));
