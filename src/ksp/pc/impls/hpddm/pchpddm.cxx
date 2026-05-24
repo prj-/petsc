@@ -1468,11 +1468,14 @@ static PetscErrorCode PCHPDDMCheckMatStructure_Private(PC pc, Mat A, Mat B)
 static PetscErrorCode PCHPDDMMatAXPYWithConvert_Private(PC pc, Mat Y, PetscScalar a, Mat X, MatStructure str, const char lhs_name[], const char rhs_name[])
 {
   PetscBool sametype;
+  PetscBool isnest = PETSC_FALSE;
   Mat       C = X;
 
   PetscFunctionBegin;
   PetscCall(PetscObjectObjectTypeCompare((PetscObject)Y, (PetscObject)X, &sametype));
+  if (!sametype) PetscCall(PetscObjectTypeCompare((PetscObject)Y, MATNEST, &isnest));
   if (!sametype) {
+    PetscCheck(isnest, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_INCOMP, "Incompatible MatTypes in %s += %s: %s vs %s", lhs_name, rhs_name, ((PetscObject)Y)->type_name, ((PetscObject)X)->type_name);
     PetscCall(PetscInfo(pc, "Converting %s from type %s to %s before MatAXPY() in %s += %s\n", rhs_name, ((PetscObject)X)->type_name, ((PetscObject)Y)->type_name, lhs_name, rhs_name));
     PetscCall(MatConvert(X, ((PetscObject)Y)->type_name, MAT_INITIAL_MATRIX, &C));
   }
