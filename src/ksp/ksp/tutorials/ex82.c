@@ -67,20 +67,47 @@ int main(int argc, char **argv)
   PetscCall(PetscObjectTypeCompare((PetscObject)pc, PCHPDDM, &flg));
   if (flg) {
 #if defined(PETSC_HAVE_HPDDM) && defined(PETSC_HAVE_DYNAMIC_LIBRARIES) && defined(PETSC_USE_SHARED_LIBRARIES)
-    Mat      aux;
-    IS       is;
-    PetscInt n;
+    Mat            aux;
+    IS             is;
+    PetscInt       n, nd, nb, na, nnest, didx, bidx, aidx;
+    PetscInt       blk_sz[3]        = {0, 0, 0};
+    Mat            submats[9]       = {NULL};
+    const PetscInt *idxs;
 
     PetscCall(MatGetOwnershipRange(A, &begin, &n));
     n -= begin;
     PetscCall(ISCreateStride(PETSC_COMM_SELF, n, begin, 1, &is));
     PetscCall(MatIncreaseOverlap(A, 1, &is, overlap));
+    nd = n; /* local row count = diagonal block size */
     PetscCall(ISGetLocalSize(is, &n));
-    PetscCall(MatCreateDense(PETSC_COMM_SELF, n, n, n, n, NULL, &aux));
+    PetscCall(ISSort(is));
+    PetscCall(ISGetIndices(is, &idxs));
+    nb = 0;
+    while (nb < n && idxs[nb] < begin) nb++;
+    PetscCall(ISRestoreIndices(is, &idxs));
+    na    = n - nb - nd;
+    nnest = (nb > 0 ? 1 : 0) + 1 + (na > 0 ? 1 : 0);
+    didx  = (nb > 0 ? 1 : 0);
+    bidx  = -1;
+    aidx  = -1;
+    if (nb > 0) {
+      bidx        = 0;
+      blk_sz[bidx] = nb;
+    }
+    blk_sz[didx] = nd;
+    if (na > 0) {
+      aidx        = nnest - 1;
+      blk_sz[aidx] = na;
+    }
+    for (PetscInt kr = 0; kr < nnest; kr++) {
+      for (PetscInt kc = 0; kc < nnest; kc++) {
+        PetscCall(MatCreateDense(PETSC_COMM_SELF, blk_sz[kr], blk_sz[kc], blk_sz[kr], blk_sz[kc], NULL, &submats[kr * nnest + kc]));
+        PetscCall(MatShift(submats[kr * nnest + kc], 1.0)); /* just the local identity matrix, not very meaningful numerically, but just testing that the necessary plumbing is there */
+      }
+    }
+    PetscCall(MatCreateNest(PETSC_COMM_SELF, nnest, NULL, nnest, NULL, submats, &aux));
+    for (PetscInt k = 0; k < nnest * nnest; k++) PetscCall(MatDestroy(&submats[k]));
     PetscCall(MatSetOption(aux, MAT_SYMMETRIC, sym));
-    PetscCall(MatAssemblyBegin(aux, MAT_FINAL_ASSEMBLY));
-    PetscCall(MatAssemblyEnd(aux, MAT_FINAL_ASSEMBLY));
-    PetscCall(MatShift(aux, 1.0)); /* just the local identity matrix, not very meaningful numerically, but just testing that the necessary plumbing is there */
     PetscCall(PCHPDDMSetAuxiliaryMat(pc, is, aux, NULL, NULL));
     PetscCall(ISDestroy(&is));
     PetscCall(MatDestroy(&aux));
@@ -108,7 +135,7 @@ int main(int argc, char **argv)
       nsize: 4
       # different numbers of iterations depending on PetscScalar type
       filter: sed -e "s/symmetry: S/symmetry: N/g" -e "/number of dense/d" -e "s/Linear solve converged due to CONVERGED_RTOL iterations 13/Linear solve converged due to CONVERGED_RTOL iterations 18/g"
-      args: -ksp_view -ksp_converged_reason -mat_htool_epsilon 1e-2 -m_local 200 -pc_type hpddm -pc_hpddm_define_subdomains -pc_hpddm_levels_1_sub_pc_type lu -pc_hpddm_levels_1_eps_nev 1 -pc_hpddm_coarse_pc_type lu -pc_hpddm_levels_1_eps_gen_non_hermitian -symmetric {{false true}shared output} -overlap 2
+      args: -ksp_view -ksp_converged_reason -mat_htool_epsilon 1e-2 -m_local 200 -pc_type hpddm -pc_hpddm_define_subdomains -pc_hpddm_levels_1_sub_pc_type lu -pc_hpddm_levels_1_eps_nev 1 -pc_hpddm_coarse_pc_type lu -pc_hpddm_levels_1_eps_gen_non_hermitian -symmetric {{false true}shared output} -overlap 2 -pc_hpddm_levels_1_pc_asm_sub_mat_type seqdense
       output_file: output/ex82_1.out
 
    test:

@@ -1474,6 +1474,7 @@ static PetscErrorCode PCHPDDMMatAXPYWithConvert_Private(PC pc, Mat Y, PetscScala
   PetscFunctionBegin;
   PetscCall(PetscObjectObjectTypeCompare((PetscObject)Y, (PetscObject)X, &sametype));
   if (!sametype) PetscCall(PetscObjectTypeCompare((PetscObject)Y, MATNEST, &isnest));
+  if (!sametype && !isnest) PetscCall(PetscObjectTypeCompare((PetscObject)X, MATNEST, &isnest));
   if (!sametype) {
     PetscCheck(isnest, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_INCOMP, "Incompatible MatTypes in %s += %s: %s vs %s", lhs_name, rhs_name, ((PetscObject)Y)->type_name, ((PetscObject)X)->type_name);
     PetscCall(PetscInfo(pc, "Converting %s from type %s to %s before MatAXPY() in %s += %s\n", rhs_name, ((PetscObject)X)->type_name, ((PetscObject)Y)->type_name, lhs_name, rhs_name));
