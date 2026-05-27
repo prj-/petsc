@@ -2560,10 +2560,12 @@ static PetscErrorCode PCSetUp_HPDDM(PC pc)
           Vec       D;
           PetscBool same = PETSC_FALSE;
 
-          PetscCall(MatCreateVecs(sub[0], &D, nullptr));
+          PetscCall(MatCreateVecs(sub[0], &D, NULL));
           if (data->levels[0]->D) {
-            PetscInt      nlocal, nlocalD;
-            const VecType typeD, typeSub;
+            PetscInt      nlocal;
+            PetscInt      nlocalD;
+            const VecType typeD;
+            const VecType typeSub;
 
             PetscCall(VecGetType(data->levels[0]->D, &typeD));
             PetscCall(VecGetType(D, &typeSub));
