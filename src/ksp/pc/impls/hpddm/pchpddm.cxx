@@ -2556,11 +2556,24 @@ static PetscErrorCode PCSetUp_HPDDM(PC pc)
       }
       if (data->N > 1) {
         /* Vec holding the partition of unity */
-        if (!data->levels[0]->D) {
-          PetscCall(ISGetLocalSize(data->is, &n));
-          PetscCall(VecCreate(PETSC_COMM_SELF, &data->levels[0]->D));
-          PetscCall(VecSetSizes(data->levels[0]->D, n, n));
-          PetscCall(VecSetType(data->levels[0]->D, A->defaultvectype));
+        {
+          Vec       D;
+          PetscBool same = PETSC_FALSE;
+
+          PetscCall(MatCreateVecs(sub[0], &D, nullptr));
+          if (data->levels[0]->D) {
+            PetscInt      nlocal, nlocalD;
+            const VecType typeD, typeSub;
+
+            PetscCall(VecGetType(data->levels[0]->D, &typeD));
+            PetscCall(VecGetType(D, &typeSub));
+            PetscCall(PetscStrcmp(typeD, typeSub, &same));
+            PetscCall(VecGetLocalSize(data->levels[0]->D, &nlocal));
+            PetscCall(VecGetLocalSize(D, &nlocalD));
+            if (!same || nlocal != nlocalD) PetscCall(VecDestroy(&data->levels[0]->D));
+          }
+          if (!data->levels[0]->D) data->levels[0]->D = D;
+          else PetscCall(VecDestroy(&D));
         }
         if (data->share && overlap == -1) {
           Mat      D;
