@@ -1736,15 +1736,17 @@ typedef struct {
 
 static PetscErrorCode ShellCtxDestroy(PetscCtx ctx)
 {
-  ShellCtx *ectx = (ShellCtx *)ctx;
+  ShellCtx **ectx_p = (ShellCtx **)ctx;
+  ShellCtx  *ectx   = ectx_p ? *ectx_p : NULL;
 
   PetscFunctionBeginUser;
+  if (!ectx) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(MatDestroy(&ectx->B));
   PetscCall(MatDestroy(&ectx->C));
   PetscCall(KSPDestroy(&ectx->ksp));
   PetscCall(VecDestroy(&ectx->w));
   PetscCall(PetscFree(ectx));
-  ctx = NULL;
+  *ectx_p = NULL;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1851,6 +1853,7 @@ PetscErrorCode makeCompressedBEMPcmQualMatrices(DM dm, BEMType bem, PetscReal ep
   PetscCall(MatDestroy(&A));
   ectx->B=B;
   ectx->C=C;
+  PetscCall(PetscObjectReference((PetscObject)w));
   ectx->w=w;
   ectx->epsIn=epsIn;
   // PetscCall(PetscObjectReference((PetscObject)B));
