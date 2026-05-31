@@ -1119,14 +1119,16 @@ typedef struct {
 
 static PetscErrorCode PointSurfCtxDestroy(PetscCtx ctx)
 {
-  PointSurfCtx *ectx = (PointSurfCtx *)ctx;
+  PointSurfCtx **ectx_p = (PointSurfCtx **)ctx;
+  PointSurfCtx  *ectx   = ectx_p ? *ectx_p : NULL;
 
   PetscFunctionBeginUser;
+  if (!ectx) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscFree(ectx->surf_coords));
   PetscCall(PetscFree(ectx->surf_weights));
   PetscCall(PetscFree(ectx->surf_normals));
   PetscCall(PetscFree(ectx));
-  ctx = NULL;
+  *ectx_p = NULL;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1193,15 +1195,17 @@ typedef struct {
 
 static PetscErrorCode PointSurfChargeCtxDestroy(PetscCtx ctx)
 {
-  PointSurfChargeCtx *ectx = (PointSurfChargeCtx *)ctx;
+  PointSurfChargeCtx **ectx_p = (PointSurfChargeCtx **)ctx;
+  PointSurfChargeCtx  *ectx   = ectx_p ? *ectx_p : NULL;
 
   PetscFunctionBeginUser;
+  if (!ectx) PetscFunctionReturn(PETSC_SUCCESS);
   PetscCall(PetscFree(ectx->surf_coords));
   PetscCall(PetscFree(ectx->surf_weights));
   PetscCall(PetscFree(ectx->surf_normals));
   PetscCall(PetscFree(ectx->charge_coords));
   PetscCall(PetscFree(ectx));
-  ctx = NULL;
+  *ectx_p = NULL;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
