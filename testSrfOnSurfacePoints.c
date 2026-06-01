@@ -1111,6 +1111,356 @@ PetscErrorCode makeSurfaceToChargePanelOperators(DM dm, Vec w, Vec n, PQRData *p
 }
 
 typedef struct {
+  PetscReal *panel_verts;     /* Np * maxCorners * 3 */
+  PetscReal *panel_R;         /* Np * 9 */
+  PetscReal *panel_v0;        /* Np * 3 */
+  PetscReal *panel_centroids; /* Np * 3 */
+  PetscInt  *panel_ncorners;  /* Np */
+  PetscInt   maxCorners;
+  PetscInt   Np;
+} PanelSurfCtx;
+
+static PetscErrorCode PanelSurfCtxDestroy(PetscCtx ctx)
+{
+  PanelSurfCtx **ectx_p = (PanelSurfCtx **)ctx;
+  PanelSurfCtx  *ectx   = ectx_p ? *ectx_p : NULL;
+
+  PetscFunctionBeginUser;
+  if (!ectx) PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PetscFree(ectx->panel_verts));
+  PetscCall(PetscFree(ectx->panel_R));
+  PetscCall(PetscFree(ectx->panel_v0));
+  PetscCall(PetscFree(ectx->panel_centroids));
+  PetscCall(PetscFree(ectx->panel_ncorners));
+  PetscCall(PetscFree(ectx));
+  *ectx_p = NULL;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode SingleLayerPanelSSKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PanelSurfCtx    *ectx = (PanelSurfCtx *)ctx;
+  const PetscReal  fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt         j, k, d, e;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    PetscInt ti = rows[j]; /* target panel */
+    for (k = 0; k < N; k++) {
+      PetscInt    si = cols[k]; /* source panel */
+      PetscInt    nc = ectx->panel_ncorners[si];
+      PetscReal   cloc[3];
+      PetscScalar fss, fds;
+
+      /* Rotate target centroid into source panel coordinate system */
+      for (d = 0; d < 3; d++) {
+        cloc[d] = 0.0;
+        for (e = 0; e < 3; e++) cloc[d] += ectx->panel_R[si * 9 + e * 3 + d] * (ectx->panel_centroids[ti * 3 + e] - ectx->panel_v0[si * 3 + e]);
+      }
+      PetscCall(IntegratePanel(nc, &ectx->panel_verts[si * ectx->maxCorners * 3], cloc, NULL, &fss, &fds, NULL, NULL));
+      ptr[j + M * k] = fss * fac;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+static PetscErrorCode DoubleLayerPanelSSKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PanelSurfCtx    *ectx = (PanelSurfCtx *)ctx;
+  const PetscReal  fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt         j, k, d, e;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    PetscInt ti = rows[j];
+    for (k = 0; k < N; k++) {
+      PetscInt    si = cols[k];
+      PetscInt    nc = ectx->panel_ncorners[si];
+      PetscReal   cloc[3];
+      PetscScalar fss, fds;
+
+      for (d = 0; d < 3; d++) {
+        cloc[d] = 0.0;
+        for (e = 0; e < 3; e++) cloc[d] += ectx->panel_R[si * 9 + e * 3 + d] * (ectx->panel_centroids[ti * 3 + e] - ectx->panel_v0[si * 3 + e]);
+      }
+      PetscCall(IntegratePanel(nc, &ectx->panel_verts[si * ectx->maxCorners * 3], cloc, NULL, &fss, &fds, NULL, NULL));
+      ptr[j + M * k] = fds * fac;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  makeCompressedSurfaceToSurfacePanelOperators_Laplace - Make compressed A matrix mapping the surface to itself using MatHtool
+
+  Input Parameters:
++ dm - The surface mesh
+. w - The panel weights (unused, kept for API compatibility)
+- n - The panel normals (unused, kept for API compatibility)
+
+  Output Parameters:
++ V - The compressed single layer operator
+- K - The compressed double layer operator
+
+  Level: beginner
+
+.seealso: makeSurfaceToSurfacePanelOperators_Laplace()
+@*/
+PetscErrorCode makeCompressedSurfaceToSurfacePanelOperators_Laplace(DM dm, Vec w, Vec n, Mat *V, Mat *K)
+{
+  Vec            coordinates;
+  PetscSection   coordSection;
+  PanelSurfCtx  *ectx;
+  PetscContainer ctxContainer;
+  PetscInt       Np, i, maxCorners = 4;
+
+  PetscFunctionBeginUser;
+  PetscCall(PetscLogEventBegin(CalcStoS_Event, 0, 0, 0, 0));
+  PetscCall(DMGetCoordinateSection(dm, &coordSection));
+  PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
+  PetscCall(DMPlexGetHeightStratum(dm, 0, NULL, &Np));
+
+  PetscCall(PetscNew(&ectx));
+  ectx->Np         = Np;
+  ectx->maxCorners = maxCorners;
+  PetscCall(PetscMalloc1(Np * maxCorners * 3, &ectx->panel_verts));
+  PetscCall(PetscMalloc1(Np * 9, &ectx->panel_R));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->panel_v0));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->panel_centroids));
+  PetscCall(PetscMalloc1(Np, &ectx->panel_ncorners));
+
+  for (i = 0; i < Np; ++i) {
+    PetscScalar *coords = NULL;
+    PetscReal    R[9], v0[3];
+    PetscInt     numCorners, coordSize, d, e;
+
+    PetscCall(DMPlexGetConeSize(dm, i, &numCorners));
+    PetscCall(DMPlexVecGetClosure(dm, coordSection, coordinates, i, &coordSize, &coords));
+    /* Compute centroid in 3D before projection modifies coords */
+    for (d = 0; d < 3; ++d) {
+      ectx->panel_centroids[i * 3 + d] = 0.0;
+      for (e = 0; e < numCorners; ++e) ectx->panel_centroids[i * 3 + d] += PetscRealPart(coords[e * 3 + d]);
+      ectx->panel_centroids[i * 3 + d] /= numCorners;
+    }
+    for (d = 0; d < 3; ++d) v0[d] = PetscRealPart(coords[d]);
+    PetscCall(DMPlexComputeProjection3Dto2D(coordSize, coords, R));
+    ectx->panel_ncorners[i] = numCorners;
+    for (d = 0; d < 3; ++d) ectx->panel_v0[i * 3 + d] = v0[d];
+    for (d = 0; d < 9; ++d) ectx->panel_R[i * 9 + d] = R[d];
+    for (d = 0; d < numCorners; ++d) {
+      ectx->panel_verts[i * maxCorners * 3 + d * 3 + 0] = PetscRealPart(coords[d * 2 + 0]);
+      ectx->panel_verts[i * maxCorners * 3 + d * 3 + 1] = PetscRealPart(coords[d * 2 + 1]);
+      ectx->panel_verts[i * maxCorners * 3 + d * 3 + 2] = 0.0;
+    }
+    PetscCall(DMPlexVecRestoreClosure(dm, coordSection, coordinates, i, &coordSize, &coords));
+  }
+
+  PetscCall(PetscContainerCreate(PETSC_COMM_SELF, &ctxContainer));
+  PetscCall(PetscContainerSetPointer(ctxContainer, ectx));
+  PetscCall(PetscContainerSetCtxDestroy(ctxContainer, &PanelSurfCtxDestroy));
+
+  if (V) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Np, Np, Np, Np, 3, ectx->panel_centroids, ectx->panel_centroids, SingleLayerPanelSSKernel, ectx, V));
+    PetscCall(MatSetFromOptions(*V));
+    PetscCall(MatAssemblyBegin(*V, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*V, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*V, "kernelctx", (PetscObject)ctxContainer));
+  }
+  if (K) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Np, Np, Np, Np, 3, ectx->panel_centroids, ectx->panel_centroids, DoubleLayerPanelSSKernel, ectx, K));
+    PetscCall(MatSetFromOptions(*K));
+    PetscCall(MatAssemblyBegin(*K, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*K, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*K, "kernelctx", (PetscObject)ctxContainer));
+  }
+  PetscCall(PetscContainerDestroy(&ctxContainer));
+  PetscCall(PetscLogEventEnd(CalcStoS_Event, 0, 0, 0, 0));
+  PetscFunctionReturn(0);
+}
+
+typedef struct {
+  PetscReal *panel_verts;     /* Np * maxCorners * 3 */
+  PetscReal *panel_R;         /* Np * 9 */
+  PetscReal *panel_v0;        /* Np * 3 */
+  PetscReal *panel_centroids; /* Np * 3 */
+  PetscReal *charge_coords;   /* Nq * 3 */
+  PetscInt  *panel_ncorners;  /* Np */
+  PetscInt   maxCorners;
+  PetscInt   Np;
+} PanelSurfChargeCtx;
+
+static PetscErrorCode PanelSurfChargeCtxDestroy(PetscCtx ctx)
+{
+  PanelSurfChargeCtx **ectx_p = (PanelSurfChargeCtx **)ctx;
+  PanelSurfChargeCtx  *ectx   = ectx_p ? *ectx_p : NULL;
+
+  PetscFunctionBeginUser;
+  if (!ectx) PetscFunctionReturn(PETSC_SUCCESS);
+  PetscCall(PetscFree(ectx->panel_verts));
+  PetscCall(PetscFree(ectx->panel_R));
+  PetscCall(PetscFree(ectx->panel_v0));
+  PetscCall(PetscFree(ectx->panel_centroids));
+  PetscCall(PetscFree(ectx->charge_coords));
+  PetscCall(PetscFree(ectx->panel_ncorners));
+  PetscCall(PetscFree(ectx));
+  *ectx_p = NULL;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* singleLayer[j,i] = G(charge_j, panel_i) integrated: rows=charges (target), cols=panels (source) */
+static PetscErrorCode SingleLayerPanelSCKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PanelSurfChargeCtx *ectx = (PanelSurfChargeCtx *)ctx;
+  const PetscReal     fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt            j, k, d, e;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    PetscInt qi = rows[j]; /* charge index */
+    for (k = 0; k < N; k++) {
+      PetscInt    pi = cols[k]; /* panel index */
+      PetscInt    nc = ectx->panel_ncorners[pi];
+      PetscReal   qloc[3];
+      PetscScalar fss, fds;
+
+      /* Rotate charge location into panel coordinate system */
+      for (d = 0; d < 3; d++) {
+        qloc[d] = 0.0;
+        for (e = 0; e < 3; e++) qloc[d] += ectx->panel_R[pi * 9 + e * 3 + d] * (ectx->charge_coords[qi * 3 + e] - ectx->panel_v0[pi * 3 + e]);
+      }
+      PetscCall(IntegratePanel(nc, &ectx->panel_verts[pi * ectx->maxCorners * 3], qloc, NULL, &fss, &fds, NULL, NULL));
+      ptr[j + M * k] = fss * fac;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/* doubleLayer[j,i] = dG/dn(charge_j, panel_i) integrated: rows=charges (target), cols=panels (source) */
+static PetscErrorCode DoubleLayerPanelSCKernel(PetscInt sdim, PetscInt M, PetscInt N, const PetscInt *rows, const PetscInt *cols, PetscScalar *ptr, void *ctx)
+{
+  PanelSurfChargeCtx *ectx = (PanelSurfChargeCtx *)ctx;
+  const PetscReal     fac  = 1.0 / 4.0 / PETSC_PI;
+  PetscInt            j, k, d, e;
+
+  PetscFunctionBeginUser;
+  for (j = 0; j < M; j++) {
+    PetscInt qi = rows[j];
+    for (k = 0; k < N; k++) {
+      PetscInt    pi = cols[k];
+      PetscInt    nc = ectx->panel_ncorners[pi];
+      PetscReal   qloc[3];
+      PetscScalar fss, fds;
+
+      for (d = 0; d < 3; d++) {
+        qloc[d] = 0.0;
+        for (e = 0; e < 3; e++) qloc[d] += ectx->panel_R[pi * 9 + e * 3 + d] * (ectx->charge_coords[qi * 3 + e] - ectx->panel_v0[pi * 3 + e]);
+      }
+      PetscCall(IntegratePanel(nc, &ectx->panel_verts[pi * ectx->maxCorners * 3], qloc, NULL, &fss, &fds, NULL, NULL));
+      ptr[j + M * k] = fds * fac;
+    }
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+/*@
+  makeCompressedSurfaceToChargePanelOperators - Make compressed B and C matrices mapping point charges to the surface panels using MatHtool
+
+  Input Parameters:
++ dm - The surface mesh
+. w - The panel weights (unused, kept for API compatibility)
+. n - The panel normals (unused, kept for API compatibility)
+- pqrData - the PQRData context
+
+  Output Parameters:
++ potential - (not implemented)
+. field - (not implemented)
+. singleLayer -
+- doubleLayer -
+
+  Level: beginner
+
+.seealso: makeSurfaceToChargePanelOperators()
+@*/
+PetscErrorCode makeCompressedSurfaceToChargePanelOperators(DM dm, Vec w, Vec n, PQRData *pqr, Mat *potential, Mat *field, Mat *singleLayer, Mat *doubleLayer)
+{
+  Vec                 coordinates;
+  PetscSection        coordSection;
+  PanelSurfChargeCtx *ectx;
+  PetscContainer      ctxContainer;
+  const PetscScalar  *xyz;
+  PetscInt            Nq, Np, i, maxCorners = 4;
+
+  PetscFunctionBeginUser;
+  PetscCall(PetscLogEventBegin(CalcStoQ_Event, 0, 0, 0, 0));
+  if (potential || field) SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_SUP, "Do not currently make the potential or field operators");
+  PetscCall(DMGetCoordinateSection(dm, &coordSection));
+  PetscCall(DMGetCoordinatesLocal(dm, &coordinates));
+  PetscCall(VecGetLocalSize(pqr->q, &Nq));
+  PetscCall(DMPlexGetHeightStratum(dm, 0, NULL, &Np));
+
+  PetscCall(PetscNew(&ectx));
+  ectx->Np         = Np;
+  ectx->maxCorners = maxCorners;
+  PetscCall(PetscMalloc1(Np * maxCorners * 3, &ectx->panel_verts));
+  PetscCall(PetscMalloc1(Np * 9, &ectx->panel_R));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->panel_v0));
+  PetscCall(PetscMalloc1(Np * 3, &ectx->panel_centroids));
+  PetscCall(PetscMalloc1(Nq * 3, &ectx->charge_coords));
+  PetscCall(PetscMalloc1(Np, &ectx->panel_ncorners));
+
+  for (i = 0; i < Np; ++i) {
+    PetscScalar *coords = NULL;
+    PetscReal    R[9], v0[3];
+    PetscInt     numCorners, coordSize, d, e;
+
+    PetscCall(DMPlexGetConeSize(dm, i, &numCorners));
+    PetscCall(DMPlexVecGetClosure(dm, coordSection, coordinates, i, &coordSize, &coords));
+    /* Compute centroid in 3D before projection modifies coords */
+    for (d = 0; d < 3; ++d) {
+      ectx->panel_centroids[i * 3 + d] = 0.0;
+      for (e = 0; e < numCorners; ++e) ectx->panel_centroids[i * 3 + d] += PetscRealPart(coords[e * 3 + d]);
+      ectx->panel_centroids[i * 3 + d] /= numCorners;
+    }
+    for (d = 0; d < 3; ++d) v0[d] = PetscRealPart(coords[d]);
+    PetscCall(DMPlexComputeProjection3Dto2D(coordSize, coords, R));
+    ectx->panel_ncorners[i] = numCorners;
+    for (d = 0; d < 3; ++d) ectx->panel_v0[i * 3 + d] = v0[d];
+    for (d = 0; d < 9; ++d) ectx->panel_R[i * 9 + d] = R[d];
+    for (d = 0; d < numCorners; ++d) {
+      ectx->panel_verts[i * maxCorners * 3 + d * 3 + 0] = PetscRealPart(coords[d * 2 + 0]);
+      ectx->panel_verts[i * maxCorners * 3 + d * 3 + 1] = PetscRealPart(coords[d * 2 + 1]);
+      ectx->panel_verts[i * maxCorners * 3 + d * 3 + 2] = 0.0;
+    }
+    PetscCall(DMPlexVecRestoreClosure(dm, coordSection, coordinates, i, &coordSize, &coords));
+  }
+  PetscCall(VecGetArrayRead(pqr->xyz, &xyz));
+  for (i = 0; i < Nq * 3; i++) ectx->charge_coords[i] = PetscRealPart(xyz[i]);
+  PetscCall(VecRestoreArrayRead(pqr->xyz, &xyz));
+
+  PetscCall(PetscContainerCreate(PETSC_COMM_SELF, &ctxContainer));
+  PetscCall(PetscContainerSetPointer(ctxContainer, ectx));
+  PetscCall(PetscContainerSetCtxDestroy(ctxContainer, &PanelSurfChargeCtxDestroy));
+
+  if (singleLayer) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Nq, Np, Nq, Np, 3, ectx->charge_coords, ectx->panel_centroids, SingleLayerPanelSCKernel, ectx, singleLayer));
+    PetscCall(MatSetFromOptions(*singleLayer));
+    PetscCall(MatAssemblyBegin(*singleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*singleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*singleLayer, "kernelctx", (PetscObject)ctxContainer));
+  }
+  if (doubleLayer) {
+    PetscCall(MatCreateHtoolFromKernel(PETSC_COMM_SELF, Nq, Np, Nq, Np, 3, ectx->charge_coords, ectx->panel_centroids, DoubleLayerPanelSCKernel, ectx, doubleLayer));
+    PetscCall(MatSetFromOptions(*doubleLayer));
+    PetscCall(MatAssemblyBegin(*doubleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(*doubleLayer, MAT_FINAL_ASSEMBLY));
+    PetscCall(PetscObjectCompose((PetscObject)*doubleLayer, "kernelctx", (PetscObject)ctxContainer));
+  }
+  PetscCall(PetscContainerDestroy(&ctxContainer));
+  PetscCall(PetscLogEventEnd(CalcStoQ_Event, 0, 0, 0, 0));
+  PetscFunctionReturn(0);
+}
+
+typedef struct {
   PetscReal *surf_coords;
   PetscReal *surf_weights;
   PetscReal *surf_normals;
