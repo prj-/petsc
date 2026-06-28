@@ -673,7 +673,120 @@ static PetscErrorCode MatNestFindSubMat(Mat A, struct MatNestISPair *is, IS isro
     *B = vs->m[rbegin][cbegin];
   } else if (rbegin != -1 && cbegin != -1) {
     PetscCall(MatNestGetBlock_Private(A, rbegin, rend, cbegin, cend, B));
-  } else SETERRQ(PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_INCOMP, "Could not find index set");
+  } else {
+    PetscInt nr = 0, nc = 0, *rowParent, *colParent, *rowBaseNest, *colBaseNest;
+    IS      *rowISg, *colISg;
+    Mat     *submats;
+
+    PetscCall(PetscMalloc6(vs->nr, &rowBaseNest, vs->nc, &colBaseNest, vs->nr, &rowISg, vs->nr, &rowParent, vs->nc, &colISg, vs->nc, &colParent));
+    for (PetscInt i = 0; i < vs->nr; i++) {
+      IS              isBlock = is->row[i];
+      const PetscInt *idx;
+      PetscInt        n;
+
+      if (!isBlock) {
+        rowBaseNest[i] = -1;
+        continue;
+      }
+      PetscCall(ISGetLocalSize(isBlock, &n));
+      PetscCheck(n, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Empty MATNEST row block %" PetscInt_FMT, i);
+      PetscCall(ISGetIndices(isBlock, &idx));
+      rowBaseNest[i] = idx[0];
+      PetscCall(ISRestoreIndices(isBlock, &idx));
+    }
+
+    for (PetscInt j = 0; j < vs->nc; j++) {
+      IS              isBlock = is->col[j];
+      const PetscInt *idx;
+      PetscInt        n;
+
+      if (!isBlock) {
+        colBaseNest[j] = -1;
+        continue;
+      }
+      PetscCall(ISGetLocalSize(isBlock, &n));
+      PetscCheck(n, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "Empty MATNEST column block %" PetscInt_FMT, j);
+      PetscCall(ISGetIndices(isBlock, &idx));
+      colBaseNest[j] = idx[0];
+      PetscCall(ISRestoreIndices(isBlock, &idx));
+    }
+    for (PetscInt i = 0; i < vs->nr; i++) {
+      IS       isInt;
+      PetscInt nInt = 0;
+
+      if (is->row[i]) {
+        PetscCall(ISIntersect(isrow, is->row[i], &isInt));
+        PetscCall(ISGetSize(isInt, &nInt));
+      }
+      if (nInt) {
+        rowParent[nr] = i;
+        rowISg[nr++]  = isInt;
+      } else PetscCall(ISDestroy(&isInt));
+    }
+
+    for (PetscInt j = 0; j < vs->nc; j++) {
+      IS       isInt;
+      PetscInt nInt = 0;
+
+      if (is->col[j]) {
+        PetscCall(ISIntersect(iscol, is->col[j], &isInt));
+        PetscCall(ISGetSize(isInt, &nInt));
+      }
+      if (nInt) {
+        colParent[nc] = j;
+        colISg[nc++]  = isInt;
+      } else PetscCall(ISDestroy(&isInt));
+    }
+    PetscCheck(nr > 0 && nc > 0, PetscObjectComm((PetscObject)A), PETSC_ERR_ARG_INCOMP, "Could not match any rows/columns of given IS with MATNEST layout");
+    PetscCall(PetscCalloc1(nr * nc, &submats));
+    for (PetscInt i = 0; i < nr; i++) {
+      PetscInt p = rowParent[i];
+
+      for (PetscInt j = 0; j < nc; j++) {
+        IS              rowIS_block, colIS_block;
+        const PetscInt *gidx;
+        PetscInt       *bidx, nInt, baseNest, q = colParent[j];
+
+        if (!vs->m[p][q]) continue;
+        PetscCall(MatGetOwnershipRange(vs->m[p][q], &rbegin, NULL));
+        PetscCall(MatGetOwnershipRangeColumn(vs->m[p][q], &cbegin, NULL));
+
+        baseNest = rowBaseNest[p];
+        PetscCall(ISGetLocalSize(rowISg[i], &nInt));
+        PetscCall(ISGetIndices(rowISg[i], &gidx));
+        PetscCall(PetscMalloc1(nInt, &bidx));
+        for (PetscInt k = 0; k < nInt; k++) bidx[k] = (gidx[k] - baseNest) + rbegin;
+        PetscCall(ISRestoreIndices(rowISg[i], &gidx));
+        PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)A), nInt, bidx, PETSC_OWN_POINTER, &rowIS_block));
+
+        baseNest = colBaseNest[q];
+        PetscCall(ISGetLocalSize(colISg[j], &nInt));
+        PetscCall(ISGetIndices(colISg[j], &gidx));
+        PetscCall(PetscMalloc1(nInt, &bidx));
+        for (PetscInt k = 0; k < nInt; k++) bidx[k] = (gidx[k] - baseNest) + cbegin;
+        PetscCall(ISRestoreIndices(colISg[j], &gidx));
+        PetscCall(ISCreateGeneral(PetscObjectComm((PetscObject)A), nInt, bidx, PETSC_OWN_POINTER, &colIS_block));
+
+        PetscCall(MatCreateSubMatrix(vs->m[p][q], rowIS_block, colIS_block, MAT_INITIAL_MATRIX, &submats[i * nc + j]));
+        PetscCall(ISDestroy(&rowIS_block));
+        PetscCall(ISDestroy(&colIS_block));
+      }
+    }
+    for (PetscInt i = 0; i < nr; i++) PetscCall(ISDestroy(&rowISg[i]));
+    for (PetscInt j = 0; j < nc; j++) PetscCall(ISDestroy(&colISg[j]));
+    if (nr > 1 || nc > 1) PetscCall(MatCreateNest(PetscObjectComm((PetscObject)A), nr, NULL, nc, NULL, submats, B));
+    else {
+      *B = *submats;
+      PetscCall(PetscObjectReference((PetscObject)*B));
+    }
+    for (PetscInt i = 0; i < nr; i++) {
+      for (PetscInt j = 0; j < nc; j++) PetscCall(MatDestroy(submats + i * nc + j));
+    }
+    PetscCall(PetscFree(submats));
+    PetscCall(PetscFree6(rowBaseNest, colBaseNest, rowISg, rowParent, colISg, colParent));
+    PetscCall(PetscObjectCompose((PetscObject)A, "Non-trivial SubMatrix", (PetscObject)*B));
+    PetscCall(PetscObjectDereference((PetscObject)*B));
+  }
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
