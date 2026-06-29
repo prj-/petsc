@@ -2217,21 +2217,23 @@ static PetscErrorCode MatHasOperation_Nest(Mat mat, MatOperation op, PetscBool *
   Mat_Nest    *bA = (Mat_Nest *)mat->data;
   MatOperation opAdd;
   PetscInt     i, j, nr = bA->nr, nc = bA->nc;
-  PetscBool    flg;
+  PetscBool    flg = PETSC_TRUE;
 
   PetscFunctionBegin;
   *has = PETSC_FALSE;
-  if (op == MATOP_MULT || op == MATOP_MULT_ADD || op == MATOP_MULT_TRANSPOSE || op == MATOP_MULT_TRANSPOSE_ADD) {
-    opAdd = (op == MATOP_MULT || op == MATOP_MULT_ADD ? MATOP_MULT_ADD : MATOP_MULT_TRANSPOSE_ADD);
+  if (op == MATOP_MULT || op == MATOP_MULT_ADD || op == MATOP_MULT_TRANSPOSE || op == MATOP_MULT_TRANSPOSE_ADD || op == MATOP_MULT_HERMITIAN_TRANSPOSE || op == MATOP_MULT_HERMITIAN_TRANS_ADD) {
+    if (op == MATOP_MULT || op == MATOP_MULT_ADD) opAdd = MATOP_MULT_ADD;
+    else if (op == MATOP_MULT_TRANSPOSE || op == MATOP_MULT_TRANSPOSE_ADD) opAdd = MATOP_MULT_TRANSPOSE_ADD;
+    else if (op == MATOP_MULT_HERMITIAN_TRANSPOSE || op == MATOP_MULT_HERMITIAN_TRANS_ADD) opAdd = MATOP_MULT_HERMITIAN_TRANS_ADD;
     for (j = 0; j < nc; j++) {
       for (i = 0; i < nr; i++) {
         if (!bA->m[i][j]) continue;
         PetscCall(MatHasOperation(bA->m[i][j], opAdd, &flg));
-        if (!flg) PetscFunctionReturn(PETSC_SUCCESS);
+        if (!flg) break;
       }
     }
   }
-  if (((void **)mat->ops)[op]) *has = PETSC_TRUE;
+  if (flg && ((void **)mat->ops)[op]) *has = PETSC_TRUE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
