@@ -1402,16 +1402,14 @@ PetscErrorCode VecSqrtAbs(Vec v)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+#if PetscDefined(USE_COMPLEX)
 static PetscScalar ScalarImaginaryPart_Function(PetscScalar x)
 {
   const PetscReal imag = PetscImaginaryPart(x);
 
-#if PetscDefined(USE_COMPLEX)
   return PetscCMPLX(imag, 0.0);
-#else
-  return imag;
-#endif
 }
+#endif
 
 /*@
   VecImaginaryPart - Replaces a complex vector with its imaginary part
@@ -1429,20 +1427,22 @@ PetscErrorCode VecImaginaryPart(Vec v)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(v, VEC_CLASSID, 1);
+#if defined(PETSC_USE_COMPLEX)
   PetscCall(VecApplyUnary_Private(v, NULL, NULL, NULL, ScalarImaginaryPart_Function));
+#else
+  PetscCall(VecZeroEntries(v));
+#endif
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+#if PetscDefined(USE_COMPLEX)
 static PetscScalar ScalarRealPart_Function(PetscScalar x)
 {
   const PetscReal real = PetscRealPart(x);
 
-#if PetscDefined(USE_COMPLEX)
   return PetscCMPLX(real, 0.0);
-#else
-  return real;
-#endif
 }
+#endif
 
 /*@
   VecRealPart - Replaces a complex vector with its real part
@@ -1460,7 +1460,9 @@ PetscErrorCode VecRealPart(Vec v)
 {
   PetscFunctionBegin;
   PetscValidHeaderSpecific(v, VEC_CLASSID, 1);
+#if defined(PETSC_USE_COMPLEX)
   PetscCall(VecApplyUnary_Private(v, NULL, NULL, NULL, ScalarRealPart_Function));
+#endif
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -1787,7 +1789,7 @@ PetscErrorCode VecUniqueEntries(Vec vec, PetscInt *n, PetscScalar *e[])
   for (p = 1, displs[0] = 0; p <= size; ++p) displs[p] = displs[p - 1] + N[p - 1];
   PetscCallMPI(MPI_Allgatherv(tmp, l, MPIU_SCALAR, vals, N, displs, MPIU_SCALAR, PetscObjectComm((PetscObject)vec)));
   /* Find unique entries */
-#ifdef PETSC_USE_COMPLEX
+#if defined(PETSC_USE_COMPLEX)
   SETERRQ(PetscObjectComm((PetscObject)vec), PETSC_ERR_SUP, "Does not work with complex numbers");
 #else
   *n = displs[size];
