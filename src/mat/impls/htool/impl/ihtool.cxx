@@ -323,7 +323,7 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                 if (a->gcoords_source == a->gcoords_target) d->gcoords_source = d->gcoords_target;
                 else if (a->gcoords_source) {
                   PetscCall(PetscMalloc1(A->cmap->N * d->dim, &d->gcoords_source));
-                  PetscCall(PetscArraycpy(d->gcoords_source, d->gcoords_source, A->cmap->N * d->dim));
+                  PetscCall(PetscArraycpy(d->gcoords_source, a->gcoords_source, A->cmap->N * d->dim));
                 }
                 d->max_cluster_leaf_size  = a->max_cluster_leaf_size;
                 d->epsilon                = a->epsilon;
@@ -339,7 +339,7 @@ static PetscErrorCode MatCreateSubMatrices_Htool(Mat A, PetscInt n, const IS iro
                 d->kernelctx              = a->kernelctx;
                 d->target_cluster         = a->target_cluster;
                 if (a->source_cluster) d->source_cluster = a->source_cluster;
-                d->local_hmatrix           = std::make_unique<htool::HMatrix<PetscReal>>(*a->block_diagonal_hmatrix);
+                d->local_hmatrix           = std::make_unique<htool::HMatrix<PetscScalar>>(*a->block_diagonal_hmatrix);
                 d->local_to_local_operator = std::make_unique<htool::LocalToLocalHMatrix<PetscScalar>>(*d->block_diagonal_hmatrix);
                 d->distributed_operator_holder = std::make_unique<htool::CustomApproximationBuilder<PetscScalar>>(a->block_diagonal_hmatrix->get_target_cluster(), a->block_diagonal_hmatrix->get_source_cluster(), PetscObjectComm((PetscObject)A), *d->local_to_local_operator);
                 d->distributed_operator   = &d->distributed_operator_holder->distributed_operator;

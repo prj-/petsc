@@ -52,7 +52,7 @@ struct Mat_Htool {
   WrapperHtool                                                     *wrapper;
   std::shared_ptr<htool::Cluster<PetscReal>>                        target_cluster;
   std::shared_ptr<htool::Cluster<PetscReal>>                        source_cluster;
-  std::unique_ptr<htool::HMatrix<PetscReal>>                        local_hmatrix;
+  std::unique_ptr<htool::HMatrix<PetscScalar>>                      local_hmatrix;
   std::unique_ptr<htool::VirtualLocalToLocalOperator<PetscScalar>>  local_to_local_operator;
   std::unique_ptr<htool::VirtualGlobalToLocalOperator<PetscScalar>> global_to_local_operator;
   std::unique_ptr<htool::CustomApproximationBuilder<PetscScalar>>   distributed_operator_holder;
