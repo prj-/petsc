@@ -1717,8 +1717,8 @@ static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS 
     PetscCall(ISInvertPermutation(isrow_perm[i], PETSC_DECIDE, isrow_iperm + i));
 
     if (irow[i] == icol[i]) {
-      // When irow[i] == icol[i], reuse the same IS objects for row and column.
-      // PetscObjectReference() balances the paired ISDestroy() calls in cleanup.
+      /* When irow[i] == icol[i], reuse the same IS objects for row and column.
+         PetscObjectReference() balances the paired ISDestroy() calls in cleanup. */
       iscol_sorted[i] = isrow_sorted[i];
       PetscCall(PetscObjectReference((PetscObject)iscol_sorted[i]));
       iscol_perm[i] = isrow_perm[i];
