@@ -1700,9 +1700,19 @@ static PetscErrorCode MatAXPY_MPISBAIJ(Mat Y, PetscScalar a, Mat X, MatStructure
 static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *B[])
 {
   PetscInt  i;
-  PetscBool flg;
+  PetscBool flg, issorted;
 
   PetscFunctionBegin;
+  /* SBAIJ stores only the upper triangle.  An unsorted IS can map upper-triangle
+     entries of A to the lower triangle of the submatrix, making them invisible to
+     the row-oriented extraction loop.  Require sorted IS, as MatCreateSubMatrix()
+     already does for symmetric format. */
+  for (i = 0; i < n; i++) {
+    PetscCall(ISSorted(irow[i], &issorted));
+    PetscCheck(issorted, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "For symmetric format, irow[%" PetscInt_FMT "] must be sorted", i);
+    PetscCall(ISSorted(icol[i], &issorted));
+    PetscCheck(issorted, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "For symmetric format, icol[%" PetscInt_FMT "] must be sorted", i);
+  }
   PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, irow, icol, scall, B)); /* B[] are sbaij matrices */
   for (i = 0; i < n; i++) {
     PetscCall(ISEqual(irow[i], icol[i], &flg));
