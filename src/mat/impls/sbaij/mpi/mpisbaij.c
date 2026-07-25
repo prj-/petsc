@@ -1700,7 +1700,7 @@ static PetscErrorCode MatAXPY_MPISBAIJ(Mat Y, PetscScalar a, Mat X, MatStructure
 static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *B[])
 {
   IS        *isrow_sorted, *iscol_sorted, *isrow_perm, *iscol_perm, *isrow_iperm, *iscol_iperm;
-  Mat       *Bsorted = NULL, Bperm;
+  Mat       *Bsorted = NULL, Bpermuted;
   PetscInt   i;
   PetscBool  flg, isid, unsorted = PETSC_FALSE;
 
@@ -1716,9 +1716,9 @@ static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS 
     PetscCall(ISInvertPermutation(isrow_perm[i], PETSC_DECIDE, isrow_iperm + i));
 
     if (irow[i] == icol[i]) {
-      /* Row/column request the same IS: share sorted/permutation objects.
-         Cleanup below intentionally destroys both row and column handles; the
-         extra PetscObjectReference() calls here balance those ISDestroy() calls. */
+      /* When irow[i] == icol[i], reuse the same IS objects for both row and
+         column operations. PetscObjectReference() increments reference counts so
+         the paired ISDestroy() calls in cleanup can safely decrement both handles. */
       iscol_sorted[i] = isrow_sorted[i];
       PetscCall(PetscObjectReference((PetscObject)iscol_sorted[i]));
       iscol_perm[i] = isrow_perm[i];
@@ -1741,9 +1741,9 @@ static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS 
   } else {
     PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, isrow_sorted, iscol_sorted, MAT_INITIAL_MATRIX, &Bsorted)); /* Bsorted[] are sbaij matrices */
     for (i = 0; i < n; i++) {
-      PetscCall(MatPermute(Bsorted[i], isrow_iperm[i], iscol_iperm[i], &Bperm));
+      PetscCall(MatPermute(Bsorted[i], isrow_iperm[i], iscol_iperm[i], &Bpermuted));
       PetscCall(MatDestroy(Bsorted + i));
-      Bsorted[i] = Bperm;
+      Bsorted[i] = Bpermuted;
     }
     if (scall == MAT_REUSE_MATRIX) {
       for (i = 0; i < n; i++) PetscCall(MatCopy(Bsorted[i], (*B)[i], DIFFERENT_NONZERO_PATTERN));
