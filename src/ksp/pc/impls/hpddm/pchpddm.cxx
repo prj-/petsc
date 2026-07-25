@@ -1485,26 +1485,15 @@ static PetscErrorCode PCHPDDMDestroySubMatrices_Private(PetscBool flg, PetscBool
 static PetscErrorCode PCHPDDMAlgebraicAuxiliaryMat_Private(Mat P, IS *is, Mat *sub[], PetscBool block)
 {
   IS         icol[3], irow[2];
-  Mat       *M, Q;
+  Mat       *M;
   PetscReal *ptr;
   PetscInt  *idx, p = 0, bs = P->cmap->bs;
-  PetscBool  flg;
 
   PetscFunctionBegin;
   PetscCall(ISCreateStride(PETSC_COMM_SELF, P->cmap->N, 0, 1, icol + 2));
   PetscCall(ISSetBlockSize(icol[2], bs));
   PetscCall(ISSetIdentity(icol[2]));
-  PetscCall(PetscObjectTypeCompare((PetscObject)P, MATMPISBAIJ, &flg));
-  if (flg) {
-    /* MatCreateSubMatrices() does not handle MATMPISBAIJ properly when iscol != isrow, so convert first to MATMPIBAIJ */
-    PetscCall(MatConvert(P, MATMPIBAIJ, MAT_INITIAL_MATRIX, &Q));
-    std::swap(P, Q);
-  }
   PetscCall(MatCreateSubMatrices(P, 1, is, icol + 2, MAT_INITIAL_MATRIX, &M));
-  if (flg) {
-    std::swap(P, Q);
-    PetscCall(MatDestroy(&Q));
-  }
   PetscCall(ISDestroy(icol + 2));
   PetscCall(ISCreateStride(PETSC_COMM_SELF, M[0]->rmap->N, 0, 1, irow));
   PetscCall(ISSetBlockSize(irow[0], bs));
@@ -2254,21 +2243,11 @@ static PetscErrorCode PCSetUp_HPDDM(PC pc)
 #endif
   if (data->is || (ismatis && data->N > 1)) {
     if (ismatis) {
-      std::initializer_list<std::string> list = {MATSEQBAIJ, MATSEQSBAIJ};
       PetscCall(MatISGetLocalMat(P, &N));
-      std::initializer_list<std::string>::const_iterator it = std::find(list.begin(), list.end(), ((PetscObject)N)->type_name);
+      PetscCall(PetscObjectTypeCompare((PetscObject)N, MATSEQBAIJ, &flg));
       PetscCall(MatISRestoreLocalMat(P, &N));
-      switch (std::distance(list.begin(), it)) {
-      case 0:
-        PetscCall(MatConvert(P, MATMPIBAIJ, MAT_INITIAL_MATRIX, &C));
-        break;
-      case 1:
-        /* MatCreateSubMatrices() does not work with MATSBAIJ and unsorted ISes, so convert to MPIBAIJ */
-        PetscCall(MatConvert(P, MATMPIBAIJ, MAT_INITIAL_MATRIX, &C));
-        break;
-      default:
-        PetscCall(MatConvert(P, MATMPIAIJ, MAT_INITIAL_MATRIX, &C));
-      }
+      if (flg) PetscCall(MatConvert(P, MATMPIBAIJ, MAT_INITIAL_MATRIX, &C));
+      else PetscCall(MatConvert(P, MATMPIAIJ, MAT_INITIAL_MATRIX, &C));
       PetscCall(MatISGetLocalToGlobalMapping(P, &l2g, nullptr));
       PetscCall(PetscObjectReference((PetscObject)P));
       PetscCall(KSPSetOperators(data->levels[0]->ksp, A, C));
@@ -2833,14 +2812,9 @@ static PetscErrorCode PCSetUp_HPDDM(PC pc)
           if (PetscDefined(USE_DEBUG) && PetscBool3ToBool(data->Neumann)) {
             Mat      *sub, A[3];
             PetscReal norm[2];
-            PetscBool flg;
 
-            PetscCall(PetscObjectTypeCompare((PetscObject)P, MATMPISBAIJ, &flg)); /* MatCreateSubMatrices() does not work with MATSBAIJ and unsorted ISes, so convert to MPIAIJ */
-            if (flg) PetscCall(MatConvert(P, MATMPIAIJ, MAT_INITIAL_MATRIX, A));
-            else {
-              A[0] = P;
-              PetscCall(PetscObjectReference((PetscObject)P));
-            }
+            A[0] = P;
+            PetscCall(PetscObjectReference((PetscObject)P));
             PetscCall(MatCreateSubMatrices(A[0], 1, &data->is, &data->is, MAT_INITIAL_MATRIX, &sub));
             PetscCall(MatDiagonalScale(sub[0], data->levels[0]->D, data->levels[0]->D));
             PetscCall(MatConvert(sub[0], MATSEQAIJ, MAT_INITIAL_MATRIX, A + 1)); /* too many corner cases to handle (MATNORMAL, MATNORMALHERMITIAN, MATBAIJ with different block sizes...), so just MatConvert() to MATSEQAIJ since this is just for debugging */
