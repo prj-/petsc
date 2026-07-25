@@ -1716,6 +1716,9 @@ static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS 
     PetscCall(ISInvertPermutation(isrow_perm[i], PETSC_DECIDE, isrow_iperm + i));
 
     if (irow[i] == icol[i]) {
+      /* Row/column request the same IS: share sorted/permutation objects.
+         Cleanup below intentionally destroys both row and column handles; the
+         extra PetscObjectReference() calls here balance those ISDestroy() calls. */
       iscol_sorted[i] = isrow_sorted[i];
       PetscCall(PetscObjectReference((PetscObject)iscol_sorted[i]));
       iscol_perm[i] = isrow_perm[i];
