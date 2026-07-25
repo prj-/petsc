@@ -1700,7 +1700,8 @@ static PetscErrorCode MatAXPY_MPISBAIJ(Mat Y, PetscScalar a, Mat X, MatStructure
 static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *B[])
 {
   IS        *isrow_sorted, *iscol_sorted, *isrow_perm, *iscol_perm, *isrow_iperm, *iscol_iperm;
-  Mat       *Bsorted = NULL, Bpermuted;
+  Mat       *Bsorted = NULL;
+  Mat        Bpermuted;
   PetscInt   i;
   PetscBool  flg, isid, unsorted = PETSC_FALSE;
 

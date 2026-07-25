@@ -1,5 +1,5 @@
 static char help[] = "Tests MatCreateSubMatrices() for MATMPISBAIJ.\n\n"
-                     "With an unsorted IS, MATMPISBAIJ silently returned wrong values because\n"
+                     "With an unsorted IS, MATMPISBAIJ previously returned wrong values because\n"
                      "the diagonal block is stored as MATSEQSBAIJ (upper triangle only), so\n"
                      "entries that belong to the upper triangle of the submatrix but to the lower\n"
                      "triangle of the original matrix were not sent and were missing from the result.\n"
