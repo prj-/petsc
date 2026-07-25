@@ -1699,25 +1699,66 @@ static PetscErrorCode MatAXPY_MPISBAIJ(Mat Y, PetscScalar a, Mat X, MatStructure
 
 static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS irow[], const IS icol[], MatReuse scall, Mat *B[])
 {
-  PetscInt  i;
-  PetscBool flg, issorted;
+  IS        *isrow_sorted, *iscol_sorted, *isrow_perm, *iscol_perm, *isrow_iperm, *iscol_iperm;
+  Mat       *Bsorted = NULL, Bperm;
+  PetscInt   i;
+  PetscBool  flg, isid, unsorted = PETSC_FALSE;
 
   PetscFunctionBegin;
-  /* SBAIJ stores only the upper triangle.  An unsorted IS can map upper-triangle
-     entries of A to the lower triangle of the submatrix, making them invisible to
-     the row-oriented extraction loop.  Require sorted IS, as MatCreateSubMatrix()
-     already does for symmetric format. */
+  PetscCall(PetscMalloc6(n, &isrow_sorted, n, &iscol_sorted, n, &isrow_perm, n, &iscol_perm, n, &isrow_iperm, n, &iscol_iperm));
   for (i = 0; i < n; i++) {
-    PetscCall(ISSorted(irow[i], &issorted));
-    PetscCheck(issorted, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "For symmetric format, irow[%" PetscInt_FMT "] must be sorted", i);
-    PetscCall(ISSorted(icol[i], &issorted));
-    PetscCheck(issorted, PETSC_COMM_SELF, PETSC_ERR_ARG_INCOMP, "For symmetric format, icol[%" PetscInt_FMT "] must be sorted", i);
+    PetscCall(ISDuplicate(irow[i], isrow_sorted + i));
+    PetscCall(ISCopy(irow[i], isrow_sorted[i]));
+    PetscCall(ISSort(isrow_sorted[i]));
+    PetscCall(ISSortPermutation(irow[i], PETSC_TRUE, isrow_perm + i));
+    PetscCall(ISIdentity(isrow_perm[i], &isid));
+    if (!isid) unsorted = PETSC_TRUE;
+    PetscCall(ISInvertPermutation(isrow_perm[i], PETSC_DECIDE, isrow_iperm + i));
+
+    if (irow[i] == icol[i]) {
+      iscol_sorted[i] = isrow_sorted[i];
+      PetscCall(PetscObjectReference((PetscObject)iscol_sorted[i]));
+      iscol_perm[i] = isrow_perm[i];
+      PetscCall(PetscObjectReference((PetscObject)iscol_perm[i]));
+      iscol_iperm[i] = isrow_iperm[i];
+      PetscCall(PetscObjectReference((PetscObject)iscol_iperm[i]));
+    } else {
+      PetscCall(ISDuplicate(icol[i], iscol_sorted + i));
+      PetscCall(ISCopy(icol[i], iscol_sorted[i]));
+      PetscCall(ISSort(iscol_sorted[i]));
+      PetscCall(ISSortPermutation(icol[i], PETSC_TRUE, iscol_perm + i));
+      PetscCall(ISIdentity(iscol_perm[i], &isid));
+      if (!isid) unsorted = PETSC_TRUE;
+      PetscCall(ISInvertPermutation(iscol_perm[i], PETSC_DECIDE, iscol_iperm + i));
+    }
   }
-  PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, irow, icol, scall, B)); /* B[] are sbaij matrices */
+
+  if (!unsorted) {
+    PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, irow, icol, scall, B)); /* B[] are sbaij matrices */
+  } else {
+    PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, isrow_sorted, iscol_sorted, MAT_INITIAL_MATRIX, &Bsorted)); /* Bsorted[] are sbaij matrices */
+    for (i = 0; i < n; i++) {
+      PetscCall(MatPermute(Bsorted[i], isrow_iperm[i], iscol_iperm[i], &Bperm));
+      PetscCall(MatDestroy(Bsorted + i));
+      Bsorted[i] = Bperm;
+    }
+    if (scall == MAT_REUSE_MATRIX) {
+      for (i = 0; i < n; i++) PetscCall(MatCopy(Bsorted[i], (*B)[i], DIFFERENT_NONZERO_PATTERN));
+      PetscCall(MatDestroySubMatrices(n, &Bsorted));
+    } else *B = Bsorted;
+  }
+
   for (i = 0; i < n; i++) {
     PetscCall(ISEqual(irow[i], icol[i], &flg));
-    if (!flg) PetscCall(MatSeqSBAIJZeroOps_Private(*B[i]));
+    if (!flg) PetscCall(MatSeqSBAIJZeroOps_Private((*B)[i]));
+    PetscCall(ISDestroy(isrow_sorted + i));
+    PetscCall(ISDestroy(iscol_sorted + i));
+    PetscCall(ISDestroy(isrow_perm + i));
+    PetscCall(ISDestroy(iscol_perm + i));
+    PetscCall(ISDestroy(isrow_iperm + i));
+    PetscCall(ISDestroy(iscol_iperm + i));
   }
+  PetscCall(PetscFree6(isrow_sorted, iscol_sorted, isrow_perm, iscol_perm, isrow_iperm, iscol_iperm));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
