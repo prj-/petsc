@@ -1718,6 +1718,7 @@ static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS 
 
     if (irow[i] == icol[i]) {
       /* When irow[i] == icol[i], reuse the same IS objects for row and column.
+         This is valid because this branch has identical row and column index sets.
          PetscObjectReference() balances the paired ISDestroy() calls in cleanup. */
       iscol_sorted[i] = isrow_sorted[i];
       PetscCall(PetscObjectReference((PetscObject)iscol_sorted[i]));
@@ -1736,9 +1737,8 @@ static PetscErrorCode MatCreateSubMatrices_MPISBAIJ(Mat A, PetscInt n, const IS 
     }
   }
 
-  if (!unsorted) {
-    PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, irow, icol, scall, B)); /* B[] are sbaij matrices */
-  } else {
+  if (!unsorted) PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, irow, icol, scall, B)); /* B[] are sbaij matrices */
+  else {
     PetscCall(MatCreateSubMatrices_MPIBAIJ(A, n, isrow_sorted, iscol_sorted, MAT_INITIAL_MATRIX, &Bsorted)); /* Bsorted[] are sbaij matrices */
     for (i = 0; i < n; i++) {
       PetscCall(MatPermute(Bsorted[i], isrow_iperm[i], iscol_iperm[i], &Bpermuted));
