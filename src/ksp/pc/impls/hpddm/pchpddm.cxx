@@ -78,6 +78,51 @@ static PetscErrorCode PCReset_HPDDM(PC pc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
+static PetscErrorCode PCHPDDMResetSetup_Private(PC pc)
+{
+  PC_HPDDM *data = (PC_HPDDM *)pc->data;
+  IS        is   = data->is;
+  Mat       aux = data->aux, B = data->B;
+  PetscErrorCode (*setup)(Mat, PetscReal, Vec, Vec, PetscReal, IS, void *) = data->setup;
+  void                       *setup_ctx                                    = data->setup_ctx;
+  PetscReal                   threshold[PETSC_PCHPDDM_MAXLEVELS];
+  PetscInt                    nu[PETSC_PCHPDDM_MAXLEVELS], overlap = data->overlap, n = 0;
+  PCHPDDMCoarseCorrectionType correction   = data->correction;
+  PetscBool3                  Neumann      = data->Neumann;
+  PetscBool                   log_separate = data->log_separate, share = data->share, deflation = data->deflation, svd = data->svd, relative = data->relative;
+
+  PetscFunctionBegin;
+  for (; n < PETSC_PCHPDDM_MAXLEVELS && data->levels && data->levels[n]; ++n) {
+    threshold[n] = data->levels[n]->threshold;
+    nu[n]        = data->levels[n]->nu;
+  }
+  PetscCall(PetscObjectReference((PetscObject)is));
+  PetscCall(PetscObjectReference((PetscObject)aux));
+  PetscCall(PetscObjectReference((PetscObject)B));
+  PetscCall(PCReset_HPDDM(pc));
+  data->is           = is;
+  data->aux          = aux;
+  data->B            = B;
+  data->correction   = correction;
+  data->Neumann      = Neumann;
+  data->log_separate = log_separate;
+  data->share        = share;
+  data->deflation    = deflation;
+  data->overlap      = overlap;
+  data->svd          = svd;
+  data->relative     = relative;
+  data->setup        = setup;
+  data->setup_ctx    = setup_ctx;
+  for (PetscInt i = 0; i < n; ++i) {
+    PetscCall(PCHPDDMInitializeLevel_Private(data, i));
+    data->levels[i]->threshold = threshold[i];
+    data->levels[i]->nu        = nu[i];
+  }
+  PetscCall(PCHPDDMUpdateN_Private(data));
+  pc->setupcalled = PETSC_FALSE;
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 static PetscErrorCode PCDestroy_HPDDM(PC pc)
 {
   PC_HPDDM *data = (PC_HPDDM *)pc->data;
@@ -382,8 +427,8 @@ static PetscErrorCode PCHPDDMSetHarmonicOverlap_HPDDM(PC pc, PetscInt ovl)
   PC_HPDDM *data = (PC_HPDDM *)pc->data;
 
   PetscFunctionBegin;
-  PetscCheck(!pc->setupcalled || ovl == data->overlap, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONGSTATE, "PCHPDDMSetHarmonicOverlap() must be called before PCSetUp()");
   PetscCheck(ovl >= 1, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Overlap %" PetscInt_FMT " must be positive", ovl);
+  if (pc->setupcalled && ovl != data->overlap) PetscCall(PCHPDDMResetSetup_Private(pc));
   data->overlap = ovl;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -403,7 +448,7 @@ static PetscErrorCode PCHPDDMSetHarmonicOverlap_HPDDM(PC pc, PetscInt ovl)
   Level: intermediate
 
   Note:
-  This routine must be called before `PCSetUp()`.
+  If the preconditioner has already been set up and `ovl` differs from its current value, the computed hierarchy is reset and rebuilt by the next `PCSetUp()`.
 
 .seealso: [](ch_ksp), `PCHPDDM`, `PCASMSetOverlap()`, `PCGASMSetOverlap()`, `PCHPDDMSetEPSThreshold()`, `PCHPDDMSetSVDDimensions()`
 @*/
@@ -420,12 +465,17 @@ static PetscErrorCode PCHPDDMSetEPSThreshold_HPDDM(PC pc, PetscReal v[], PetscIn
 {
   PC_HPDDM *data = (PC_HPDDM *)pc->data;
   PetscInt  i, N = PetscMin(n, relative ? 1 : PETSC_PCHPDDM_MAXLEVELS - 1);
+  PetscBool rebuild = PETSC_FALSE;
 
   PetscFunctionBegin;
   for (i = 0; i < N; ++i) {
     if (v[i] == static_cast<PetscReal>(PETSC_CURRENT)) continue;
     PetscCheck(v[i] >= 0.0, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Threshold %g at level %" PetscInt_FMT " must be nonnegative or PETSC_CURRENT", (double)v[i], i + 1);
-    PetscCheck(!pc->setupcalled || (data->levels && data->levels[i] && v[i] == data->levels[i]->threshold && (i || (data->relative == relative && !data->svd))), PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONGSTATE, "PCHPDDMSetEPSThreshold() must be called before PCSetUp()");
+    if (pc->setupcalled && (!data->levels || !data->levels[i] || v[i] != data->levels[i]->threshold || (!i && (data->relative != relative || data->svd)))) rebuild = PETSC_TRUE;
+  }
+  if (rebuild) PetscCall(PCHPDDMResetSetup_Private(pc));
+  for (i = 0; i < N; ++i) {
+    if (v[i] == static_cast<PetscReal>(PETSC_CURRENT)) continue;
     PetscCall(PCHPDDMInitializeLevel_Private(data, i));
     data->levels[i]->threshold = v[i];
     if (!i) {
@@ -457,7 +507,7 @@ static PetscErrorCode PCHPDDMSetEPSThreshold_HPDDM(PC pc, PetscReal v[], PetscIn
   Notes:
   Relative thresholds are currently supported only at the finest level and require harmonic overlap.
 
-  Use `PETSC_CURRENT` to preserve a threshold. This routine must be called before `PCSetUp()`. If `n` exceeds the number of supported levels, excess entries are ignored.
+  Use `PETSC_CURRENT` to preserve a threshold. If the preconditioner has already been set up and a threshold changes, the computed hierarchy is reset and rebuilt by the next `PCSetUp()`. If `n` exceeds the number of supported levels, excess entries are ignored.
 
 .seealso: [](ch_ksp), `PCHPDDM`, `PCGAMGSetThreshold()`, `PCHPDDMSetHarmonicOverlap()`, `PCHPDDMSetEPSDimensions()`
 @*/
@@ -478,26 +528,28 @@ static PetscErrorCode PCHPDDMSetDimensions_Private(PC pc, PetscInt nev[], PetscI
   PC_HPDDM   *data   = (PC_HPDDM *)pc->data;
   const char *solver = svd ? "svd" : "eps";
   PetscInt    i, N = PetscMin(n, PETSC_PCHPDDM_MAXLEVELS - 1);
+  PetscBool   rebuild = PETSC_FALSE;
 
   PetscFunctionBegin;
   for (i = 0; i < N; ++i) {
     if (nev[i] != PETSC_CURRENT) {
       PetscCheck(nev[i] >= 0, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Number of requested vectors %" PetscInt_FMT " at level %" PetscInt_FMT " must be nonnegative or PETSC_CURRENT", nev[i], i + 1);
-      PetscCheck(!pc->setupcalled || (data->levels && data->levels[i] && nev[i] == data->levels[i]->nu && (i || data->svd == svd)), PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONGSTATE, "PCHPDDM dimension setters must be called before PCSetUp()");
+      if (pc->setupcalled && (!data->levels || !data->levels[i] || nev[i] != data->levels[i]->nu || (!i && data->svd != svd))) rebuild = PETSC_TRUE;
+    }
+    PetscCheck(ncv[i] > 0 || ncv[i] == PETSC_DETERMINE || ncv[i] == PETSC_CURRENT, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Subspace dimension %" PetscInt_FMT " at level %" PetscInt_FMT " must be positive, PETSC_DETERMINE, or PETSC_CURRENT", ncv[i], i + 1);
+    if (pc->setupcalled && ncv[i] != PETSC_CURRENT) rebuild = PETSC_TRUE;
+    PetscCheck(mpd[i] > 0 || mpd[i] == PETSC_DETERMINE || mpd[i] == PETSC_CURRENT, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Projected dimension %" PetscInt_FMT " at level %" PetscInt_FMT " must be positive, PETSC_DETERMINE, or PETSC_CURRENT", mpd[i], i + 1);
+    if (pc->setupcalled && mpd[i] != PETSC_CURRENT) rebuild = PETSC_TRUE;
+  }
+  if (rebuild) PetscCall(PCHPDDMResetSetup_Private(pc));
+  for (i = 0; i < N; ++i) {
+    if (nev[i] != PETSC_CURRENT) {
       PetscCall(PCHPDDMInitializeLevel_Private(data, i));
       data->levels[i]->nu = nev[i];
       if (!i) data->svd = svd;
     }
-    PetscCheck(ncv[i] > 0 || ncv[i] == PETSC_DETERMINE || ncv[i] == PETSC_CURRENT, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Subspace dimension %" PetscInt_FMT " at level %" PetscInt_FMT " must be positive, PETSC_DETERMINE, or PETSC_CURRENT", ncv[i], i + 1);
-    if (ncv[i] != PETSC_CURRENT) {
-      PetscCheck(!pc->setupcalled, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONGSTATE, "PCHPDDM dimension setters must be called before PCSetUp()");
-      PetscCall(PCHPDDMSetSLEPcDimension_Private(pc, i + 1, solver, "ncv", ncv[i]));
-    }
-    PetscCheck(mpd[i] > 0 || mpd[i] == PETSC_DETERMINE || mpd[i] == PETSC_CURRENT, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Projected dimension %" PetscInt_FMT " at level %" PetscInt_FMT " must be positive, PETSC_DETERMINE, or PETSC_CURRENT", mpd[i], i + 1);
-    if (mpd[i] != PETSC_CURRENT) {
-      PetscCheck(!pc->setupcalled, PetscObjectComm((PetscObject)pc), PETSC_ERR_ARG_WRONGSTATE, "PCHPDDM dimension setters must be called before PCSetUp()");
-      PetscCall(PCHPDDMSetSLEPcDimension_Private(pc, i + 1, solver, "mpd", mpd[i]));
-    }
+    if (ncv[i] != PETSC_CURRENT) PetscCall(PCHPDDMSetSLEPcDimension_Private(pc, i + 1, solver, "ncv", ncv[i]));
+    if (mpd[i] != PETSC_CURRENT) PetscCall(PCHPDDMSetSLEPcDimension_Private(pc, i + 1, solver, "mpd", mpd[i]));
   }
   PetscCall(PCHPDDMUpdateN_Private(data));
   PetscFunctionReturn(PETSC_SUCCESS);
@@ -532,7 +584,7 @@ static PetscErrorCode PCHPDDMSetEPSDimensions_HPDDM(PC pc, PetscInt nev[], Petsc
   Notes:
   `PCHPDDM` can currently set only `-eps_nev` directly when constructing its internal `EPS` objects. Since these objects are not otherwise available through the API, `-eps_ncv` and `-eps_mpd` are forwarded through string options. See [EPSSetDimensions()](https://slepc.upv.es/release/manualpages/EPS/EPSSetDimensions.html).
 
-  Use `PETSC_CURRENT` to preserve a dimension and `PETSC_DETERMINE` for `ncv` or `mpd` to use a solver default. This routine must be called before `PCSetUp()`. If `n` exceeds the number of supported levels, excess entries are ignored.
+  Use `PETSC_CURRENT` to preserve a dimension and `PETSC_DETERMINE` for `ncv` or `mpd` to use a solver default. If the preconditioner has already been set up and a dimension changes, the computed hierarchy is reset and rebuilt by the next `PCSetUp()`. If `n` exceeds the number of supported levels, excess entries are ignored.
 
 .seealso: [](ch_ksp), `PCHPDDM`, `PCHPDDMSetEPSThreshold()`, `PCHPDDMSetSVDDimensions()`
 @*/
@@ -580,7 +632,7 @@ static PetscErrorCode PCHPDDMSetSVDDimensions_HPDDM(PC pc, PetscInt nsv[], Petsc
   Notes:
   `PCHPDDM` can currently set only `-svd_nsv` directly when constructing its internal `SVD` objects. Since these objects are not otherwise available through the API, `-svd_ncv` and `-svd_mpd` are forwarded through string options. See [SVDSetDimensions()](https://slepc.upv.es/release/manualpages/SVD/SVDSetDimensions.html).
 
-  Use `PETSC_CURRENT` to preserve a dimension and `PETSC_DETERMINE` for `ncv` or `mpd` to use a solver default. SVD is currently supported only with harmonic overlap at the finest level, so entries after the first are ignored. This routine must be called before `PCSetUp()`.
+  Use `PETSC_CURRENT` to preserve a dimension and `PETSC_DETERMINE` for `ncv` or `mpd` to use a solver default. SVD is currently supported only with harmonic overlap at the finest level, so entries after the first are ignored. If the preconditioner has already been set up and a dimension changes, the computed hierarchy is reset and rebuilt by the next `PCSetUp()`.
 
 .seealso: [](ch_ksp), `PCHPDDM`, `PCHPDDMSetHarmonicOverlap()`, `PCHPDDMSetEPSDimensions()`
 @*/

@@ -214,6 +214,23 @@ int main(int argc, char **args)
 
     PetscCall(PCHPDDMGetSubKSP(pc, 1, &subksp));
     PetscCheck(subksp, PETSC_COMM_SELF, PETSC_ERR_PLIB, "PCHPDDMGetSubKSP() returned NULL");
+    if (test_eps_api) {
+      PetscInt  nev[] = {29}, ncv[] = {30}, mpd[] = {29};
+      PetscReal threshold[] = {9.0};
+
+      PetscCall(PCHPDDMSetEPSThreshold(pc, threshold, 1, PETSC_TRUE));
+      PetscCall(PCSetUp(pc));
+      PetscCall(PCHPDDMSetEPSDimensions(pc, nev, ncv, mpd, 1));
+      PetscCall(PCSetUp(pc));
+      PetscCall(PCHPDDMSetHarmonicOverlap(pc, 2));
+    } else {
+      PetscInt nsv[] = {11}, ncv[] = {12}, mpd[] = {11};
+
+      PetscCall(PCHPDDMSetSVDDimensions(pc, nsv, ncv, mpd, 1));
+    }
+    PetscCall(PCSetUp(pc));
+    PetscCall(PCHPDDMGetSubKSP(pc, 1, &subksp));
+    PetscCheck(subksp, PETSC_COMM_SELF, PETSC_ERR_PLIB, "PCHPDDMGetSubKSP() returned NULL after resetting the hierarchy");
   }
 #endif
   PetscCall(VecGetLocalSize(b, &m));
