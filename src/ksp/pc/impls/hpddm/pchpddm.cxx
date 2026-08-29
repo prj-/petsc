@@ -87,8 +87,9 @@ static PetscErrorCode PCHPDDMResetSetup_Private(PC pc)
   void                       *setup_ctx                                    = data->setup_ctx;
   PetscReal                   threshold[PETSC_PCHPDDM_MAXLEVELS];
   PetscInt                    nu[PETSC_PCHPDDM_MAXLEVELS], overlap = data->overlap, n = 0;
-  PCHPDDMCoarseCorrectionType correction   = data->correction;
-  PetscBool3                  Neumann      = data->Neumann;
+  PCHPDDMCoarseCorrectionType correction     = data->correction;
+  PetscBool3                  Neumann        = data->Neumann;
+  PetscBool                   setfromoptions = PetscBool(data->levels && data->levels[0] && data->levels[0]->ksp && data->levels[0]->ksp->setfromoptionscalled);
   PetscBool                   log_separate = data->log_separate, share = data->share, deflation = data->deflation, svd = data->svd, relative = data->relative;
 
   PetscFunctionBegin;
@@ -100,6 +101,7 @@ static PetscErrorCode PCHPDDMResetSetup_Private(PC pc)
   PetscCall(PetscObjectReference((PetscObject)aux));
   PetscCall(PetscObjectReference((PetscObject)B));
   PetscCall(PCReset_HPDDM(pc));
+  if (setfromoptions) pc->setfromoptionscalled = 1;
   data->is           = is;
   data->aux          = aux;
   data->B            = B;

@@ -210,10 +210,13 @@ int main(int argc, char **args)
   else PetscCall(KSPSolveTranspose(ksp, b, b));
 #if PetscDefined(HAVE_HPDDM) && PetscDefined(HAVE_DYNAMIC_LIBRARIES) && PetscDefined(USE_SHARED_LIBRARIES)
   if (test_eps_api || test_svd_api) {
-    KSP subksp;
+    KSP       subksp;
+    PetscBool errorifnotconverged;
 
     PetscCall(PCHPDDMGetSubKSP(pc, 1, &subksp));
     PetscCheck(subksp, PETSC_COMM_SELF, PETSC_ERR_PLIB, "PCHPDDMGetSubKSP() returned NULL");
+    PetscCall(KSPGetErrorIfNotConverged(subksp, &errorifnotconverged));
+    PetscCheck(errorifnotconverged == PetscNot(skip_set_from_options), PETSC_COMM_SELF, PETSC_ERR_PLIB, "Unexpected nested KSP option state before resetting the hierarchy");
     if (test_eps_api) {
       PetscInt  nev[] = {29}, ncv[] = {30}, mpd[] = {29};
       PetscReal threshold[] = {9.0};
@@ -231,6 +234,8 @@ int main(int argc, char **args)
     PetscCall(PCSetUp(pc));
     PetscCall(PCHPDDMGetSubKSP(pc, 1, &subksp));
     PetscCheck(subksp, PETSC_COMM_SELF, PETSC_ERR_PLIB, "PCHPDDMGetSubKSP() returned NULL after resetting the hierarchy");
+    PetscCall(KSPGetErrorIfNotConverged(subksp, &errorifnotconverged));
+    PetscCheck(errorifnotconverged == PetscNot(skip_set_from_options), PETSC_COMM_SELF, PETSC_ERR_PLIB, "Unexpected nested KSP option state after resetting the hierarchy");
   }
 #endif
   PetscCall(VecGetLocalSize(b, &m));
@@ -278,7 +283,7 @@ int main(int argc, char **args)
 #if PetscDefined(HAVE_HPDDM) && PetscDefined(HAVE_DYNAMIC_LIBRARIES) && PetscDefined(USE_SHARED_LIBRARIES)
   if (flg) PetscCall(PCHPDDMGetSTShareSubKSP(pc, &flg));
 #endif
-  if (flg && PetscDefined(USE_LOG)) {
+  if (flg && PetscDefined(USE_LOG) && !test_eps_api && !test_svd_api) {
     PetscCall(PetscOptionsHasName(NULL, NULL, "-pc_hpddm_harmonic_overlap", &flg));
     if (!flg) {
       PetscLogEvent      event;
@@ -453,7 +458,11 @@ int main(int argc, char **args)
         suffix: harmonic_overlap_1_api
         output_file: output/ex76_geneo_share.out
         filter: sed -e "s/Linear solve converged due to CONVERGED_RTOL iterations 1[0-3]/Linear solve converged due to CONVERGED_RTOL iterations 15/g"
-        args: -test_eps_api -pc_hpddm_levels_1_st_pc_type lu -pc_hpddm_levels_1_eps_pc_type lu -mat_type baij
+        args: -test_eps_api -pc_hpddm_levels_1_ksp_error_if_not_converged -pc_hpddm_levels_1_st_pc_type lu -pc_hpddm_levels_1_eps_pc_type lu -mat_type baij
+      test:
+        suffix: harmonic_overlap_1_api_skip_set_from_options
+        output_file: output/empty.out
+        args: -test_eps_api -skip_set_from_options -options_left no -pc_hpddm_levels_1_ksp_error_if_not_converged -pc_hpddm_levels_1_st_pc_type lu -pc_hpddm_levels_1_eps_pc_type lu -mat_type baij
       test:
         requires: cuda
         suffix: harmonic_overlap_1_cuda
@@ -503,7 +512,7 @@ int main(int argc, char **args)
         suffix: harmonic_overlap_2_api
         output_file: output/ex76_geneo_share.out
         filter: sed -e "s/Linear solve converged due to CONVERGED_RTOL iterations 9/Linear solve converged due to CONVERGED_RTOL iterations 15/g"
-        args: -test_svd_api -pc_hpddm_levels_1_svd_type trlanczos -pc_hpddm_levels_1_st_share_sub_ksp -mat_type sbaij
+        args: -test_svd_api -pc_hpddm_levels_1_ksp_error_if_not_converged -pc_hpddm_levels_1_svd_type trlanczos -pc_hpddm_levels_1_st_share_sub_ksp -mat_type sbaij
       test:
         requires: cuda
         suffix: harmonic_overlap_2_cuda
