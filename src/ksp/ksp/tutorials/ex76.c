@@ -5,11 +5,11 @@ static char help[] = "Solves a linear system using PCHPDDM.\n\n";
 
 int main(int argc, char **args)
 {
-  Vec             b;            /* computed solution and RHS */
-  Mat             A, aux, X, B; /* linear system matrix */
-  KSP             ksp;          /* linear solver context */
+  Vec             b;                              /* computed solution and RHS */
+  Mat             A, aux, reset_aux = NULL, X, B; /* linear system matrix */
+  KSP             ksp;                            /* linear solver context */
   PC              pc;
-  IS              is, sizes;
+  IS              is, reset_is = NULL, sizes;
   const PetscInt *idx;
   PetscMPIInt     rank, size;
   PetscInt        m, N = 1;
@@ -147,6 +147,12 @@ int main(int argc, char **args)
     PetscCall(PCSetUp(pc));
     PetscCall(PetscOptionsClearValue(NULL, "-pc_hpddm_block_splitting"));
   }
+  if (test_eps_api || test_svd_api) {
+    PetscCall(PetscObjectReference((PetscObject)is));
+    reset_is = is;
+    PetscCall(PetscObjectReference((PetscObject)aux));
+    reset_aux = aux;
+  }
   PetscCall(PCHPDDMSetAuxiliaryMat(pc, is, aux, NULL, NULL));
   PetscCall(PCHPDDMHasNeumannMat(pc, PETSC_FALSE)); /* PETSC_TRUE is fine as well, just testing */
   if (share == PETSC_BOOL3_UNKNOWN) PetscCall(PCHPDDMSetSTShareSubKSP(pc, PetscBool3ToBool(share)));
@@ -184,6 +190,8 @@ int main(int argc, char **args)
   }
 #else
   (void)share;
+  (void)reset_aux;
+  (void)reset_is;
   (void)test_eps_api;
   (void)test_svd_api;
 #endif
@@ -217,6 +225,16 @@ int main(int argc, char **args)
     PetscCheck(subksp, PETSC_COMM_SELF, PETSC_ERR_PLIB, "PCHPDDMGetSubKSP() returned NULL");
     PetscCall(KSPGetErrorIfNotConverged(subksp, &errorifnotconverged));
     PetscCheck(errorifnotconverged == PetscNot(skip_set_from_options), PETSC_COMM_SELF, PETSC_ERR_PLIB, "Unexpected nested KSP option state before resetting the hierarchy");
+    PetscCall(PCHPDDMSetAuxiliaryMat(pc, reset_is, reset_aux, NULL, NULL));
+    PetscCall(PCHPDDMHasNeumannMat(pc, PETSC_FALSE));
+    PetscCall(ISDestroy(&reset_is));
+    PetscCall(MatDestroy(&reset_aux));
+    PetscCall(PCSetUp(pc));
+    PetscCall(PCHPDDMGetSubKSP(pc, 2, &subksp)); /* confirms that the coarsening API state survived */
+    PetscCall(PCHPDDMGetSubKSP(pc, 1, &subksp));
+    PetscCheck(subksp, PETSC_COMM_SELF, PETSC_ERR_PLIB, "PCHPDDMGetSubKSP() returned NULL after replacing the auxiliary matrix");
+    PetscCall(KSPGetErrorIfNotConverged(subksp, &errorifnotconverged));
+    PetscCheck(errorifnotconverged == PetscNot(skip_set_from_options), PETSC_COMM_SELF, PETSC_ERR_PLIB, "Unexpected nested KSP option state after replacing the auxiliary matrix");
     if (test_eps_api) {
       PetscInt  nev[] = {29}, ncv[] = {30}, mpd[] = {29};
       PetscReal threshold[] = {9.0};

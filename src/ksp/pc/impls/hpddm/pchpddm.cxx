@@ -78,7 +78,7 @@ static PetscErrorCode PCReset_HPDDM(PC pc)
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-static PetscErrorCode PCHPDDMResetSetup_Private(PC pc)
+static PetscErrorCode PCHPDDMResetSetup_Private(PC pc, PetscBool resetauxiliary)
 {
   PC_HPDDM *data = (PC_HPDDM *)pc->data;
   IS        is   = data->is;
@@ -97,30 +97,34 @@ static PetscErrorCode PCHPDDMResetSetup_Private(PC pc)
     threshold[n] = data->levels[n]->threshold;
     nu[n]        = data->levels[n]->nu;
   }
-  PetscCall(PetscObjectReference((PetscObject)is));
-  PetscCall(PetscObjectReference((PetscObject)aux));
-  PetscCall(PetscObjectReference((PetscObject)B));
+  if (!resetauxiliary) {
+    PetscCall(PetscObjectReference((PetscObject)is));
+    PetscCall(PetscObjectReference((PetscObject)aux));
+    PetscCall(PetscObjectReference((PetscObject)B));
+  }
   PetscCall(PCReset_HPDDM(pc));
   if (setfromoptions) pc->setfromoptionscalled = 1;
-  data->is           = is;
-  data->aux          = aux;
-  data->B            = B;
   data->correction   = correction;
-  data->Neumann      = Neumann;
   data->log_separate = log_separate;
   data->share        = share;
-  data->deflation    = deflation;
   data->overlap      = overlap;
   data->svd          = svd;
   data->relative     = relative;
-  data->setup        = setup;
-  data->setup_ctx    = setup_ctx;
+  if (!resetauxiliary) {
+    data->is        = is;
+    data->aux       = aux;
+    data->B         = B;
+    data->Neumann   = Neumann;
+    data->deflation = deflation;
+    data->setup     = setup;
+    data->setup_ctx = setup_ctx;
+  }
   for (PetscInt i = 0; i < n; ++i) {
     PetscCall(PCHPDDMInitializeLevel_Private(data, i));
     data->levels[i]->threshold = threshold[i];
     data->levels[i]->nu        = nu[i];
   }
-  PetscCall(PCHPDDMUpdateN_Private(data));
+  if (!resetauxiliary) PetscCall(PCHPDDMUpdateN_Private(data));
   pc->setupcalled = PETSC_FALSE;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -152,8 +156,8 @@ static PetscErrorCode PCDestroy_HPDDM(PC pc)
 
 static inline PetscErrorCode PCHPDDMSetAuxiliaryMat_Private(PC pc, IS is, Mat A, PetscBool deflation)
 {
-  PC_HPDDM                   *data = (PC_HPDDM *)pc->data;
-  PCHPDDMCoarseCorrectionType type = data->correction;
+  PC_HPDDM *data  = (PC_HPDDM *)pc->data;
+  PetscBool reset = PetscBool(is && data->is);
 
   PetscFunctionBegin;
   PetscValidLogicalCollectiveBool(pc, deflation, 4);
@@ -164,23 +168,19 @@ static inline PetscErrorCode PCHPDDMSetAuxiliaryMat_Private(PC pc, IS is, Mat A,
     PetscCall(MatGetLocalSize(A, m + 1, nullptr));
     PetscCheck(m[0] == m[1], PETSC_COMM_SELF, PETSC_ERR_USER_INPUT, "Inconsistent IS and Mat sizes (%" PetscInt_FMT " v. %" PetscInt_FMT ")", m[0], m[1]);
   }
+  PetscCall(PetscObjectReference((PetscObject)A));
   if (is) {
     PetscCall(PetscObjectReference((PetscObject)is));
-    if (data->is) { /* new overlap definition resets the PC */
-      PetscCall(PCReset_HPDDM(pc));
-      pc->setfromoptionscalled = 0;
-      pc->setupcalled          = PETSC_FALSE;
-      data->correction         = type;
-    }
+    if (reset) PetscCall(PCHPDDMResetSetup_Private(pc, PETSC_TRUE)); /* new overlap definition resets the PC */
     PetscCall(ISDestroy(&data->is));
     data->is = is;
   }
   if (A) {
-    PetscCall(PetscObjectReference((PetscObject)A));
     PetscCall(MatDestroy(&data->aux));
     data->aux = A;
   }
   data->deflation = deflation;
+  if (reset) PetscCall(PCHPDDMUpdateN_Private(data));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -430,7 +430,7 @@ static PetscErrorCode PCHPDDMSetHarmonicOverlap_HPDDM(PC pc, PetscInt ovl)
 
   PetscFunctionBegin;
   PetscCheck(ovl >= 1, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Overlap %" PetscInt_FMT " must be positive", ovl);
-  if (pc->setupcalled && ovl != data->overlap) PetscCall(PCHPDDMResetSetup_Private(pc));
+  if (pc->setupcalled && ovl != data->overlap) PetscCall(PCHPDDMResetSetup_Private(pc, PETSC_FALSE));
   data->overlap = ovl;
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -475,7 +475,7 @@ static PetscErrorCode PCHPDDMSetEPSThreshold_HPDDM(PC pc, PetscReal v[], PetscIn
     PetscCheck(v[i] >= 0.0, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Threshold %g at level %" PetscInt_FMT " must be nonnegative or PETSC_CURRENT", (double)v[i], i + 1);
     if (pc->setupcalled && (!data->levels || !data->levels[i] || v[i] != data->levels[i]->threshold || (!i && (data->relative != relative || data->svd)))) rebuild = PETSC_TRUE;
   }
-  if (rebuild) PetscCall(PCHPDDMResetSetup_Private(pc));
+  if (rebuild) PetscCall(PCHPDDMResetSetup_Private(pc, PETSC_FALSE));
   for (i = 0; i < N; ++i) {
     if (v[i] == static_cast<PetscReal>(PETSC_CURRENT)) continue;
     PetscCall(PCHPDDMInitializeLevel_Private(data, i));
@@ -543,7 +543,7 @@ static PetscErrorCode PCHPDDMSetDimensions_Private(PC pc, PetscInt nev[], PetscI
     PetscCheck(mpd[i] > 0 || mpd[i] == PETSC_DETERMINE || mpd[i] == PETSC_CURRENT, PETSC_COMM_SELF, PETSC_ERR_ARG_OUTOFRANGE, "Projected dimension %" PetscInt_FMT " at level %" PetscInt_FMT " must be positive, PETSC_DETERMINE, or PETSC_CURRENT", mpd[i], i + 1);
     if (pc->setupcalled && mpd[i] != PETSC_CURRENT) rebuild = PETSC_TRUE;
   }
-  if (rebuild) PetscCall(PCHPDDMResetSetup_Private(pc));
+  if (rebuild) PetscCall(PCHPDDMResetSetup_Private(pc, PETSC_FALSE));
   for (i = 0; i < N; ++i) {
     if (nev[i] != PETSC_CURRENT) {
       PetscCall(PCHPDDMInitializeLevel_Private(data, i));
