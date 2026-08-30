@@ -1515,7 +1515,7 @@ static PetscErrorCode PCGAMGASMSetHEM_GAMG(PC pc, PetscInt n)
   If `n` is greater than the total number of levels, the excess entries in threshold are ignored.
 
 .seealso: [the Users Manual section on PCGAMG](sec_amg), [the Users Manual section on PCMG](sec_mg), [](ch_ksp), `PCGAMG`, `PCGAMGSetAggressiveLevels()`, `PCGAMGMISkSetAggressive()`,
-          `PCGAMGMISkSetMinDegreeOrdering()`, `PCGAMGSetThresholdScale()`
+          `PCGAMGMISkSetMinDegreeOrdering()`, `PCGAMGSetThresholdScale()`, `PCHPDDMSetEPSThreshold()`
 @*/
 PetscErrorCode PCGAMGSetThreshold(PC pc, PetscReal v[], PetscInt n)
 {

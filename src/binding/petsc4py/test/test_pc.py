@@ -194,6 +194,68 @@ class TestHPDDMPC(BaseTestPC, unittest.TestCase):
         A.destroy()
         ovl.destroy()
 
+    def testHPDDMSetters(self):
+        nl = 3
+        novl = 1
+        A = PETSc.Mat().create()
+        A.setType('aij')
+        A.setSizes(([nl, None],) * 2)
+        A.assemble()
+        self.pc.setOperators(A)
+
+        rank = A.getComm().rank
+        size = A.getComm().size
+        naux = nl
+        st = nl * rank
+        if rank > 0:
+            naux += novl
+            st -= novl
+        if rank < size - 1:
+            naux += novl
+        ovl = PETSc.IS().createStride(naux, st, comm=PETSc.COMM_SELF)
+        Aux = PETSc.Mat().createAIJ(naux, comm=PETSc.COMM_SELF)
+        Aux.assemble()
+        self.pc.setHPDDMAuxiliaryMat(ovl, Aux)
+
+        # Test setHPDDMHarmonicOverlap
+        self.pc.setHPDDMHarmonicOverlap(2)
+
+        # Test setHPDDMEPSThreshold with sequence conversion
+        self.pc.setHPDDMEPSThreshold([0.1, 0.2])
+        self.pc.setHPDDMEPSThreshold([0.5])
+
+        # Test setHPDDMEPSDimensions with equal-length arrays
+        self.pc.setHPDDMEPSDimensions([10], [20], [15])
+
+        # Test setHPDDMEPSDimensions mismatched-array error
+        with self.assertRaises(ValueError):
+            self.pc.setHPDDMEPSDimensions([10, 20], [20], [15])
+        with self.assertRaises(ValueError):
+            self.pc.setHPDDMEPSDimensions([10], [20, 30], [15])
+
+        # Test setHPDDMSVDDimensions with equal-length arrays
+        self.pc.setHPDDMSVDDimensions([5], [10], [8])
+
+        # Test setHPDDMSVDDimensions mismatched-array error
+        with self.assertRaises(ValueError):
+            self.pc.setHPDDMSVDDimensions([5, 6], [10], [8])
+
+        # Test getHPDDMSubKSP: level 1 should return a KSP
+        self.pc.setUp()
+        ksp1 = self.pc.getHPDDMSubKSP(1)
+        self.assertIsInstance(ksp1, PETSc.KSP)
+        ksp1.destroy()
+
+        # Test getHPDDMSubKSP: coarse level returns a KSP (possibly null-backed)
+        if size > 1:
+            coarse = self.pc.getHPDDMSubKSP(2)
+            self.assertIsInstance(coarse, PETSc.KSP)
+            coarse.destroy()
+
+        Aux.destroy()
+        A.destroy()
+        ovl.destroy()
+
 
 if __name__ == '__main__':
     unittest.main()
