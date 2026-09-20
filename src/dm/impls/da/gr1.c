@@ -147,7 +147,7 @@ PetscErrorCode VecView_MPI_Draw_DA1d(Vec xin, PetscViewer v)
   PetscMPIInt         rank, size, tag;
   PetscInt            i, n, N, dof, istart, isize, j, nbounds;
   MPI_Status          status;
-  PetscReal           min, max, xmin = 0.0, xmax = 0.0, tmp = 0.0, xgtmp = 0.0;
+  PetscReal           min, max, xmin, xmax, tmp = 0.0, xgtmp = 0.0;
   const PetscScalar  *array, *xg;
   PetscDraw           draw;
   PetscBool           isnull, useports = PETSC_FALSE, showmarkers = PETSC_FALSE;
@@ -193,8 +193,8 @@ PetscErrorCode VecView_MPI_Draw_DA1d(Vec xin, PetscViewer v)
   PetscCall(DMDAGetCoordinateName(da, 0, &xlabel));
 
   /* Determine the min and max coordinate in plot */
-  if (rank == 0) xmin = PetscRealPart(xg[0]);
-  if (rank == size - 1) xmax = PetscRealPart(xg[n - 1]);
+  xmin = rank == 0 ? PetscRealPart(xg[0]) : 0.0;
+  xmax = rank == size - 1 ? PetscRealPart(xg[n - 1]) : 0.0;
   PetscCallMPI(MPI_Bcast(&xmin, 1, MPIU_REAL, 0, comm));
   PetscCallMPI(MPI_Bcast(&xmax, 1, MPIU_REAL, size - 1, comm));
 

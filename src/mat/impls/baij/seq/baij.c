@@ -1583,6 +1583,12 @@ static PetscErrorCode MatSetOption_SeqBAIJ(Mat A, MatOption op, PetscBool flg)
   case MAT_UNUSED_NONZERO_LOCATION_ERR:
     a->nounused = (flg ? -1 : 0);
     break;
+  case MAT_STRUCTURE_ONLY:
+    if (flg) {
+      PetscCall(MatXAIJDeallocatea(A, &a->a));
+      a->a = NULL;
+    }
+    break;
   default:
     break;
   }
@@ -1915,8 +1921,8 @@ static PetscErrorCode MatView_SeqBAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
 
   /* loop over matrix elements drawing boxes */
 
+  PetscDrawCollectiveBegin(draw);
   if (format != PETSC_VIEWER_DRAW_CONTOUR) {
-    PetscDrawCollectiveBegin(draw);
     /* Blue for negative, Cyan for zero and  Red for positive */
     color = PETSC_DRAW_BLUE;
     for (i = 0, row = 0; i < mbs; i++, row += bs) {
@@ -1966,7 +1972,6 @@ static PetscErrorCode MatView_SeqBAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
         }
       }
     }
-    PetscDrawCollectiveEnd(draw);
   } else {
     /* use contour shading to indicate magnitude of values */
     /* first determine max of all nonzero values */
@@ -1980,7 +1985,6 @@ static PetscErrorCode MatView_SeqBAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
     PetscCall(PetscDrawGetPopup(draw, &popup));
     PetscCall(PetscDrawScalePopup(popup, 0.0, maxv));
 
-    PetscDrawCollectiveBegin(draw);
     for (i = 0, row = 0; i < mbs; i++, row += bs) {
       for (j = a->i[i]; j < a->i[i + 1]; j++) {
         y_l = A->rmap->N - row - 1.0;
@@ -1997,8 +2001,8 @@ static PetscErrorCode MatView_SeqBAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
         }
       }
     }
-    PetscDrawCollectiveEnd(draw);
   }
+  PetscDrawCollectiveEnd(draw);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

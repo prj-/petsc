@@ -20,8 +20,7 @@ static PetscErrorCode DrawFunction(PetscDraw draw, PetscCtx ctx)
 {
   int         i, j, w, h;
   Function    function = ((FunctionCtx *)ctx)->function;
-  PetscReal   min = PETSC_MAX_REAL, max = PETSC_MIN_REAL;
-  MPI_Comm    comm = PetscObjectComm((PetscObject)draw);
+  MPI_Comm    comm     = PetscObjectComm((PetscObject)draw);
   PetscMPIInt size, rank;
   PetscDraw   popup;
 
@@ -39,8 +38,6 @@ static PetscErrorCode DrawFunction(PetscDraw draw, PetscCtx ctx)
       f     = function(x, y);
       color = PetscDrawRealToColor(f, -8, +8);
       PetscCall(PetscDrawPointPixel(draw, i, j, color));
-      min = PetscMin(f, min);
-      max = PetscMax(f, max);
     }
   }
   PetscDrawCollectiveEnd(draw);

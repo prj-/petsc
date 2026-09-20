@@ -249,9 +249,9 @@ PetscErrorCode PetscDrawAxisDraw(PetscDrawAxis axis)
 {
   int         i, ntick, numx, numy, ac, tc, cc;
   PetscMPIInt rank;
-  size_t      len, ytlen = 0;
+  size_t      len, ytlen;
   PetscReal   coors[4] = {0, 0, 0, 0}, tickloc[PETSC_DRAW_AXIS_MAX_SEGMENTS], sep, tw, th;
-  PetscReal   xl, xr, yl, yr, dxl = 0, dyl = 0, dxr = 0, dyr = 0;
+  PetscReal   xl, xr, yl, yr, dxl, dyl, dxr, dyr;
   char       *p;
   PetscDraw   draw;
   PetscBool   isnull;
@@ -278,6 +278,9 @@ PetscErrorCode PetscDrawAxisDraw(PetscDrawAxis axis)
 
   PetscDrawCollectiveBegin(draw);
   if (rank) goto finally;
+
+  dxl = dyl = dxr = dyr = 0;
+  ytlen                 = 0;
 
   /* get canonical string size */
   PetscCall(PetscDrawSetCoordinates(draw, 0, 0, 1, 1));

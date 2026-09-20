@@ -969,8 +969,8 @@ static PetscErrorCode MatView_SeqAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
 
   /* loop over matrix elements drawing boxes */
   PetscCall(MatSeqAIJGetArrayRead(A, &aa));
+  PetscDrawCollectiveBegin(draw);
   if (format != PETSC_VIEWER_DRAW_CONTOUR) {
-    PetscDrawCollectiveBegin(draw);
     /* Blue for negative, Cyan for zero and  Red for positive */
     color = PETSC_DRAW_BLUE;
     for (i = 0; i < m; i++) {
@@ -1005,7 +1005,6 @@ static PetscErrorCode MatView_SeqAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
         PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, color, color, color, color));
       }
     }
-    PetscDrawCollectiveEnd(draw);
   } else {
     /* use contour shading to indicate magnitude of values */
     /* first determine max of all nonzero values */
@@ -1020,7 +1019,6 @@ static PetscErrorCode MatView_SeqAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
     PetscCall(PetscDrawGetPopup(draw, &popup));
     PetscCall(PetscDrawScalePopup(popup, minv, maxv));
 
-    PetscDrawCollectiveBegin(draw);
     for (i = 0; i < m; i++) {
       y_l = m - i - 1.0;
       y_r = y_l + 1.0;
@@ -1032,8 +1030,8 @@ static PetscErrorCode MatView_SeqAIJ_Draw_Zoom(PetscDraw draw, void *Aa)
         count++;
       }
     }
-    PetscDrawCollectiveEnd(draw);
   }
+  PetscDrawCollectiveEnd(draw);
   PetscCall(MatSeqAIJRestoreArrayRead(A, &aa));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -1334,6 +1332,12 @@ PetscErrorCode MatSetOption_SeqAIJ(Mat A, MatOption op, PetscBool flg)
     break;
   case MAT_FORM_EXPLICIT_TRANSPOSE:
     A->form_explicit_transpose = flg;
+    break;
+  case MAT_STRUCTURE_ONLY:
+    if (flg) {
+      PetscCall(MatXAIJDeallocatea(A, &a->a));
+      a->a = NULL;
+    }
     break;
   default:
     break;
@@ -4522,7 +4526,7 @@ PetscErrorCode MatSetPreallocationCOO_SeqAIJ(Mat mat, PetscCount coo_n, PetscInt
   PetscCount           k, p, q, nneg, nnz, start, end; /* Index the coo array, so use PetscCount as their type */
   PetscInt            *Ai;                             /* Change to PetscCount once we use it for row pointers */
   PetscInt            *Aj;
-  PetscScalar         *Aa;
+  PetscScalar         *Aa     = NULL;
   Mat_SeqAIJ          *seqaij = (Mat_SeqAIJ *)mat->data;
   MatType              rtype;
   PetscCount          *perm, *jmap;
@@ -4683,11 +4687,14 @@ PetscErrorCode MatSetPreallocationCOO_SeqAIJ(Mat mat, PetscCount coo_n, PetscInt
   }
 
   PetscCall(MatGetRootType_Private(mat, &rtype));
-  PetscCall(PetscShmgetAllocateArray(nnz, sizeof(PetscScalar), (void **)&Aa));
-  PetscCall(PetscArrayzero(Aa, nnz));
+  if (!mat->structure_only) {
+    PetscCall(PetscShmgetAllocateArray(nnz, sizeof(PetscScalar), (void **)&Aa));
+    PetscCall(PetscArrayzero(Aa, nnz));
+  }
   PetscCall(MatSetSeqAIJWithArrays_private(PETSC_COMM_SELF, M, N, Ai, Aj, Aa, rtype, mat));
 
-  seqaij->free_a = seqaij->free_ij = PETSC_TRUE; /* Let newmat own Ai, Aj and Aa */
+  seqaij->free_a  = (PetscBool)!mat->structure_only;
+  seqaij->free_ij = PETSC_TRUE; /* Let mat own Ai, Aj and any allocated Aa */
 
   // Put the COO struct in a container and then attach that to the matrix
   PetscCall(PetscMalloc1(1, &coo));

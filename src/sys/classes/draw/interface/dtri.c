@@ -67,7 +67,7 @@ PetscErrorCode PetscDrawScalePopup(PetscDraw popup, PetscReal min, PetscReal max
   PetscCall(PetscDrawSetCoordinates(popup, xl, yl, xr, yr));
   PetscDrawCollectiveBegin(popup);
   if (rank == 0) {
-    for (i = 0; i < 10; i++) {
+    for (i = 0, yl = 0.0; i < 10; i++) {
       int c = PetscDrawRealToColor((PetscReal)i / 9, 0, 1);
       PetscCall(PetscDrawRectangle(popup, xl, yl, xr, yr, c, c, c, c));
       yl += 0.1;

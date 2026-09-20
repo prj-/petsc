@@ -48,10 +48,9 @@ static PetscErrorCode PetscP4estFinalize(void)
 
 PetscErrorCode PetscP4estInitialize(void)
 {
-  PetscBool psc_catch_signals    = PETSC_FALSE;
-  PetscBool psc_print_backtrace  = PETSC_TRUE;
-  int       psc_log_threshold    = SC_LP_DEFAULT;
-  int       pp4est_log_threshold = SC_LP_DEFAULT;
+  PetscBool psc_catch_signals   = PETSC_FALSE;
+  PetscBool psc_print_backtrace = PETSC_TRUE;
+  int       psc_log_threshold   = SC_LP_DEFAULT;
   char      logList[256];
   PetscBool opt, pkg;
 
@@ -94,12 +93,10 @@ PetscErrorCode PetscP4estInitialize(void)
     sc_set_abort_handler(PetscScAbort);
   }
   if (p4est_package_id == -1) {
-    int       log_threshold_shifted = pp4est_log_threshold + 1;
-    PetscBool set;
+    int log_threshold_shifted = SC_LP_DEFAULT + 1;
 
-    PetscCall(PetscOptionsGetEnum(NULL, NULL, "-petsc_p4est_log_threshold", SCLogTypes, (PetscEnum *)&log_threshold_shifted, &set));
-    if (set) pp4est_log_threshold = log_threshold_shifted - 1;
-    PetscCallP4est(p4est_init, PetscScLogHandler, pp4est_log_threshold);
+    PetscCall(PetscOptionsGetEnum(NULL, NULL, "-petsc_p4est_log_threshold", SCLogTypes, (PetscEnum *)&log_threshold_shifted, NULL));
+    PetscCallP4est(p4est_init, PetscScLogHandler, log_threshold_shifted - 1);
     PetscCheck(p4est_package_id != -1, PETSC_COMM_WORLD, PETSC_ERR_LIB, "Could not initialize p4est");
   }
   PetscCall(DMForestRegisterType(DMP4EST));

@@ -1292,8 +1292,8 @@ static PetscErrorCode MatView_SeqSELL_Draw_Zoom(PetscDraw draw, void *Aa)
 
   /* loop over matrix elements drawing boxes */
 
+  PetscDrawCollectiveBegin(draw);
   if (format != PETSC_VIEWER_DRAW_CONTOUR) {
-    PetscDrawCollectiveBegin(draw);
     /* Blue for negative, Cyan for zero and  Red for positive */
     color = PETSC_DRAW_BLUE;
     for (i = 0; i < m; i++) {
@@ -1331,7 +1331,6 @@ static PetscErrorCode MatView_SeqSELL_Draw_Zoom(PetscDraw draw, void *Aa)
         PetscCall(PetscDrawRectangle(draw, x_l, y_l, x_r, y_r, color, color, color, color));
       }
     }
-    PetscDrawCollectiveEnd(draw);
   } else {
     /* use contour shading to indicate magnitude of values */
     /* first determine max of all nonzero values */
@@ -1345,7 +1344,6 @@ static PetscErrorCode MatView_SeqSELL_Draw_Zoom(PetscDraw draw, void *Aa)
     PetscCall(PetscDrawGetPopup(draw, &popup));
     PetscCall(PetscDrawScalePopup(popup, minv, maxv));
 
-    PetscDrawCollectiveBegin(draw);
     for (i = 0; i < m; i++) {
       shift = a->sliidx[i / a->sliceheight] + i % a->sliceheight;
       y_l   = m - i - 1.0;
@@ -1358,8 +1356,8 @@ static PetscErrorCode MatView_SeqSELL_Draw_Zoom(PetscDraw draw, void *Aa)
         count++;
       }
     }
-    PetscDrawCollectiveEnd(draw);
   }
+  PetscDrawCollectiveEnd(draw);
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

@@ -20,9 +20,10 @@
 @*/
 PetscErrorCode PetscDrawZoom(PetscDraw draw, PetscErrorCode (*func)(PetscDraw draw, PetscCtx ctx), PetscCtx ctx)
 {
-  PetscDrawButton button;
-  PetscReal       dpause, xc, yc, scale = 1.0, w, h, xr, xl, yr, yl, xmin, xmax, ymin, ymax;
-  PetscBool       isnull;
+  PetscDrawButton    button;
+  PetscReal          dpause, xc, yc, scale = 1.0, xr, xl, yr, yl, xmin, xmax, ymin, ymax;
+  volatile PetscReal w, h;
+  PetscBool          isnull;
 
   PetscFunctionBegin;
   PetscCall(PetscDrawIsNull(draw, &isnull));
@@ -72,8 +73,8 @@ PetscErrorCode PetscDrawZoom(PetscDraw draw, PetscErrorCode (*func)(PetscDraw dr
     xr = scale * (xr - w - xc) + xc + w * scale;
     yl = scale * (yl + h - yc) + yc - h * scale;
     yr = scale * (yr - h - yc) + yc + h * scale;
-    w *= scale;
-    h *= scale;
+    w  = w * scale;
+    h  = h * scale;
     PetscCall(PetscDrawClear(draw));
     PetscCall(PetscDrawSetCoordinates(draw, xl, yl, xr, yr));
     PetscDrawCollectiveBegin(draw);
