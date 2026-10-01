@@ -54,6 +54,11 @@
 ```{rubric} PC:
 ```
 
+- Add `PCHPDDMSetHarmonicOverlap()`, `PCHPDDMSetEPSThreshold()`, `PCHPDDMSetEPSDimensions()`, and `PCHPDDMSetSVDDimensions()` to configure `PCHPDDM` coarsening, and `PCHPDDMGetSubKSP()` to access its per-level solvers, with corresponding petsc4py methods
+- Reject a positive `-pc_hpddm_levels_1_eps_nev` combined with `-pc_hpddm_levels_1_svd_threshold_relative`, or a positive `-pc_hpddm_levels_1_svd_nsv` combined with `-pc_hpddm_levels_1_eps_threshold_relative`, instead of silently ignoring the incompatible threshold
+- Retain previously configured `PCHPDDM` coarsening settings when `PCSetFromOptions()` is called without the corresponding options; removing these options no longer restores defaults
+- Preserve previously enabled nested options processing when `PCHPDDMSetAuxiliaryMat()` replaces the overlap index set, so recreated per-level solvers reapply their options
+
 ```{rubric} KSP:
 ```
 
