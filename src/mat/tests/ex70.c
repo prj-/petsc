@@ -723,15 +723,15 @@ int main(int argc, char **args)
 
   /* Test by Pierre Jolivet */
   {
-    Mat C, D, D2, AtA;
+    Mat C, D, D2 = NULL, AtA, Aij;
+    Vec left;
+
     PetscCall(MatCreateNormal(A, &AtA));
     PetscCall(MatDuplicate(X, MAT_DO_NOT_COPY_VALUES, &C));
     PetscCall(MatDuplicate(B, MAT_DO_NOT_COPY_VALUES, &D));
-    PetscCall(MatDuplicate(B, MAT_DO_NOT_COPY_VALUES, &D2));
     PetscCall(MatSetRandom(B, NULL));
     PetscCall(MatSetRandom(C, NULL));
     PetscCall(MatSetRandom(D, NULL));
-    PetscCall(MatSetRandom(D2, NULL));
     PetscCall(MatProductCreateWithMat(A, B, NULL, C));
     PetscCall(MatProductSetType(C, MATPRODUCT_AB));
     PetscCall(MatProductSetFromOptions(C));
@@ -759,9 +759,21 @@ int main(int argc, char **args)
       PetscCall(MatView(T, NULL));
       PetscCall(MatDestroy(&T));
     }
+    PetscCall(MatDestroy(&D));
+    PetscCall(MatCreateVecs(AtA, &left, NULL));
+    PetscCall(VecSetRandom(left, NULL));
+    PetscCall(MatDiagonalScale(AtA, left, NULL));
+    PetscCall(MatConvert(AtA, MATAIJ, MAT_INITIAL_MATRIX, &Aij));
+    PetscCall(MatMatMult(AtA, B, MAT_INITIAL_MATRIX, PETSC_DETERMINE, &D));
+    PetscCall(MatMatMult(Aij, B, MAT_INITIAL_MATRIX, PETSC_DETERMINE, &D2));
+    PetscCall(MatAXPY(D, -1.0, D2, SAME_NONZERO_PATTERN));
+    PetscCall(MatNorm(D, NORM_FROBENIUS, &err));
+    PetscCheck(err < 1000.0 * PETSC_MACHINE_EPSILON, PETSC_COMM_WORLD, PETSC_ERR_PLIB, "MATNORMAL dense product with left scaling differs from converted AIJ product by %g", (double)err);
     PetscCall(MatDestroy(&C));
     PetscCall(MatDestroy(&D));
     PetscCall(MatDestroy(&D2));
+    PetscCall(MatDestroy(&Aij));
+    PetscCall(VecDestroy(&left));
     PetscCall(MatDestroy(&AtA));
   }
 

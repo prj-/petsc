@@ -275,7 +275,7 @@ static PetscErrorCode MatProductNumeric_Normal_Dense(Mat C)
   Mat           A, B;
   Normal_Dense *contents;
   Mat_Normal   *a;
-  Vec           right;
+  Vec           left, right;
   PetscScalar  *array, scale;
 
   PetscFunctionBegin;
@@ -285,7 +285,7 @@ static PetscErrorCode MatProductNumeric_Normal_Dense(Mat C)
   PetscCall(MatShellGetContext(A, &a));
   contents = (Normal_Dense *)C->product->data;
   PetscCheck(contents, PetscObjectComm((PetscObject)C), PETSC_ERR_PLIB, "Product data empty");
-  PetscCall(MatShellGetScalingShifts(A, (PetscScalar *)MAT_SHELL_NOT_ALLOWED, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, (Vec *)MAT_SHELL_NOT_ALLOWED, &right, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
+  PetscCall(MatShellGetScalingShifts(A, (PetscScalar *)MAT_SHELL_NOT_ALLOWED, &scale, (Vec *)MAT_SHELL_NOT_ALLOWED, &left, &right, (Mat *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED, (IS *)MAT_SHELL_NOT_ALLOWED));
   if (right) {
     PetscCall(MatCopy(B, C, SAME_NONZERO_PATTERN));
     PetscCall(MatDiagonalScale(C, right, NULL));
@@ -299,6 +299,7 @@ static PetscErrorCode MatProductNumeric_Normal_Dense(Mat C)
   PetscCall(MatSetOption(C, MAT_NO_OFF_PROC_ENTRIES, PETSC_TRUE));
   PetscCall(MatAssemblyBegin(C, MAT_FINAL_ASSEMBLY));
   PetscCall(MatAssemblyEnd(C, MAT_FINAL_ASSEMBLY));
+  if (left) PetscCall(MatDiagonalScale(C, left, NULL));
   PetscCall(MatScale(C, scale));
   PetscFunctionReturn(PETSC_SUCCESS);
 }
